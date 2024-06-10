@@ -1,0 +1,4 @@
+class WiseAgentRegistry:
+    """
+    TODO
+    """
