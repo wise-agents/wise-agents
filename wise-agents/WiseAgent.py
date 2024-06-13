@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
+import WiseAgentEvent
 import WiseAgentLLM
 import WiseAgentMessage
 
@@ -73,4 +74,25 @@ class WiseAgent(ABC):
         """
         ...
 
+    @abstractmethod
+    def receive_event(self) -> WiseAgentEvent:
+        """
+        Receive an event.
 
+        Returns:
+            WiseAgentEvent: the event that has been received
+        """
+        ...
+
+    @abstractmethod
+    def process_event(self, event: WiseAgentEvent) -> WiseAgentMessage:
+        """
+        Process the given event.
+
+        Args:
+            event (WiseAgentEvent): the event to be processed
+
+        Returns:
+            WiseAgentMessage: the message to send to another agent
+        """
+        ...
