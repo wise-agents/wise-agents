@@ -2,8 +2,8 @@ from enum import Enum, auto
 
 
 class WiseAgentMessageType(Enum):
-    INFO = auto()
-    ACTION = auto()
-    """
-    TODO
-    """
+    ALERT = auto()
+    QUERY = auto()
+    RESPONSE = auto()
+    ACTION_REQUEST = auto()
+    HUMAN = auto()
