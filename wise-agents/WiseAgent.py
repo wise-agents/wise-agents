@@ -4,14 +4,17 @@ from typing import Optional
 import WiseAgentEvent
 import WiseAgentLLM
 import WiseAgentMessage
+import WiseAgentVectorDB
 
 
 class WiseAgent(ABC):
 
-    def __init__(self, name: str, description: str, llm: Optional[WiseAgentLLM] = None):
+    def __init__(self, name: str, description: str, llm: Optional[WiseAgentLLM] = None,
+                 vector_db: Optional[WiseAgentVectorDB] = None):
         self._name = name
         self._description = description
         self._llm = llm
+        self._vector_db = vector_db
 
     @property
     def name(self) -> str:
