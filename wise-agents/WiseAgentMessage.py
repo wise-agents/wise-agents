@@ -1,6 +1,6 @@
 from typing import Optional
 
-import WiseAgentMessageType
+from WiseAgentMessageType import WiseAgentMessageType
 
 
 class WiseAgentMessage:
@@ -25,4 +25,13 @@ class WiseAgentMessage:
         return self._message_type
 
 
+class WiseAgentMessageWithTracing(WiseAgentMessage):
+    def __init__(self, message: str, sender: Optional[str] = None,
+                 message_type: Optional[WiseAgentMessageType] = None, trace: Optional[WiseAgentMessage['']] = []]):
+        super().__init__(message, sender, message_type)
+        self._trace = trace.append(self)
 
+    @property
+    def trace(self) -> str:
+        """Get the trace of the message (or None if the trace was not specified)."""
+        return self._trace
