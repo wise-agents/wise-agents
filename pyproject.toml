@@ -1,10 +1,17 @@
-[tool.poetry]
+[project]
 name = "wise-agents"
 version = "0.0.1"
 description = "Multi-agent framework"
 authors = []
 readme = "README.md"
-packages = [{include = "wise-agents"}]
+requires-python = ">=3.8.1,<4.0"
 
-[tool.poetry.dependencies]
-python = ">=3.8.1,<4.0"
+dependencies = [
+    "langchain==0.2.3",
+    "langchain-openai==0.1.7",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+]
