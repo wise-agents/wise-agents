@@ -1,5 +1,5 @@
 [project]
-name = "wise-agents"
+name = "wiseagents"
 version = "0.0.1"
 description = "Multi-agent framework"
 authors = []
@@ -15,3 +15,12 @@ dependencies = [
 test = [
     "pytest",
 ]
+
+[pytest]
+pythonpath = "src"
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+

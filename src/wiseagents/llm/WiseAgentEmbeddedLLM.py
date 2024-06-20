@@ -1,7 +1,7 @@
 import WiseAgentLLM
 
-class LocalWiseAgentLLM(WiseAgentLLM):
-    """Extende WiseAgentLLM to support local execution of WiseAgentLLM on the local machine."""
+class WiseAgentEmbeddedLLM(WiseAgentLLM):
+    """Extends WiseAgentLLM to support local execution of WiseAgentLLM on the local machine."""
         
     def __init__(self):
         super().__init__()

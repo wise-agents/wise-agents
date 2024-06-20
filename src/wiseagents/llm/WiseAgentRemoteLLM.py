@@ -1,7 +1,7 @@
-from WiseAgentLLM import WiseAgentLLM
+from wiseagents.llm.WiseAgentLLM import WiseAgentLLM
 from abc import abstractmethod
 
-class RemoteWiseAgentLLM(WiseAgentLLM):
+class WiseAgentRemoteLLM(WiseAgentLLM):
     """Extend WiseAgentLLM to support remote execution of WiseAgentLLM on a remote machine."""
 
     def __init__(self, system_message, model_name, remote_address):

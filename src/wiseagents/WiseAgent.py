@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 import WiseAgentEvent
-import llm.WiseAgentLLM
+from  wiseagents.llm.WiseAgentLLM import WiseAgentLLM
 import WiseAgentMessage
 import WiseAgentVectorDB
 
