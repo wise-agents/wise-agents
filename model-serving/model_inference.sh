@@ -18,4 +18,4 @@ echo "Model path: $MODEL_PATH"
 echo "Model name: $MODEL_NAME"
 echo "Pod container: $POD_CONTAINER"
 
-$POD_CONTAINER run --rm -it -p 8001:8001 -v $MODEL_PATH:/locallm/models:ro -e MODEL_PATH=models/$MODEL_NAME -e HOST=0.0.0.0 -e PORT=8001 -e MODEL_CHAT_FORMAT=openchat ghcr.io/abetlen/llama-cpp-python:latest 
+$POD_CONTAINER run --rm -it -p 8001:8001 -v $MODEL_PATH:/locallm/models:ro -e MODEL=/locallm/models/$MODEL_NAME -e HOST=0.0.0.0 -e PORT=8001 -e MODEL_CHAT_FORMAT=openchat ghcr.io/abetlen/llama-cpp-python:latest
