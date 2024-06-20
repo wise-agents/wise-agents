@@ -1,4 +1,4 @@
-from RemoteWiseAgentLLM import RemoteWiseAgentLLM
+from wiseagents.llm.WiseAgentRemoteLLM import WiseAgentRemoteLLM
 import requests
 from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain
@@ -7,7 +7,7 @@ from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain.memory import ConversationBufferWindowMemory
 
 
-class LangChainRemoteWiseAgentLLM(RemoteWiseAgentLLM):
+class LangChainWiseAgentRemoteLLM(WiseAgentRemoteLLM):
     
     chain = None
     
@@ -42,7 +42,7 @@ class LangChainRemoteWiseAgentLLM(RemoteWiseAgentLLM):
 
    
     def process(self, message):
-        print(f"Executing WiseAgentLLM on remote machine at {RemoteWiseAgentLLM.remote_address}")
+        print(f"Executing WiseAgentLLM on remote machine at {WiseAgentRemoteLLM.remote_address}")
         buffer = self.memory
         response = self.chain.invoke({
                 "history": buffer.buffer_as_messages,
