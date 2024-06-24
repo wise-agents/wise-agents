@@ -9,6 +9,7 @@ requires-python = ">=3.8.1,<4.0"
 dependencies = [
     "langchain==0.2.3",
     "langchain-openai==0.1.7",
+    "pydantic==2.7.4",
 ]
 
 [project.optional-dependencies]
