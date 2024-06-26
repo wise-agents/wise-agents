@@ -1,8 +1,10 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-import WiseAgentEvent
+from wiseagents.graphdb.WiseAgentGraphDB import WiseAgentGraphDB
 from  wiseagents.llm.WiseAgentLLM import WiseAgentLLM
+
+import WiseAgentEvent
 import WiseAgentMessage
 import WiseAgentVectorDB
 
@@ -10,11 +12,12 @@ import WiseAgentVectorDB
 class WiseAgent(ABC):
 
     def __init__(self, name: str, description: str, llm: Optional[WiseAgentLLM] = None,
-                 vector_db: Optional[WiseAgentVectorDB] = None):
+                 vector_db: Optional[WiseAgentVectorDB] = None, graph_db: Optional[WiseAgentGraphDB] = None):
         self._name = name
         self._description = description
         self._llm = llm
         self._vector_db = vector_db
+        self._graph_db = graph_db
 
     @property
     def name(self) -> str:
