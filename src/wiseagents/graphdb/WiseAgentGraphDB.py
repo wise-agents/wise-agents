@@ -4,10 +4,12 @@ from typing import Optional, Any, List
 from wiseagents.graphdb.Entity import Entity
 from wiseagents.graphdb.GraphDocument import GraphDocument
 from wiseagents.graphdb.Relationship import Relationship
+import yaml
 
 
-class WiseAgentGraphDB(ABC):
-
+class WiseAgentGraphDB(yaml.YAMLObject):
+    yaml_tag = u'!WiseAgentGraphDB'
+    
     @abstractmethod
     def get_schema(self, refresh: bool = False) -> str:
         """

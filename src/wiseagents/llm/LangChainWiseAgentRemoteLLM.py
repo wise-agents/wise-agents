@@ -8,32 +8,38 @@ from langchain.memory import ConversationBufferWindowMemory
 
 
 class LangChainWiseAgentRemoteLLM(WiseAgentRemoteLLM):
-    
+      
     chain = None
+    yaml_tag = u'!LangChainWiseAgentRemoteLLM'    
     
-    def __init__(self, system_message, model_name, remote_address = "http://localhost:8001"):
-        try:
-            request_cpp = requests.get(f'{remote_address}/v1/models')
-            if request_cpp.status_code == 200:
-                self.server = "Llamacpp_Python"
-                remote_address = f'{remote_address}/v1'
-            print(f"Server {self.server} is Ready")
-            super().__init__(system_message, model_name, remote_address)
-            llm = ChatOpenAI(base_url=remote_address, 
-                api_key="sk-no-key-required",
-                model=self.model_name,
-                streaming=True)
+    
+    def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1"):
+        super().__init__(system_message, model_name, remote_address)
+        self.chain = None
+    
+    
+    def __repr__(self):
+        '''Return a string representation of the agent.'''
+        return f"{self.__class__.__name__}(system_message={self.system_message}, model_name={self.model_name}, remote_address={self.remote_address})"
+    
+    def __getstate__(self) -> object:
+        '''Return the state of the agent. Removing the instance variable chain to avoid it is serialized/deserialized by pyyaml.'''
+        state = self.__dict__.copy()
+        del state['chain']
+        return state 
+    
+    def connect(self):
+        llm = ChatOpenAI(base_url=self.remote_address, 
+            api_key="sk-no-key-required",
+            model=self.model_name,
+            streaming=True)
 
-            prompt = ChatPromptTemplate.from_messages([
-                ("system", system_message),
-                MessagesPlaceholder("history"),
-                ("human", "{message}")
-            ])          
-            self.chain = prompt | llm
-        except requests.exceptions.RequestException as e:
-            print(f"Error: Could not connect to remote machine at {remote_address}")
-            print(e)
-            pass
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", self.system_message),
+            MessagesPlaceholder("history"),
+            ("human", "{message}")
+        ])          
+        self.chain = prompt | llm
     
     @property    
     def memory(self) -> ConversationBufferWindowMemory:
@@ -44,6 +50,8 @@ class LangChainWiseAgentRemoteLLM(WiseAgentRemoteLLM):
     def process(self, message):
         print(f"Executing WiseAgentLLM on remote machine at {WiseAgentRemoteLLM.remote_address}")
         buffer = self.memory
+        if (self.chain is None):
+            self.connect()
         response = self.chain.invoke({
                 "history": buffer.buffer_as_messages,
                 "message": message
