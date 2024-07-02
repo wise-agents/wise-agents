@@ -64,7 +64,7 @@ class WiseAgentMessage(YAMLObject):
         """Get the id of the message."""
         return self._identifier
 
-class WiseAgentTransport(ABC):
+class WiseAgentTransport(YAMLObject):
     
     def set_call_backs(self, request_receiver: Optional[Callable[[], WiseAgentMessage]] = None,
                  event_receiver: Optional[Callable[[], WiseAgentEvent]] = None,
@@ -75,6 +75,12 @@ class WiseAgentTransport(ABC):
         self._error_receiver = error_receiver
         self._response_receiver = response_receiver
         
+    @abstractmethod
+    def start(self):
+        """
+        Start the transport.
+        """
+        pass
     
     @abstractmethod
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):

@@ -1,0 +1,20 @@
+---
+!wiseagents.PassThroughClientAgent
+_description: This is a test agent
+_name: PassThroughClientAgent1
+_transport:  !wiseagents.transport.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: PassThroughClientAgent1
+---
+!wiseagents.LLMOnlyWiseAgent
+_description: This is another test agent
+_llm: !OpenaiAPIWiseAgentLLM
+  _model_name: Phi-3-mini-4k-instruct-q4.gguf
+  _remote_address: http://localhost:8001/v1
+  _system_message: Answer my greeting saying Hello and my name
+_name: LLMOnlyWiseAgent2
+_transport:  !wiseagents.transport.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: LLMOnlyWiseAgent2

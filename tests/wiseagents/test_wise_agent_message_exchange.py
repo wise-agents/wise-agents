@@ -14,7 +14,7 @@ class WiseAgentDoingNothing(WiseAgent):
         self._description = description
         transport = StompWiseAgentTransport(host='localhost', port=61616, agent_name=self.name)
         super().__init__(name, description, transport, None, None, None)
-        transport.start()
+        
         
     def process_event(self, event):
         return True
@@ -52,6 +52,9 @@ def test_send_message_to_agent_and_get_response():
     assert agent2.request_received.message == 'Do Nothing'
     
     assert agent1.response_received.message == 'I am doing nothing'
+
+    for  message in WiseAgentRegistry.get_or_create_context('default').message_trace:
+        print(f'{message.sender} : {message.message}')
     
     assert WiseAgentRegistry.get_or_create_context('default').message_trace[0].message == 'Do Nothing'
     assert WiseAgentRegistry.get_or_create_context('default').message_trace[0].sender == 'Agent1'
