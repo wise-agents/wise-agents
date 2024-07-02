@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from wiseagents.graphdb.Entity import Entity
 
@@ -18,4 +18,4 @@ class Relationship(BaseModel):
     label: str
     source: Entity
     target: Entity
-    metadata: Optional[dict] = None
+    metadata: Optional[dict] = Field(default_factory=dict)

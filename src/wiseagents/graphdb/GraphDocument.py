@@ -3,6 +3,7 @@ from typing import List
 from pydantic import BaseModel
 from wiseagents.graphdb.Entity import Entity
 from wiseagents.graphdb.Relationship import Relationship
+from wiseagents.graphdb.Source import Source
 
 
 class GraphDocument(BaseModel):
@@ -12,7 +13,9 @@ class GraphDocument(BaseModel):
     Attributes:
         entities (List[Entity]): the entities in the graph document
         relationships (List[Relationship]): the relationships in the graph document
+        source (Source): the source that contains the entities and relationships
     """
     entities: List[Entity]
     relationships: List[Relationship]
+    source: Source
 

@@ -1,6 +1,8 @@
 from wiseagents import WiseAgent
 from wiseagents.llm.LangChainWiseAgentRemoteLLM import LangChainWiseAgentRemoteLLM
 from wiseagents.llm.WiseAgentRemoteLLM import WiseAgentRemoteLLM
+from wiseagents.graphdb.LangChainWiseAgentGraphDB import LangChainWiseAgentGraphDB
+from wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB import Neo4jLangChainWiseAgentGraphDB
 import yaml
 import logging, pathlib
 
@@ -22,6 +24,8 @@ def test_using_deserialized_agent():
     logging.debug(deserialized_agent)
     response = deserialized_agent.llm.process("Hello my name is Stefano")
     assert response.content.__len__() > 0
+    assert deserialized_agent.graph_db.url == "bolt://localhost:7687"
+    assert not deserialized_agent.graph_db.refresh_graph_schema
     
 def test_using_multiple_deserialized_agents():
     # Create a WiseAgent object
@@ -43,6 +47,8 @@ def test_using_multiple_deserialized_agents():
     assert deserialized_agent[0].llm.remote_address == "http://localhost:8001/v1"
     response = deserialized_agent[0].llm.process("Hello my name is Stefano")
     assert response.content.__len__() > 0
+    assert deserialized_agent[0].graph_db.url == "bolt://localhost:7687"
+    assert not deserialized_agent[0].graph_db.refresh_graph_schema
     
     logging.debug(deserialized_agent[1])
     
@@ -54,4 +60,6 @@ def test_using_multiple_deserialized_agents():
     assert deserialized_agent[1].llm.remote_address == "http://localhost:8001/v1"
     response = deserialized_agent[1].llm.process("Hello my name is Stefano")
     assert response.content.__len__() > 0
+    assert deserialized_agent[1].graph_db.url == "bolt://localhost:7687"
+    assert not deserialized_agent[1].graph_db.refresh_graph_schema
     

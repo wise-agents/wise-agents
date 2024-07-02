@@ -1,6 +1,6 @@
-from typing import Union, Optional
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Entity(BaseModel):
@@ -8,10 +8,10 @@ class Entity(BaseModel):
     An entity (node) in a knowledge graph.
 
     Attributes:
-        id (Union[str, int]): the unique id for the entity
-        label (str): a description of the entity
+        id (str): the unique id for the entity
+        label (Optional[str]): an optional label for the entity
         metadata (Optional[dict]): optional information about the entity
     """
-    id: Union[str, int]
-    label: str
-    metadata: Optional[dict] = None
+    id: str
+    label: Optional[str] = "entity"
+    metadata: Optional[dict] = Field(default_factory=dict)
