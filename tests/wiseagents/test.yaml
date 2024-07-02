@@ -1,0 +1,9 @@
+!wiseagents.WiseAgent
+_description: This is a test agent
+_graph_db: null
+_llm: !LangChainWiseAgentRemoteLLM
+  _model_name: Phi-3-mini-4k-instruct-q4.gguf
+  _remote_address: http://localhost:8001/v1
+  _system_message: Answer my greeting saying Hello and my name
+_name: Agent1
+_vector_db: null

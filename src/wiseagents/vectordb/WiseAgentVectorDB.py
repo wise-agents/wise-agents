@@ -2,10 +2,13 @@ from abc import ABC, abstractmethod
 from typing import Callable, Optional, List
 
 from wiseagents.WiseAgentVectorDB import Document
+import yaml
 
 
-class WiseAgentVectorDB(ABC):
+class WiseAgentVectorDB(yaml.YAMLObject):
 
+    yaml_tag = u'!WiseAgentVectorDB'
+    
     @abstractmethod
     def create_collection(self, collection_name: str, embedding_function: Optional[Callable] = None,
                           metadata: Optional[dict] = None):

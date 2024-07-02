@@ -12,7 +12,9 @@ dependencies = [
     "langchain-openai==0.1.7",
     "langchain-postgres==0.0.9",
     "pydantic==2.7.4",
-    "sentence-transformers==3.0.1"
+    "sentence-transformers==3.0.1",
+    "streamlit==1.36.0",
+    "pyyaml==6.0.1",
 ]
 
 [project.optional-dependencies]
