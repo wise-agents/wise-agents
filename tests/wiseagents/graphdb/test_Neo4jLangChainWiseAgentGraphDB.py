@@ -1,10 +1,6 @@
 import os
 
-from wiseagents.graphdb.Entity import Entity
-from wiseagents.graphdb.GraphDocument import GraphDocument
-from wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB import Neo4jLangChainWiseAgentGraphDB
-from wiseagents.graphdb.Relationship import Relationship
-from wiseagents.graphdb.Source import Source
+from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
 
 
 def set_env(monkeypatch):

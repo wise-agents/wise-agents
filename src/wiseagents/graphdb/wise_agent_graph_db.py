@@ -1,18 +1,74 @@
+import uuid
 from abc import abstractmethod
 from typing import Optional, Any, List
 
-from wiseagents.graphdb.Source import Source
-from wiseagents.graphdb.Entity import Entity
-from wiseagents.graphdb.GraphDocument import GraphDocument
-from wiseagents.graphdb.Relationship import Relationship
+from pydantic import BaseModel, Field
 import yaml
+
+
+class Entity(BaseModel):
+    """
+    An entity (node) in a knowledge graph.
+
+    Attributes:
+        id (str): the unique id for the entity
+        label (Optional[str]): an optional label for the entity
+        metadata (Optional[dict]): optional information about the entity
+    """
+    id: str
+    label: Optional[str] = "entity"
+    metadata: Optional[dict] = Field(default_factory=dict)
+
+
+class Relationship(BaseModel):
+    """
+    A relationship (edge) in a knowledge graph.
+
+    Attributes:
+        label (str): a description of the relationship
+        source (Entity): the source entity
+        target (Entity): the target entity
+        metadata (Optional[dict]): optional information about the relationship
+    """
+    label: str
+    source: Entity
+    target: Entity
+    metadata: Optional[dict] = Field(default_factory=dict)
+
+
+class Source(BaseModel):
+    """
+    Information about a source from which entities and relationships have been derived from.
+
+    Attributes:
+        content (str): the content of the source
+        id (str): the optional id associated with the source
+        metadata (Optional[dict]): optional information about the source
+    """
+    content: str
+    id: Optional[str] = str(uuid.uuid4())
+    metadata: Optional[dict] = {}
+
+
+class GraphDocument(BaseModel):
+    """
+    A graph document is a collection of entities and relationships that are part of a knowledge graph.
+
+    Attributes:
+        entities (List[Entity]): the entities in the graph document
+        relationships (List[Relationship]): the relationships in the graph document
+        source (Source): the source that contains the entities and relationships
+    """
+    entities: List[Entity]
+    relationships: List[Relationship]
+    source: Source
 
 
 class WiseAgentGraphDB(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentGraphDB."""
 
     yaml_tag = u'!WiseAgentGraphDB'
-    
+
     @abstractmethod
     def get_schema(self) -> str:
         """
@@ -75,4 +131,3 @@ class WiseAgentGraphDB(yaml.YAMLObject):
             graph_documents (List[GraphDocuments]): the graph documents to insert
         """
         ...
-

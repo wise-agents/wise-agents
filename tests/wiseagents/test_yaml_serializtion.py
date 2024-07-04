@@ -1,5 +1,5 @@
 from wiseagents import WiseAgent
-from wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB import Neo4jLangChainWiseAgentGraphDB
+from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm.LangChainWiseAgentRemoteLLM import LangChainWiseAgentRemoteLLM
 from wiseagents.llm.WiseAgentRemoteLLM import WiseAgentRemoteLLM
 import yaml

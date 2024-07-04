@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 from typing import Optional
 
-from wiseagents.graphdb.WiseAgentGraphDB import WiseAgentGraphDB
-from wiseagents.llm.WiseAgentLLM import WiseAgentLLM
+from wiseagents.graphdb import WiseAgentGraphDB
+from  wiseagents.llm.WiseAgentLLM import WiseAgentLLM
 
 from wiseagents.WiseAgentEvent import WiseAgentEvent
 from wiseagents.WiseAgentMessage import WiseAgentMessage
