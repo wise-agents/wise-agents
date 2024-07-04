@@ -16,6 +16,8 @@ source .venv/bin/activate
 2. Start the llm service (see [model-serving/README.MD](model-serving/README.MD))
 3. From project's root directory run ``pytest``
 4. If you need log enable it running ``pytest --log-cli-level=DEBUG``
+5. If you want to run a single test you can specify the test with -k option: ``pytest -k test_register_agents --log-cli-level=DEBUG``
+6. You can also run all tests contained in a single file with the same option ``pytest -k test_WiseAgentRegistry --log-cli-level=DEBUG``
 
 
 ```
