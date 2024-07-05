@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from wiseagents.graphdb.WiseAgentGraphDB import WiseAgentGraphDB
-from  wiseagents.llm.WiseAgentLLM import WiseAgentLLM
+from wiseagents.llm.WiseAgentLLM import WiseAgentLLM
 
 from wiseagents.WiseAgentEvent import WiseAgentEvent
 from wiseagents.WiseAgentMessage import WiseAgentMessage
@@ -20,6 +20,7 @@ class WiseAgent(yaml.YAMLObject):
         self._llm = llm
         self._vector_db = vector_db
         self._graph_db = graph_db
+        WiseAgentRegistry.register_agent(self) 
     
     def __repr__(self):
         '''Return a string representation of the agent.'''
@@ -123,3 +124,109 @@ class WiseAgent(yaml.YAMLObject):
             WiseAgentMessage: the message to send to another agent
         """
         ...
+
+
+class WiseAgentContext():
+    message_trace : [WiseAgentMessage] = []
+    participants : [WiseAgent] = []
+    
+    def __init__(self, name: str):
+        self._name = name
+        WiseAgentRegistry.register_context(self)
+        
+    @property
+    def name(self) -> str:
+        """Get the name of the context."""
+        return self._name
+    
+    @property
+    def message_trace(self) -> [WiseAgentMessage]:
+        """Get the message trace of the context."""
+        return self.message_trace
+        
+class WiseAgentRegistry:
+
+    """
+    A Registry to get available agents and running contexts
+    """
+    agents : dict[str, WiseAgent] = {}
+    contexts : dict[str, WiseAgentContext] = {}
+    
+    @classmethod
+    def register_agent(cls,agent : WiseAgent):
+        """
+        Register an agent with the registry
+        """
+        cls.agents[agent.name] = agent
+    @classmethod    
+    def register_context(cls, context : WiseAgentContext):
+        """
+        Register a context with the registry
+        """
+        cls.contexts[context.name] = context
+    @classmethod    
+    def get_agents(cls) -> dict [str, WiseAgent]:
+        """
+        Get the list of agents
+        """
+        return cls.agents
+    
+    @classmethod
+    def get_contexts(cls) -> dict [str, WiseAgentContext]:
+        """
+        Get the list of contexts
+        """
+        return cls.contexts
+    
+    @classmethod
+    def get_agent(cls, agent_name: str) -> WiseAgent:
+        """
+        Get the agent with the given name
+        """
+        return cls.agents.get(agent_name) 
+    
+    @classmethod
+    def get_or_create_context(cls, context_name: str) -> WiseAgentContext:
+        """ Get the context with the given name """
+        context = cls.contexts.get(context_name)
+        if context is None:
+            return WiseAgentContext(context_name)
+        else:
+            return context
+        
+    @classmethod
+    def get_context(cls, context_name: str) -> WiseAgentContext:
+        """
+        Get the context with the given name
+        """
+        return cls.contexts.get(context_name)
+    
+    @classmethod
+    def remove_agent(cls, agent_name: str):
+        """
+        Remove the agent from the registry
+        """
+        cls.agents.pop(agent_name)
+        
+    @classmethod
+    def remove_context(cls, context_name: str):
+        """
+        Remove the context from the registry
+        """
+        cls.contexts.pop(context_name)
+    
+    @classmethod
+    def clear_agents(cls):
+        """
+        Clear all agents from the registry
+        """
+        cls.agents.clear()
+    
+    @classmethod
+    def clear_contexts(cls):
+        """
+        Clear all contexts from the registry
+        """
+        cls.contexts.clear()
+        
+        

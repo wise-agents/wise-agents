@@ -1,4 +1,4 @@
-from wiseagents.WiseAgent import WiseAgent
+from wiseagents import WiseAgent
 from wiseagents.llm.LangChainWiseAgentRemoteLLM import LangChainWiseAgentRemoteLLM
 from wiseagents.llm.WiseAgentRemoteLLM import WiseAgentRemoteLLM
 import yaml
