@@ -1,6 +1,6 @@
-import WiseAgentLLM
+import wiseagents.llm.wise_agent_LLM as wise_agent_LLM
 
-class WiseAgentEmbeddedLLM(WiseAgentLLM):
+class WiseAgentEmbeddedLLM(wise_agent_LLM):
     """Extends WiseAgentLLM to support local execution of WiseAgentLLM on the local machine."""
         
     def __init__(self):

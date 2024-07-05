@@ -1,7 +1,7 @@
 from wiseagents import WiseAgent
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
-from wiseagents.llm.LangChainWiseAgentRemoteLLM import LangChainWiseAgentRemoteLLM
-from wiseagents.llm.WiseAgentRemoteLLM import WiseAgentRemoteLLM
+from wiseagents.llm.lang_chain_wise_agent_remote_LLM import LangChainWiseAgentRemoteLLM
+from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import yaml
 import logging
 

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from wiseagents.WiseAgentMessageType import WiseAgentMessageType
+from wiseagents.wise_agent_message_type import WiseAgentMessageType
 
 
 class WiseAgentMessage:

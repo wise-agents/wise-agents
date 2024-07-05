@@ -2,9 +2,9 @@
 
 # Import any modules or subpackages here
 
-from wiseagents.WiseAgent import  WiseAgentContext
-from wiseagents.WiseAgent import WiseAgent
-from wiseagents.WiseAgent import WiseAgentRegistry
+from wiseagents.wise_agent import  WiseAgentContext
+from wiseagents.wise_agent import WiseAgent
+from wiseagents.wise_agent import WiseAgentRegistry
 
 # Define any necessary initialization code here
 

@@ -1,6 +1,6 @@
 from wiseagents import WiseAgent
-from wiseagents.llm.LangChainWiseAgentRemoteLLM import LangChainWiseAgentRemoteLLM
-from wiseagents.llm.WiseAgentRemoteLLM import WiseAgentRemoteLLM
+from wiseagents.llm.lang_chain_wise_agent_remote_LLM import LangChainWiseAgentRemoteLLM
+from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 from wiseagents.graphdb import LangChainWiseAgentGraphDB, Neo4jLangChainWiseAgentGraphDB
 import yaml
 import logging, pathlib

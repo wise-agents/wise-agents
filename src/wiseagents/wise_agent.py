@@ -2,11 +2,11 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from wiseagents.graphdb import WiseAgentGraphDB
-from  wiseagents.llm.WiseAgentLLM import WiseAgentLLM
+from  wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 
-from wiseagents.WiseAgentEvent import WiseAgentEvent
-from wiseagents.WiseAgentMessage import WiseAgentMessage
-from wiseagents.vectordb.WiseAgentVectorDB import WiseAgentVectorDB
+from wiseagents.wise_agent_event import WiseAgentEvent
+from wiseagents.wise_agent_message import WiseAgentMessage
+from wiseagents.vectordb.wise_agent_vectorDB import WiseAgentVectorDB
 import yaml
 
 
