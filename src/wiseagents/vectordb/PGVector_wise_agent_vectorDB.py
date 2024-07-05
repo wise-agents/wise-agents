@@ -2,8 +2,8 @@ from typing import Optional, List, Callable
 
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_postgres import PGVector
-from wiseagents.vectordb.Document import Document
-from wiseagents.vectordb.WiseAgentVectorDB import WiseAgentVectorDB
+from wiseagents.vectordb.document import Document
+from wiseagents.vectordb.wise_agent_vectorDB import WiseAgentVectorDB
 
 
 class PGVectorWiseAgentVectorDB(WiseAgentVectorDB):

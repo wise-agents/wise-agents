@@ -1,4 +1,4 @@
-from wiseagents.llm.WiseAgentRemoteLLM import WiseAgentRemoteLLM
+from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import requests
 from langchain_openai import ChatOpenAI
 from langchain.chains import LLMChain

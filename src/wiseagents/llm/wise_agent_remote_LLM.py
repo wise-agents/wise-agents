@@ -1,4 +1,4 @@
-from wiseagents.llm.WiseAgentLLM import WiseAgentLLM
+from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 from abc import abstractmethod
 
 
