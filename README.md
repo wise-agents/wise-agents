@@ -12,7 +12,7 @@ source .venv/bin/activate
 
 # How to run test
 
-1. Run ``pip install .[test]``
+1. Run ``pip install -e '.[test]'``
 2. Start the llm service (see [model-serving/README.MD](model-serving/README.MD))
 3. From project's root directory run ``pytest``
 4. If you need log enable it running ``pytest --log-cli-level=DEBUG``
