@@ -2,7 +2,7 @@ from typing import Optional, List, Callable
 
 from langchain_community.embeddings import HuggingFaceEmbeddings
 from langchain_postgres import PGVector
-from wiseagents.vectordb import Document
+from wiseagents.vectordb.Document import Document
 from wiseagents.vectordb.WiseAgentVectorDB import WiseAgentVectorDB
 
 

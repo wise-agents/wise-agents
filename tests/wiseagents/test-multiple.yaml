@@ -1,7 +1,9 @@
 ---
 !wiseagents.WiseAgent
 _description: This is a test agent
-_graph_db: null
+_graph_db: !Neo4jLangChainWiseAgentGraphDB
+  _url: bolt://localhost:7687
+  _refresh_graph_schema: False
 _llm: !LangChainWiseAgentRemoteLLM
   _model_name: Phi-3-mini-4k-instruct-q4.gguf
   _remote_address: http://localhost:8001/v1
@@ -11,7 +13,9 @@ _vector_db: null
 ---
 !wiseagents.WiseAgent
 _description: This is another test agent
-_graph_db: null
+_graph_db: !Neo4jLangChainWiseAgentGraphDB
+  _url: bolt://localhost:7687
+  _refresh_graph_schema: False
 _llm: !OpenaiAPIWiseAgentLLM
   _model_name: Phi-3-mini-4k-instruct-q4.gguf
   _remote_address: http://localhost:8001/v1
