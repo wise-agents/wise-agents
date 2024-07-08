@@ -1,13 +1,40 @@
 import os
 
+import pytest
+
 from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
+
+
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    yield
+
+    # Delete all relationships and entities from graph_db
+    original_neo4j_username = os.environ.get("NEO4J_USERNAME")
+    os.environ["NEO4J_USERNAME"] = "neo4j"
+    original_neo4j_password = os.environ.get("NEO4J_PASSWORD")
+    os.environ["NEO4J_PASSWORD"] = "neo4jpassword"
+    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    graph_db.query("MATCH (n)-[r]-() DELETE r")
+    graph_db.query("MATCH (n) DELETE n")
+    graph_db.close()
+
+    # Clean up environment variables
+    if original_neo4j_username is None:
+        del os.environ["NEO4J_USERNAME"]
+    else:
+        os.environ["NEO4J_USERNAME"] = original_neo4j_username
+    if original_neo4j_password is None:
+        del os.environ["NEO4J_PASSWORD"]
+    else:
+        os.environ["NEO4J_PASSWORD"] = original_neo4j_password
 
 
 def set_env(monkeypatch):
     """
         This test requires a running Neo4j instance on bolt://localhost:7687. The required
         graph database can be started using the run_graphdb.sh script.
-        """
+    """
     monkeypatch.setenv("NEO4J_USERNAME", "neo4j")
     assert os.environ.get("NEO4J_USERNAME") == "neo4j"
     monkeypatch.setenv("NEO4J_PASSWORD", "neo4jpassword")
@@ -17,14 +44,13 @@ def set_env(monkeypatch):
 def test_insert_graph_documents_and_query(monkeypatch):
     set_env(monkeypatch)
     graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
-
     assert graph_db.get_schema() == ""
 
     page_content = "The CN Tower is located in Toronto, a major city in Ontario. Ontario is a province in Canada."
-    landmark = Entity(id="CN Tower")
-    city = Entity(id="Toronto")
-    province = Entity(id="Ontario")
-    country = Entity(id="Canada")
+    landmark = Entity(id="1", metadata={"name": "CN Tower", "type": "landmark"})
+    city = Entity(id="2", metadata={"name": "Toronto", "type": "city"})
+    province = Entity(id="3", metadata={"name": "Ontario", "type": "province"})
+    country = Entity(id="4", metadata={"name": "Canada", "type": "country"})
     graph_document = GraphDocument(entities=[landmark, city, province, country],
                                    relationships=[Relationship(source=landmark, target=city, label="is located in"),
                                                   Relationship(source=city, target=province,
@@ -36,13 +62,19 @@ def test_insert_graph_documents_and_query(monkeypatch):
     graph_db.refresh_schema()
     assert graph_db.get_schema() != ""
 
-    result = graph_db.query("MATCH (n:entity {id: 'CN Tower'})"
+    result = graph_db.query("MATCH (n:entity {name: 'CN Tower'})"
                             "-[:IS_LOCATED_IN]->(city:entity)"
                             "-[:IS_IN_THE_PROVINCE_OF]->(province:entity)"
                             "-[:IS_IN_THE_COUNTRY_OF]->(country:entity)"
-                            "RETURN country.id AS Country")
-
+                            "RETURN country.name AS Country")
     assert result == [{'Country': 'Canada'}]
+
+    graph_db.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db")
+    documents = graph_db.query_vector_db("tall building", 1)
+    assert "CN Tower" in documents[0].content
+
+    documents = graph_db.query_vector_db("province", 1)
+    assert "Ontario" in documents[0].content
 
     graph_db.close()
 
@@ -51,16 +83,13 @@ def test_insert_entity_and_query(monkeypatch):
     set_env(monkeypatch)
     graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
 
-    assert graph_db.get_schema() == ""
-
     page_content = ""
-    graph_db.insert_entity(Entity(id="USA"), Source(content=page_content))
+    graph_db.insert_entity(Entity(id="5", metadata={"name": "USA", "type": "country"}), Source(content=page_content))
     graph_db.refresh_schema()
     assert graph_db.get_schema() != ""
 
-    result = graph_db.query("MATCH (c:entity {id: 'USA'})"
-                            "RETURN c.id AS Country")
-
+    result = graph_db.query("MATCH (c:entity {name: 'USA'})"
+                            "RETURN c.name AS Country")
     assert result == [{'Country': 'USA'}]
 
     graph_db.close()
@@ -70,18 +99,24 @@ def test_insert_relationship_and_query(monkeypatch):
     set_env(monkeypatch)
     graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
 
-    assert graph_db.get_schema() == ""
-
     page_content = "Ottawa is the capital of Canada."
-    capital_of = Relationship(label="is_the_capital_of", source=Entity(id="Ottawa"), target=Entity(id="Canada"))
+    country = Entity(id="4", metadata={"name": "Canada", "type": "country"})
+    graph_db.insert_entity(country, Source(content=page_content))
+    capital = Entity(id="6", metadata={"name": "Ottawa", "type": "city"})
+    graph_db.insert_entity(capital, Source(content=page_content))
+
+    capital_of = Relationship(label="is_the_capital_of", source=capital, target=country)
     graph_db.insert_relationship(capital_of, Source(content=page_content))
     graph_db.refresh_schema()
     assert graph_db.get_schema() != ""
 
-    result = graph_db.query("MATCH (c:entity {id: 'Ottawa'})"
+    result = graph_db.query("MATCH (c:entity {name: 'Ottawa'})"
                             "-[:IS_THE_CAPITAL_OF]->(country:entity)"
-                            "RETURN country.id AS Country")
-
+                            "RETURN country.name AS Country")
     assert result == [{'Country': 'Canada'}]
+
+    graph_db.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db")
+    documents = graph_db.query_vector_db("capital", 1)
+    assert "Ottawa" in documents[0].content
 
     graph_db.close()

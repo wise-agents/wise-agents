@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import Callable, Optional, List
 
-from wiseagents.WiseAgentVectorDB import Document
+from wiseagents.vectordb.document import Document
 import yaml
 
 

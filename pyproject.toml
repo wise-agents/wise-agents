@@ -9,6 +9,7 @@ requires-python = ">=3.8.1,<4.0"
 dependencies = [
     "langchain==0.2.5",
     "langchain-community==0.2.5",
+    "langchain-huggingface==0.0.3",
     "langchain-openai==0.1.7",
     "langchain-postgres==0.0.9",
     "neo4j==5.21",
