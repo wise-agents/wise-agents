@@ -1,17 +1,26 @@
-from wiseagents import WiseAgent
+from wiseagents import WiseAgent, WiseAgentTransport
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm.lang_chain_wise_agent_remote_LLM import LangChainWiseAgentRemoteLLM
 from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import yaml
 import logging
 
+class DummyTransport(WiseAgentTransport):
+    def __init__(self):
+        pass
+    def send_message(self, message, destination):
+        pass
+    def start(self):
+        pass
+    def stop(self):
+        pass
 
 def test_serialize_wise_agent(monkeypatch):
     # Create a WiseAgent object
     agent_llm = LangChainWiseAgentRemoteLLM(system_message="Answer my greeting saying Hello and my name",
                                             model_name="Phi-3-mini-4k-instruct-q4.gguf")
     agent_graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
-    agent = WiseAgent(name="Agent1", description="This is a test agent", llm=agent_llm, graph_db=agent_graph_db)
+    agent = WiseAgent(name="Agent1", description="This is a test agent", transport=DummyTransport(), llm=agent_llm, graph_db=agent_graph_db)
 
     # Serialize the WiseAgent object to YAML
     serialized_agent = yaml.dump(agent)
@@ -41,7 +50,7 @@ def test_using_deserialized_agent(monkeypatch):
     agent_llm = LangChainWiseAgentRemoteLLM(system_message="Answer my greeting saying Hello and my name",
                                             model_name="Phi-3-mini-4k-instruct-q4.gguf")
     agent_graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
-    agent = WiseAgent(name="Agent1", description="This is a test agent", llm=agent_llm, graph_db=agent_graph_db)
+    agent = WiseAgent(name="Agent1", description="This is a test agent", transport=DummyTransport(), llm=agent_llm, graph_db=agent_graph_db)
 
     # Serialize the WiseAgent object to YAML
     serialized_agent = yaml.dump(agent)
