@@ -1,16 +1,18 @@
+import os
 from time import sleep
 import logging
 from  wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
 from wiseagents.transports import StompWiseAgentTransport
 
 class WiseAgentDoingNothing(WiseAgent):
+     
     request_received : WiseAgentMessage = None
     response_received : WiseAgentMessage = None
     
     def __init__(self, name: str, description: str):
         self._name = name
         self._description = description
-        transport = StompWiseAgentTransport(host='localhost', port=61616, username='artemis', password='artemis', agent_name=self.name)
+        transport = StompWiseAgentTransport(host='localhost', port=61616, agent_name=self.name)
         super().__init__(name, description, transport, None, None, None)
         transport.start()
         
@@ -35,6 +37,8 @@ class WiseAgentDoingNothing(WiseAgent):
 
 
 def test_send_message_to_agent_and_get_response():
+    os.environ['STOMP_USER'] = 'artemis'
+    os.environ['STOMP_PASSWORD'] = 'artemis'
     agent1 = WiseAgentDoingNothing('Agent1', 'Agent1')
     agent2 = WiseAgentDoingNothing('Agent2', 'Agent2')
     

@@ -1,4 +1,4 @@
-from wiseagents import WiseAgent, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentTransport
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm.lang_chain_wise_agent_remote_LLM import LangChainWiseAgentRemoteLLM
 from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
@@ -8,7 +8,10 @@ import logging
 class DummyTransport(WiseAgentTransport):
     def __init__(self):
         pass
-    def send_message(self, message, destination):
+    def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
+        return super().send_request(message, dest_agent_name)
+        pass
+    def send_response(self, message: WiseAgentMessage, dest_agent_name: str):
         pass
     def start(self):
         pass

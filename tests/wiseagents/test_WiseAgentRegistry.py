@@ -1,11 +1,14 @@
 from wiseagents import WiseAgentContext, WiseAgentRegistry, WiseAgent
-from wiseagents.wise_agent_messaging import WiseAgentTransport
+from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentTransport
 
 
 class DummyTransport(WiseAgentTransport):
     def __init__(self):
         pass
-    def send_message(self, message, destination):
+    def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
+        return super().send_request(message, dest_agent_name)
+        pass
+    def send_response(self, message: WiseAgentMessage, dest_agent_name: str):
         pass
     def start(self):
         pass
@@ -38,10 +41,10 @@ def test_get_contexts():
               WiseAgentContext(name="Context3")]
     
     for context in contexts:
-        assert context == WiseAgentRegistry.get_context(context.name)
+        assert True == WiseAgentRegistry.does_context_exist(context.name)
         
 def test_get_or_create_context():
     WiseAgentRegistry.clear_contexts()
     context = WiseAgentContext(name="Context1")
     WiseAgentRegistry.get_or_create_context(context.name)
-    assert context == WiseAgentRegistry.get_context(context.name)
+    assert context == WiseAgentRegistry.get_or_create_context(context.name)

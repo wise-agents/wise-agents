@@ -1,4 +1,5 @@
 import logging
+import os
 
 import stomp.utils
 from wiseagents import WiseAgentMessage,WiseAgentTransport
@@ -42,26 +43,28 @@ class StompWiseAgentTransport(WiseAgentTransport):
     yaml_tag = u'!wiseagents.transport.StompWiseAgentTransport'
     conn : stomp.Connection = None
     conn2 : stomp.Connection = None
-    def __init__(self, host: str, port: int, username: str, password: str, agent_name: str):
+    def __init__(self, host: str, port: int, agent_name: str):
         self._host = host
         self._port = port
-        self._username = username
-        self._password = password
+        self._agent_name = agent_name
         self._request_queue =  '/queue/request/' + agent_name
         self._response_queue =  '/queue/response/' + agent_name
         
 
     def __repr__(self) -> str:
-        return super().__repr__() + f"host={self._host}, port={self._port}, username={self._username}, password={self._password}, destination={self.destination}"
+        return super().__repr__() + f"host={self._host}, port={self._port}, agent_name={self._agent_name}"
 
     def __getstate__(self) -> object:
         '''Return the state of the transport. Removing the instance variable chain to avoid it is serialized/deserialized by pyyaml.'''
         state = self.__dict__.copy()
         del state['conn']
         del state['conn2']
-        del state['_message_receiver']
+        del state['_request_receiver']
+        del state['_response_receiver']
         del state['_event_receiver']
         del state['_error_receiver']
+        del state['_request_queue']
+        del state['_response_queue']
         return state 
 
 
@@ -69,15 +72,13 @@ class StompWiseAgentTransport(WiseAgentTransport):
         hosts = [(self.host, self.port)] 
         self.conn = stomp.Connection(host_and_ports=hosts)
         self.conn.set_listener('WiseAgentRequestTopicListener', WiseAgentRequestQueueListener(self))
-        #self.conn.start()
-        self.conn.connect(self.username, self.password, wait=True)
-        #self.conn.connect(self.username, self.password, wait=True, host=self.host, port=self.port)
+        self.conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
         self.conn.subscribe(destination=self.request_queue, id=id(self), ack='auto')
         
         self.conn2 = stomp.Connection(host_and_ports=hosts)
         
         self.conn2.set_listener('WiseAgentResponseQueueListener', WiseAgentResponseQueueListener(self))
-        self.conn2.connect(self.username, self.password, wait=True)
+        self.conn2.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
         
         self.conn2.subscribe(destination=self.response_queue, id=id(self) + 1 , ack='auto')
 
@@ -99,9 +100,9 @@ class StompWiseAgentTransport(WiseAgentTransport):
     def stop(self):
         if self.conn is not None:
             #unsubscribe from the request topic
-            self.conn.unsubscribe(destination=self._request_topic)
+            self.conn.unsubscribe(destination=self.request_queue)
             #unsubscribe from the response queue
-            self.conn2.unsubscribe(destination=self._response_queue)
+            self.conn2.unsubscribe(destination=self.response_queue)
             # Disconnect from the STOMP server
             self.conn.disconnect()
             self.conn2.disconnect()
@@ -113,12 +114,6 @@ class StompWiseAgentTransport(WiseAgentTransport):
     @property
     def port(self) -> int:
         return self._port
-    @property
-    def username(self) -> str:
-        return self._username
-    @property
-    def password(self) -> str:
-        return self._password
     @property
     def request_queue(self) -> str:
         return self._request_queue
