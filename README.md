@@ -21,4 +21,9 @@ source .venv/bin/activate
 7. Note the name of the file could be partial so for example ``pytest -k test_yaml --log-cli-level=DEBUG`` will run test contained in ``tests/wiseagents/test_yaml_deserializer.py`` and ``tests/wiseagents/test_yaml_serialization.py)
 
 
-```
+
+# How to run the chatbot
+1. Run ``pip install .``
+2. Start the llm service (see [model-serving/README.MD](model-serving/README.MD))
+2. Start artemis service (see [artemis/README.MD])(artemis/README.MD)
+3. run the CLI ``python src/wiseagents/cli/wise-agent-cli.py``

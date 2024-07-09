@@ -1,7 +1,9 @@
 from abc import ABC, abstractmethod
+import logging
 from typing import Optional
 
 from wiseagents.graphdb import WiseAgentGraphDB
+from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
 from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 
 from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentTransport, WiseAgentEvent
@@ -19,9 +21,16 @@ class WiseAgent(yaml.YAMLObject):
         self._llm = llm
         self._vector_db = vector_db
         self._graph_db = graph_db
-        self.transport = transport
+        self._transport = transport
+        self.startAgent()
+        
+    def startAgent(self):
         self.transport.set_call_backs(self.process_request, self.process_event, self.process_error, self.process_response)
+        self.transport.start()
         WiseAgentRegistry.register_agent(self) 
+    def stopAgent(self):
+        self.transport.stop()
+        WiseAgentRegistry.remove_agent(self.name)
     
     def __repr__(self):
         '''Return a string representation of the agent.'''
@@ -51,6 +60,11 @@ class WiseAgent(yaml.YAMLObject):
     def graph_db(self) -> Optional[WiseAgentGraphDB]:
         """Get the graph DB associated with the agent."""
         return self._graph_db
+    
+    @property
+    def transport(self) -> WiseAgentTransport:
+        """Get the transport associated with the agent."""
+        return self._transport
     
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
         message.sender = self.name

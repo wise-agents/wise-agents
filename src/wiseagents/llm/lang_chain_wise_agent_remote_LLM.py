@@ -47,7 +47,7 @@ class LangChainWiseAgentRemoteLLM(WiseAgentRemoteLLM):
         return memory
 
    
-    def process(self, message):
+    def process(self, message: str):
         print(f"Executing WiseAgentLLM on remote machine at {WiseAgentRemoteLLM.remote_address}")
         buffer = self.memory
         if (self.chain is None):

@@ -19,6 +19,6 @@ class WiseAgentRemoteLLM(WiseAgentLLM):
         return self._remote_address
     
     @abstractmethod
-    def process(self, message):
+    def process(self, message: str):
         ...
     

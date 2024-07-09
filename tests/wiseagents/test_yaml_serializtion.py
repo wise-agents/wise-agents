@@ -5,6 +5,8 @@ from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import yaml
 import logging
 
+from wiseagents.transports.stomp import StompWiseAgentTransport
+
 class DummyTransport(WiseAgentTransport):
     def __init__(self):
         pass
@@ -34,7 +36,7 @@ def test_serialize_wise_agent(monkeypatch):
     # Assert that the serialized agent is a string
     assert isinstance(serialized_agent, str)
     logging.debug(serialized_agent)
-
+    
     # Assert that the serialized agent can be deserialized back to a WiseAgent object
     deserialized_agent = yaml.load(serialized_agent, Loader=yaml.Loader)
     assert isinstance(deserialized_agent, WiseAgent)
