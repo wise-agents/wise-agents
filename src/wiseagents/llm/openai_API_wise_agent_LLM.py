@@ -29,7 +29,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     
    
     def process(self, message):
-        print(f"Executing WiseAgentLLM on remote machine at {WiseAgentRemoteLLM.remote_address}")
+        print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
         if (self.client is None):
             self.connect()
         messages = []
