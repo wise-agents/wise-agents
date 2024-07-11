@@ -46,7 +46,7 @@ class Source(BaseModel):
         metadata (Optional[dict]): optional information about the source
     """
     content: str
-    id: Optional[str] = str(uuid.uuid4())
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
     metadata: Optional[dict] = {}
 
 
