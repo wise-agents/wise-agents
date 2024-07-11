@@ -6,3 +6,4 @@
 
 # Optionally, you can define __all__ to specify the public interface of the package
 # __all__ = ['module1', 'module2', 'subpackage']
+from .document import Document

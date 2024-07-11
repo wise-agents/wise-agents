@@ -1,7 +1,7 @@
 import uuid
-from typing import Union, Optional
+from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class Document(BaseModel):
@@ -14,4 +14,4 @@ class Document(BaseModel):
     """
     content: str
     id: Optional[str] = str(uuid.uuid4())
-    metadata: Optional[dict] = {}
+    metadata: Optional[dict] = Field(default_factory=dict)
