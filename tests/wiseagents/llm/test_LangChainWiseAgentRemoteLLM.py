@@ -1,5 +1,5 @@
 import pytest
-from wiseagents.llm.LangChainWiseAgentRemoteLLM import LangChainWiseAgentRemoteLLM
+from wiseagents.llm.lang_chain_wise_agent_remote_LLM import LangChainWiseAgentRemoteLLM
 
   
 def test_method1():
