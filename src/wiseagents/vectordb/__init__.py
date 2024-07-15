@@ -7,6 +7,6 @@
 # Optionally, you can define __all__ to specify the public interface of the package
 # __all__ = ['module1', 'module2', 'subpackage']
 from .wise_agent_vector_db import Document, WiseAgentVectorDB
-from .lang_chain_wise_agent_vector_db import LangChainWiseAgentVectorDB, PGVectorWiseAgentVectorDB
+from .lang_chain_wise_agent_vector_db import LangChainWiseAgentVectorDB, PGVectorLangChainWiseAgentVectorDB
 
-__all__ = ['Document', 'WiseAgentVectorDB', 'LangChainWiseAgentVectorDB', 'PGVectorWiseAgentVectorDB']
+__all__ = ['Document', 'WiseAgentVectorDB', 'LangChainWiseAgentVectorDB', 'PGVectorLangChainWiseAgentVectorDB']
