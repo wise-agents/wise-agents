@@ -7,7 +7,7 @@ from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
 from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 
 from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentTransport, WiseAgentEvent
-from wiseagents.vectordb.wise_agent_vectorDB import WiseAgentVectorDB
+from wiseagents.vectordb import WiseAgentVectorDB
 import yaml
 
 

@@ -5,6 +5,7 @@ from wiseagents.graphdb import LangChainWiseAgentGraphDB, Neo4jLangChainWiseAgen
 import yaml
 import logging, pathlib
 
+
 def test_using_deserialized_agent():
     # Create a WiseAgent object
     with open(pathlib.Path().resolve() / "tests/wiseagents/test.yaml") as stream:
@@ -13,19 +14,23 @@ def test_using_deserialized_agent():
         except yaml.YAMLError as exc:
             print(exc)
     # Assert that the serialized agent can be deserialized back to a WiseAgent object
-    
+
     assert isinstance(deserialized_agent, WiseAgent)
     assert deserialized_agent.name == "Agent1"
     assert deserialized_agent.description == "This is a test agent"
     assert deserialized_agent.llm.system_message == "Answer my greeting saying Hello and my name"
-    assert deserialized_agent.llm.model_name =="Phi-3-mini-4k-instruct-q4.gguf"
+    assert deserialized_agent.llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
     assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
     logging.debug(deserialized_agent)
     response = deserialized_agent.llm.process("Hello my name is Stefano")
     assert response.content.__len__() > 0
     assert deserialized_agent.graph_db.url == "bolt://localhost:7687"
     assert not deserialized_agent.graph_db.refresh_graph_schema
-    
+    assert deserialized_agent.graph_db.embedding_model_name == "all-MiniLM-L6-v2"
+    assert deserialized_agent.vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
+    assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
+
+
 def test_using_multiple_deserialized_agents():
     # Create a WiseAgent object
     deserialized_agent = []
@@ -37,28 +42,30 @@ def test_using_multiple_deserialized_agents():
             print(exc)
     # Assert that the serialized agent can be deserialized back to a WiseAgent object
     logging.debug(deserialized_agent)
-    
+
     #assert isinstance(deserialized_agent[0], WiseAgent)
     assert deserialized_agent[0].name == "Agent1"
     assert deserialized_agent[0].description == "This is a test agent"
     assert deserialized_agent[0].llm.system_message == "Answer my greeting saying Hello and my name"
-    assert deserialized_agent[0].llm.model_name =="Phi-3-mini-4k-instruct-q4.gguf"
+    assert deserialized_agent[0].llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
     assert deserialized_agent[0].llm.remote_address == "http://localhost:8001/v1"
     response = deserialized_agent[0].llm.process("Hello my name is Stefano")
     assert response.content.__len__() > 0
     assert deserialized_agent[0].graph_db.url == "bolt://localhost:7687"
     assert not deserialized_agent[0].graph_db.refresh_graph_schema
-    
+    assert deserialized_agent[0].graph_db.embedding_model_name == "all-MiniLM-L6-v2"
+    assert deserialized_agent[0].vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
+    assert deserialized_agent[0].vector_db.embedding_model_name == "all-MiniLM-L6-v2"
     logging.debug(deserialized_agent[1])
-    
+
     assert isinstance(deserialized_agent[1], WiseAgent)
     assert deserialized_agent[1].name == "Agent2"
     assert deserialized_agent[1].description == "This is another test agent"
     assert deserialized_agent[1].llm.system_message == "Answer my greeting saying Hello and my name"
-    assert deserialized_agent[1].llm.model_name =="Phi-3-mini-4k-instruct-q4.gguf"
+    assert deserialized_agent[1].llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
     assert deserialized_agent[1].llm.remote_address == "http://localhost:8001/v1"
     response = deserialized_agent[1].llm.process("Hello my name is Stefano")
     assert response.content.__len__() > 0
     assert deserialized_agent[1].graph_db.url == "bolt://localhost:7687"
     assert not deserialized_agent[1].graph_db.refresh_graph_schema
-    
+    assert deserialized_agent[1].vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
