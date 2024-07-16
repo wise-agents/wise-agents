@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from typing import Callable, Optional, List
 
 from langchain_community.graphs import Neo4jGraph
@@ -9,17 +10,23 @@ from langchain_huggingface import HuggingFaceEmbeddings
 from wiseagents.vectordb import Document
 
 from .wise_agent_graph_db import Entity, Source, GraphDocument, Relationship, WiseAgentGraphDB
+from ..constants import DEFAULT_EMBEDDING_MODEL_NAME
 
 
 class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
 
-    def __init__(self, embedding_model_name: Optional[str] = None):
+    def __init__(self, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
         self._embedding_model_name = embedding_model_name
-        if self._embedding_model_name is None:
-            # default model will be used
-            self._embedding_function = HuggingFaceEmbeddings()
-        else:
-            self._embedding_function = HuggingFaceEmbeddings(model_name=embedding_model_name)
+        self._embedding_function = None
+
+    @property
+    def embedding_model_name(self):
+        return self._embedding_model_name
+
+    def get_embedding_function(self):
+        if self._embedding_function is None:
+            self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
+        return self._embedding_function
 
     def convert_to_lang_chain_node(self, entity: Entity) -> Node:
         return Node(id=entity.id, type=entity.label, properties=entity.metadata)
@@ -40,12 +47,41 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
     def convert_to_lang_chain_document(self, source: Source) -> LangChainDocument:
         return LangChainDocument(id=source.id, page_content=source.content, metadata=source.metadata)
 
+    @abstractmethod
+    def get_schema(self) -> str:
+        ...
+
+    @abstractmethod
+    def refresh_schema(self):
+        ...
+
+    @abstractmethod
+    def query(self, query: str, params: Optional[dict] = None):
+        ...
+
+    @abstractmethod
+    def insert_entity(self, entity: Entity, source: Source):
+        ...
+
+    @abstractmethod
+    def insert_relationship(self, relationship: Relationship, source: Source):
+        ...
+
+    @abstractmethod
+    def insert_graph_documents(self, graph_documents: List[GraphDocument]):
+        ...
+
+    @abstractmethod
+    def create_vector_db_from_graph_db(self, properties: List[str], collection_name: str,
+                                       entity_label: Optional[str] = "entity"):
+        ...
+
 
 class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     yaml_tag = u'!Neo4jLangChainWiseAgentGraphDB'
 
     def __init__(self, url: Optional[str] = None, refresh_graph_schema: Optional[bool] = True,
-                 embedding_model_name: Optional[str] = None):
+                 embedding_model_name: Optional[str] = "all-mpnet-base-v2"):
         """Neo4jGraph will obtain the username, password, and database name to be used from
         the NEO4J_USERNAME, NEO4J_PASSWORD, and NEO4J_DATABASE environment variables."""
         super().__init__(embedding_model_name)
@@ -74,10 +110,6 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     @property
     def refresh_graph_schema(self):
         return self._refresh_graph_schema
-
-    @property
-    def embedding_model_name(self):
-        return self._embedding_model_name
 
     def connect(self):
         if self._neo4j_graph_db is None:
@@ -115,7 +147,7 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     def create_vector_db_from_graph_db(self, properties: List[str], collection_name: str,
                                        entity_label: Optional[str] = "entity"):
         self.connect()
-        self._neo4j_vector_db = Neo4jVector.from_existing_graph(embedding=self._embedding_function,
+        self._neo4j_vector_db = Neo4jVector.from_existing_graph(embedding=self.get_embedding_function(),
                                                                 node_label=entity_label,
                                                                 embedding_node_property="embedding",
                                                                 text_node_properties=properties,

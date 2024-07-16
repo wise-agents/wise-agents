@@ -20,7 +20,7 @@ def set_env(monkeypatch):
 def test_create_and_delete_collection(monkeypatch):
     set_env(monkeypatch)
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
-    pg_vector_db.create_collection("test_collection")
+    pg_vector_db.get_or_create_collection("test_collection")
     assert "test_collection" in pg_vector_db._vector_dbs
     pg_vector_db.delete_collection("test_collection")
     assert "test_collection" not in pg_vector_db._vector_dbs
@@ -33,7 +33,7 @@ def test_insert_documents_and_query(monkeypatch):
     try:
         # should be no matches initially
         documents = pg_vector_db.query(["tall building"], "test_collection", 1)
-        assert documents is None
+        assert len(documents[0]) == 0
 
         pg_vector_db.insert_documents([Document(id="1", content="The CN Tower is located in Toronto.")],
                                       "test_collection")
@@ -68,7 +68,7 @@ def test_insert_or_update_documents_and_query(monkeypatch):
     try:
         # should be no matches initially
         documents = pg_vector_db.query(["landmark"], "test_collection", 1)
-        assert documents is None
+        assert len(documents[0]) == 0
 
         pg_vector_db.insert_or_update_documents([Document(id="2", content="The Eiffel Tower is located in France.")],
                                                 "test_collection")
