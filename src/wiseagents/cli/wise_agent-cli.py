@@ -34,7 +34,7 @@ while True:
         for msg in WiseAgentRegistry.get_or_create_context('default').message_trace:
             print(msg)
     if  (user_input == '/exit' or user_input == '/x'):
-            break
+        raise SystemExit(0)
     if (user_input == '/load-agents' or user_input == '/l'):
         file_path = input("Enter the file path (ENTER for default src/wiseagents/cli/test-multiple.yaml): ")
         if not file_path:
