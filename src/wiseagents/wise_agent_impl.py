@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Callable, Optional
 
@@ -116,12 +117,14 @@ class RAGWiseAgent(WiseAgent):
     def process_request(self, request: WiseAgentMessage):
         retrieved_documents = self.vector_db.query([request.message], self.collection_name, 1)
         context = "\n".join([document.content for document in retrieved_documents[0]])
-        context_sources = "\n".join([document.metadata["source"] for document in retrieved_documents[0]])
-        prompt = (f"User's question is: {request.message}\n"
-                  f"Context is: {context}\n"
-                  f"The source of the context is: {context_sources}\n\n")
+        prompt = (f"Answer the question based only on the following context:\n{context}\n"
+                  f"Question: {request.message}\n")
         llm_response = self.llm.process(prompt)
-        llm_response_with_sources = f"{llm_response.content}\n\nContext used: {context}\n\nContext sources: {context_sources}"
+
+        source_documents = ""
+        for document in retrieved_documents[0]:
+            source_documents += f"Source Document:\n    Content: {document.content}\n    Metadata: {json.dumps(document.metadata)}\n\n"
+        llm_response_with_sources = f"{llm_response.content}\n\nSource Documents:\n{source_documents}"
         self.send_response(WiseAgentMessage(llm_response_with_sources, self.name), request.sender)
         return True
 
