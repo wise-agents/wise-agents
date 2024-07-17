@@ -23,14 +23,12 @@ class WiseAgentVectorDB(yaml.YAMLObject):
     yaml_tag = u'!WiseAgentVectorDB'
 
     @abstractmethod
-    def create_collection(self, collection_name: str, embedding_function: Optional[Callable] = None):
+    def get_or_create_collection(self, collection_name: str):
         """
-        Create a collection for the vector DB if it doesn't already exist.
+        Get the collection for the vector DB or create it if it doesn't already exist.
 
         Args:
             collection_name (str): the name of the collection
-            embedding_function (Callable): the optional embedding function to use for the collection (or None to use
-            the vector DB's default embedding function)
         """
         ...
 

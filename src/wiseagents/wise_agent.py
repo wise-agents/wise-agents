@@ -15,11 +15,13 @@ class WiseAgent(yaml.YAMLObject):
 
     yaml_tag = u'!wiseagents.WiseAgent'
     def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
-                 vector_db: Optional[WiseAgentVectorDB] = None, graph_db: Optional[WiseAgentGraphDB] = None):
+                 vector_db: Optional[WiseAgentVectorDB] = None, collection_name: Optional[str] = "wise-agent-collection",
+                 graph_db: Optional[WiseAgentGraphDB] = None):
         self._name = name
         self._description = description
         self._llm = llm
         self._vector_db = vector_db
+        self._collection_name = collection_name
         self._graph_db = graph_db
         self._transport = transport
         self.startAgent()
@@ -34,7 +36,8 @@ class WiseAgent(yaml.YAMLObject):
     
     def __repr__(self):
         '''Return a string representation of the agent.'''
-        return f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm}, vector_db={self.vector_db}, graph_db={self.graph_db})"
+        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+                f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db})")
     
     @property
     def name(self) -> str:
@@ -55,7 +58,12 @@ class WiseAgent(yaml.YAMLObject):
     def vector_db(self) -> Optional[WiseAgentVectorDB]:
         """Get the vector DB associated with the agent."""
         return self._vector_db
-    
+
+    @property
+    def collection_name(self) -> str:
+        """Get the vector DB collection name associated with the agent."""
+        return self._collection_name
+
     @property
     def graph_db(self) -> Optional[WiseAgentGraphDB]:
         """Get the graph DB associated with the agent."""
