@@ -17,14 +17,15 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
 
     def __init__(self, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
         self._embedding_model_name = embedding_model_name
-        self._embedding_function = None
+        self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
 
     @property
     def embedding_model_name(self):
         return self._embedding_model_name
 
     def get_embedding_function(self):
-        if self._embedding_function is None:
+        if not hasattr(self, "_embedding_function"):
+            # instances populated from PyYAML won't have this set initially
             self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
         return self._embedding_function
 
@@ -81,7 +82,7 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     yaml_tag = u'!Neo4jLangChainWiseAgentGraphDB'
 
     def __init__(self, url: Optional[str] = None, refresh_graph_schema: Optional[bool] = True,
-                 embedding_model_name: Optional[str] = "all-mpnet-base-v2"):
+                 embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
         """Neo4jGraph will obtain the username, password, and database name to be used from
         the NEO4J_USERNAME, NEO4J_PASSWORD, and NEO4J_DATABASE environment variables."""
         super().__init__(embedding_model_name)
