@@ -23,12 +23,6 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
     def embedding_model_name(self):
         return self._embedding_model_name
 
-    def get_embedding_function(self):
-        if not hasattr(self, "_embedding_function"):
-            # instances populated from PyYAML won't have this set initially
-            self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
-        return self._embedding_function
-
     def convert_to_lang_chain_node(self, entity: Entity) -> Node:
         return Node(id=entity.id, type=entity.label, properties=entity.metadata)
 
@@ -74,7 +68,7 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
 
     @abstractmethod
     def create_vector_db_from_graph_db(self, properties: List[str], collection_name: str,
-                                       entity_label: Optional[str] = "entity"):
+                                       entity_label: Optional[str] = "entity", retrieval_query: str = ""):
         ...
 
 
@@ -103,6 +97,14 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         del state['_neo4j_vector_db']
         del state['_embedding_function']
         return state
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        data = loader.construct_mapping(node, deep=True)
+        url = data.get('_url', None)
+        refresh_graph_schema = data.get('_refresh_graph_schema', True)
+        embedding_model_name = data.get('_embedding_model_name', DEFAULT_EMBEDDING_MODEL_NAME)
+        return cls(url=url, refresh_graph_schema=refresh_graph_schema, embedding_model_name=embedding_model_name)
 
     @property
     def url(self):
@@ -146,16 +148,17 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
                                                   for graph_document in graph_documents])
 
     def create_vector_db_from_graph_db(self, properties: List[str], collection_name: str,
-                                       entity_label: Optional[str] = "entity"):
+                                       entity_label: Optional[str] = "entity", retrieval_query: str = ""):
         self.connect()
-        self._neo4j_vector_db = Neo4jVector.from_existing_graph(embedding=self.get_embedding_function(),
+        self._neo4j_vector_db = Neo4jVector.from_existing_graph(embedding=self._embedding_function,
                                                                 node_label=entity_label,
                                                                 embedding_node_property="embedding",
                                                                 text_node_properties=properties,
                                                                 url=self.url,
-                                                                index_name=collection_name)
+                                                                index_name=collection_name,
+                                                                retrieval_query=retrieval_query)
 
-    def query_vector_db(self, query: str, k: int) -> List[Document]:
+    def query_with_embeddings(self, query: str, k: int) -> List[Document]:
         if self._neo4j_vector_db is None:
             raise ValueError("Vector DB is not initialized. Please call create_vector_db_from_graph_db() first.")
         return [Document(content=doc.page_content, metadata=doc.metadata)

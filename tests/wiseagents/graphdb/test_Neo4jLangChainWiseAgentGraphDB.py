@@ -73,10 +73,10 @@ def test_insert_graph_documents_and_query(monkeypatch):
         assert result == [{'Country': 'Canada'}]
 
         graph_db.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db")
-        documents = graph_db.query_vector_db("tall building", 1)
+        documents = graph_db.query_with_embeddings("tall building", 1)
         assert "CN Tower" in documents[0].content
 
-        documents = graph_db.query_vector_db("province", 1)
+        documents = graph_db.query_with_embeddings("province", 1)
         assert "Ontario" in documents[0].content
     finally:
         graph_db.close()
@@ -122,7 +122,7 @@ def test_insert_relationship_and_query(monkeypatch):
         assert result == [{'Country': 'Canada'}]
 
         graph_db.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db")
-        documents = graph_db.query_vector_db("capital", 1)
+        documents = graph_db.query_with_embeddings("capital", 1)
         assert "Ottawa" in documents[0].content
     finally:
         graph_db.close()
