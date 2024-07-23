@@ -1,6 +1,8 @@
 import os
 
 import pytest
+from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
+
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
 from wiseagents.cli.wise_agent_cli import main
 
@@ -11,7 +13,10 @@ def run_after_all_tests():
     original_postgres_db = set_env_variable("POSTGRES_DB", "postgres")
     original_stomp_user = set_env_variable("STOMP_USER", "artemis")
     original_stomp_password = set_env_variable("STOMP_PASSWORD", "artemis")
+    original_neo4j_username = set_env_variable("NEO4J_USERNAME", "neo4j")
+    original_neo4j_password = set_env_variable("NEO4J_PASSWORD", "neo4jpassword")
 
+    # Vector DB set up
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
     pg_vector_db.delete_collection("wise-agents-collection")
     pg_vector_db.insert_documents([Document(content="The Boston Celtics won the NBA Finals in 2024",
@@ -21,8 +26,34 @@ def run_after_all_tests():
                                    ],
                                   "wise-agents-collection")
 
+    # Graph DB setup
+    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    page_content = "The CN Tower is located in Toronto, a major city in Ontario. Ontario is a province in Canada."
+    landmark = Entity(id="1", metadata={"name": "CN Tower", "type": "landmark"})
+    city = Entity(id="2", metadata={"name": "Toronto", "type": "city"})
+    province = Entity(id="3", metadata={"name": "Ontario", "type": "province"})
+    country = Entity(id="4", metadata={"name": "Canada", "type": "country"})
+    graph_document = GraphDocument(entities=[landmark, city, province, country],
+                                   relationships=[Relationship(source=landmark, target=city, label="is located in"),
+                                                  Relationship(source=city, target=province,
+                                                               label="is in the province of"),
+                                                  Relationship(source=province, target=country,
+                                                               label="is in the country of")],
+                                   source=Source(content=page_content))
+    graph_db.insert_graph_documents([graph_document])
+    #graph_db.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db")
+    graph_db.refresh_schema()
     yield
+
+    # Vector DB clean up
     pg_vector_db.delete_collection("wise-agents-collection")
+
+    # Graph DB clean up
+    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    graph_db.query("MATCH (n)-[r]-() DELETE r")
+    graph_db.query("MATCH (n) DELETE n")
+    graph_db.delete_vector_db()
+    graph_db.close()
 
     # Clean up environment variables
     reset_env_variable("POSTGRES_USER", original_postgres_user)
@@ -30,6 +61,8 @@ def run_after_all_tests():
     reset_env_variable("POSTGRES_DB", original_postgres_db)
     reset_env_variable("STOMP_USER", original_stomp_user)
     reset_env_variable("STOMP_PASSWORD", original_stomp_password)
+    reset_env_variable("NEO4J_USERNAME", original_neo4j_username)
+    reset_env_variable("NEO4J_PASSWORD", original_neo4j_password)
 
 
 def set_env_variable(env_variable: str, value: str) -> str:
@@ -60,8 +93,6 @@ def set_env(monkeypatch):
 
 
 def test_cli_with_rag_agent(monkeypatch, pytestconfig, capsys):
-    project_root = pytestconfig.rootpath
-
     inputs = ['/load-agents', '', '/send', 'RAGWiseAgent1', 'Who won the NBA championship in 2024?', '/exit']
 
     def mock_input(prompt):
@@ -81,3 +112,25 @@ def test_cli_with_rag_agent(monkeypatch, pytestconfig, capsys):
     print(captured.out)
     print(captured.err)
     assert "Boston Celtics" in captured.out
+
+
+def test_cli_with_graph_rag_agent(monkeypatch, pytestconfig, capsys):
+    inputs = ['/load-agents', '', '/send', 'GraphRAGWiseAgent1', 'what country is the tall building located in', '/exit']
+
+    def mock_input(prompt):
+        if inputs:
+            response = inputs.pop(0)
+            print(prompt + response)
+            return response
+        else:
+            raise TimeoutError("No input provided in time or inputs list is empty")
+
+    monkeypatch.setattr('builtins.input', mock_input)
+
+    with pytest.raises(SystemExit):
+        main()
+
+    captured = capsys.readouterr()
+    print(captured.out)
+    print(captured.err)
+    assert "Canada" in captured.out

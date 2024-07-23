@@ -160,7 +160,7 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
 
     def query_with_embeddings(self, query: str, k: int) -> List[Document]:
         if self._neo4j_vector_db is None:
-            raise ValueError("Vector DB is not initialized. Please call create_vector_db_from_graph_db() first.")
+            self.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db
         return [Document(content=doc.page_content, metadata=doc.metadata)
                 for doc in self._neo4j_vector_db.similarity_search(query, k)]
 
