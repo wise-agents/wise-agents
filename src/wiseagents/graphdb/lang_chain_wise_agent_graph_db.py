@@ -67,28 +67,33 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
         ...
 
     @abstractmethod
-    def create_vector_db_from_graph_db(self, properties: List[str], collection_name: str,
-                                       entity_label: Optional[str] = "entity", retrieval_query: str = ""):
+    def create_vector_db_from_graph_db(self, retrieval_query: str = ""):
         ...
 
 
 class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     yaml_tag = u'!Neo4jLangChainWiseAgentGraphDB'
 
-    def __init__(self, url: Optional[str] = None, refresh_graph_schema: Optional[bool] = True,
-                 embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
+    def __init__(self, properties: List[str], collection_name: str, url: Optional[str] = None,
+                 refresh_graph_schema: Optional[bool] = True,
+                 embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME,
+                 entity_label: Optional[str] = "entity"):
         """Neo4jGraph will obtain the username, password, and database name to be used from
         the NEO4J_USERNAME, NEO4J_PASSWORD, and NEO4J_DATABASE environment variables."""
         super().__init__(embedding_model_name)
+        self._properties = properties
+        self._collection_name = collection_name
         self._url = url
         self._refresh_graph_schema = refresh_graph_schema
+        self._entity_label = entity_label
         self._neo4j_graph_db = None
         self._neo4j_vector_db = None
 
     def __repr__(self):
         """Return a string representation of the graph DB."""
-        return (f"{self.__class__.__name__}(url={self.url}, refresh_schema={self.refresh_graph_schema},"
-                f"embedding_model_name={self.embedding_model_name})")
+        return (f"{self.__class__.__name__}(properties={self.properties}, url={self.url}, refresh_schema={self.refresh_graph_schema},"
+                f"embedding_model_name={self.embedding_model_name}, collection_name={self.collection_name},"
+                f"entity_label={self._entity_label}")
 
     def __getstate__(self) -> object:
         """Return the state of the graph DB. Removing the instance variable neo4j_graph_db to avoid it being serialized/deserialized by pyyaml."""
@@ -104,7 +109,22 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         url = data.get('_url', None)
         refresh_graph_schema = data.get('_refresh_graph_schema', True)
         embedding_model_name = data.get('_embedding_model_name', DEFAULT_EMBEDDING_MODEL_NAME)
-        return cls(url=url, refresh_graph_schema=refresh_graph_schema, embedding_model_name=embedding_model_name)
+        entity_label = data.get('_entity_label', "entity")
+        return cls(properties=data.get('_properties'), collection_name=data.get('_collection_name'),
+                   url=url, refresh_graph_schema=refresh_graph_schema, embedding_model_name=embedding_model_name,
+                   entity_label=entity_label)
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @property
+    def collection_name(self):
+        return self._collection_name
+
+    @property
+    def entity_label(self):
+        return self._entity_label
 
     @property
     def url(self):
@@ -147,20 +167,19 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         self._neo4j_graph_db.add_graph_documents([self.convert_to_lang_chain_graph_document(graph_document)
                                                   for graph_document in graph_documents])
 
-    def create_vector_db_from_graph_db(self, properties: List[str], collection_name: str,
-                                       entity_label: Optional[str] = "entity", retrieval_query: str = ""):
+    def create_vector_db_from_graph_db(self, retrieval_query: str = ""):
         self.connect()
         self._neo4j_vector_db = Neo4jVector.from_existing_graph(embedding=self._embedding_function,
-                                                                node_label=entity_label,
+                                                                node_label=self.entity_label,
                                                                 embedding_node_property="embedding",
-                                                                text_node_properties=properties,
+                                                                text_node_properties=self.properties,
                                                                 url=self.url,
-                                                                index_name=collection_name,
+                                                                index_name=self.collection_name,
                                                                 retrieval_query=retrieval_query)
 
-    def query_with_embeddings(self, query: str, k: int) -> List[Document]:
+    def query_with_embeddings(self, query: str, k: int, retrieval_query: str = "") -> List[Document]:
         if self._neo4j_vector_db is None:
-            self.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db
+            self.create_vector_db_from_graph_db(retrieval_query=retrieval_query)
         return [Document(content=doc.page_content, metadata=doc.metadata)
                 for doc in self._neo4j_vector_db.similarity_search(query, k)]
 

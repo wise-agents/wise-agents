@@ -11,11 +11,11 @@ class Entity(BaseModel):
     An entity (node) in a knowledge graph.
 
     Attributes:
-        id (str): the unique id for the entity
+        id (Optional[str]): the unique id for the entity
         label (Optional[str]): an optional label for the entity
         metadata (Optional[dict]): optional information about the entity
     """
-    id: str
+    id: Optional[str] = Field(default_factory=lambda: str(uuid.uuid4()))
     label: Optional[str] = "entity"
     metadata: Optional[dict] = Field(default_factory=dict)
 

@@ -27,7 +27,9 @@ def run_after_all_tests():
                                   "wise-agents-collection")
 
     # Graph DB setup
-    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    collection_name = "test-cli-vector-db"
+    graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
+                                              url="bolt://localhost:7687", refresh_graph_schema=False)
     page_content = "The CN Tower is located in Toronto, a major city in Ontario. Ontario is a province in Canada."
     landmark = Entity(id="1", metadata={"name": "CN Tower", "type": "landmark"})
     city = Entity(id="2", metadata={"name": "Toronto", "type": "city"})
@@ -49,7 +51,8 @@ def run_after_all_tests():
     pg_vector_db.delete_collection("wise-agents-collection")
 
     # Graph DB clean up
-    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
+                                              url="bolt://localhost:7687", refresh_graph_schema=False)
     graph_db.query("MATCH (n)-[r]-() DELETE r")
     graph_db.query("MATCH (n) DELETE n")
     graph_db.delete_vector_db()
@@ -63,7 +66,6 @@ def run_after_all_tests():
     reset_env_variable("STOMP_PASSWORD", original_stomp_password)
     reset_env_variable("NEO4J_USERNAME", original_neo4j_username)
     reset_env_variable("NEO4J_PASSWORD", original_neo4j_password)
-
 
 def set_env_variable(env_variable: str, value: str) -> str:
     original_value = os.environ.get(env_variable)

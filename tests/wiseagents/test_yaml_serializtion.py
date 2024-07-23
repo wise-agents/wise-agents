@@ -33,7 +33,8 @@ def test_serialize_wise_agent(monkeypatch):
     agent_llm = LangChainWiseAgentRemoteLLM(system_message="Answer my greeting saying Hello and my name",
                                             model_name="Phi-3-mini-4k-instruct-q4.gguf")
     agent_graph_db = Neo4jLangChainWiseAgentGraphDB(url="bolt://localhost:7687", refresh_graph_schema=False,
-                                                    embedding_model_name="all-MiniLM-L6-v2")
+                                                    embedding_model_name="all-MiniLM-L6-v2", collection_name="test-cli-vector-db",
+                                                    properties=["name", "type"])
     agent_vector_db = PGVectorLangChainWiseAgentVectorDB(
         connection_string="postgresql+psycopg://langchain:langchain@localhost:6024/langchain",
         embedding_model_name="all-MiniLM-L6-v2")
@@ -59,6 +60,8 @@ def test_serialize_wise_agent(monkeypatch):
     assert deserialized_agent.llm.model_name == agent.llm.model_name
     assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
     assert deserialized_agent.graph_db.url == "bolt://localhost:7687"
+    assert deserialized_agent.graph_db.collection_name == "test-cli-vector-db"
+    assert deserialized_agent.graph_db.properties == ["name", "type"]
     assert not deserialized_agent.graph_db.refresh_graph_schema
     assert deserialized_agent.graph_db.embedding_model_name == "all-MiniLM-L6-v2"
     assert deserialized_agent.vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
@@ -71,7 +74,8 @@ def test_using_deserialized_agent(monkeypatch):
     agent_llm = LangChainWiseAgentRemoteLLM(system_message="Answer my greeting saying Hello and my name",
                                             model_name="Phi-3-mini-4k-instruct-q4.gguf")
     agent_graph_db = Neo4jLangChainWiseAgentGraphDB(url="bolt://localhost:7687", refresh_graph_schema=False,
-                                                    embedding_model_name="all-MiniLM-L6-v2")
+                                                    embedding_model_name="all-MiniLM-L6-v2", collection_name="test-cli-vector-db",
+                                                    properties=["name", "type"])
     agent_vector_db = PGVectorLangChainWiseAgentVectorDB(
         connection_string="postgresql+psycopg://langchain:langchain@localhost:6024/langchain",
         embedding_model_name="all-MiniLM-L6-v2")
@@ -97,6 +101,8 @@ def test_using_deserialized_agent(monkeypatch):
     assert deserialized_agent.llm.system_message == agent.llm.system_message
     assert deserialized_agent.llm.model_name == agent.llm.model_name
     assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
+    assert deserialized_agent.graph_db.collection_name == "test-cli-vector-db"
+    assert deserialized_agent.graph_db.properties == ["name", "type"]
     assert deserialized_agent.graph_db.url == "bolt://localhost:7687"
     assert not deserialized_agent.graph_db.refresh_graph_schema
     assert deserialized_agent.graph_db.embedding_model_name == "all-MiniLM-L6-v2"
