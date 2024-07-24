@@ -30,8 +30,8 @@ def run_after_all_tests():
     collection_name = "test-cli-vector-db"
     graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
-    page_content = "The CN Tower is located in Toronto, a major city in Ontario. Ontario is a province in Canada."
-    landmark = Entity(id="1", metadata={"name": "CN Tower", "type": "landmark"})
+    page_content = "The Fictitious Tower is located in Toronto, a major city in Ontario. Ontario is a province in Canada."
+    landmark = Entity(id="1", metadata={"name": "Fictitious Tower", "type": "landmark"})
     city = Entity(id="2", metadata={"name": "Toronto", "type": "city"})
     province = Entity(id="3", metadata={"name": "Ontario", "type": "province"})
     country = Entity(id="4", metadata={"name": "Canada", "type": "country"})
