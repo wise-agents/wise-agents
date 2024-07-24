@@ -166,7 +166,6 @@ class GraphRAGWiseAgent(WiseAgent):
         return True
 
     def process_request(self, request: WiseAgentMessage):
-        self.graph_db.create_vector_db_from_graph_db()
         retrieved_documents = self.graph_db.query_with_embeddings(request.message, 4)
         llm_response_with_sources = _create_and_process_rag_prompt(retrieved_documents, request.message, self.llm)
         self.send_response(WiseAgentMessage(llm_response_with_sources, self.name), request.sender)
