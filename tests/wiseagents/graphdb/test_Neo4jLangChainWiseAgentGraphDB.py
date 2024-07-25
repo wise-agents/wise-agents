@@ -5,6 +5,7 @@ import pytest
 from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
 
 
+collection_name = "test-vector-db"
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
@@ -14,7 +15,8 @@ def run_after_all_tests():
     os.environ["NEO4J_USERNAME"] = "neo4j"
     original_neo4j_password = os.environ.get("NEO4J_PASSWORD")
     os.environ["NEO4J_PASSWORD"] = "neo4jpassword"
-    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
+                                              url="bolt://localhost:7687", refresh_graph_schema=False)
     graph_db.query("MATCH (n)-[r]-() DELETE r")
     graph_db.query("MATCH (n) DELETE n")
     graph_db.delete_vector_db()
@@ -44,7 +46,8 @@ def set_env(monkeypatch):
 
 def test_insert_graph_documents_and_query(monkeypatch):
     set_env(monkeypatch)
-    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
+                                              url="bolt://localhost:7687", refresh_graph_schema=False)
 
     try:
         assert graph_db.get_schema() == ""
@@ -72,11 +75,11 @@ def test_insert_graph_documents_and_query(monkeypatch):
                                 "RETURN country.name AS Country")
         assert result == [{'Country': 'Canada'}]
 
-        graph_db.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db")
-        documents = graph_db.query_vector_db("tall building", 1)
+        graph_db.create_vector_db_from_graph_db()
+        documents = graph_db.query_with_embeddings("tall building", 1)
         assert "CN Tower" in documents[0].content
 
-        documents = graph_db.query_vector_db("province", 1)
+        documents = graph_db.query_with_embeddings("province", 1)
         assert "Ontario" in documents[0].content
     finally:
         graph_db.close()
@@ -84,7 +87,8 @@ def test_insert_graph_documents_and_query(monkeypatch):
 
 def test_insert_entity_and_query(monkeypatch):
     set_env(monkeypatch)
-    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
+                                              url="bolt://localhost:7687", refresh_graph_schema=False)
 
     try:
         page_content = ""
@@ -102,7 +106,8 @@ def test_insert_entity_and_query(monkeypatch):
 
 def test_insert_relationship_and_query(monkeypatch):
     set_env(monkeypatch)
-    graph_db = Neo4jLangChainWiseAgentGraphDB("bolt://localhost:7687", False)
+    graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
+                                              url="bolt://localhost:7687", refresh_graph_schema=False)
 
     try:
         page_content = "Ottawa is the capital of Canada."
@@ -121,8 +126,8 @@ def test_insert_relationship_and_query(monkeypatch):
                                 "RETURN country.name AS Country")
         assert result == [{'Country': 'Canada'}]
 
-        graph_db.create_vector_db_from_graph_db(properties=["name", "type"], collection_name="test_vector_db")
-        documents = graph_db.query_vector_db("capital", 1)
+        graph_db.create_vector_db_from_graph_db()
+        documents = graph_db.query_with_embeddings("capital", 1)
         assert "Ottawa" in documents[0].content
     finally:
         graph_db.close()

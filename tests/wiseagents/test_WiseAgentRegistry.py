@@ -16,6 +16,7 @@ class DummyTransport(WiseAgentTransport):
         pass
    
 def test_register_agents():
+    WiseAgentRegistry.clear_agents()
     agent = WiseAgent(name="Agent1", description="This is a test agent", transport=DummyTransport())
     assert 1 == WiseAgentRegistry.get_agents().__len__()
     assert agent == WiseAgentRegistry.get_agent(agent.name)

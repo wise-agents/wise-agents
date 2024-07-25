@@ -1,8 +1,10 @@
 import json
 import logging
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 
-from wiseagents.vectordb import WiseAgentVectorDB
+from wiseagents.graphdb import WiseAgentGraphDB
+
+from wiseagents.vectordb import Document, WiseAgentVectorDB
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentTransport
 from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
@@ -115,16 +117,8 @@ class RAGWiseAgent(WiseAgent):
         return True
 
     def process_request(self, request: WiseAgentMessage):
-        retrieved_documents = self.vector_db.query([request.message], self.collection_name, 1)
-        context = "\n".join([document.content for document in retrieved_documents[0]])
-        prompt = (f"Answer the question based only on the following context:\n{context}\n"
-                  f"Question: {request.message}\n")
-        llm_response = self.llm.process(prompt)
-
-        source_documents = ""
-        for document in retrieved_documents[0]:
-            source_documents += f"Source Document:\n    Content: {document.content}\n    Metadata: {json.dumps(document.metadata)}\n\n"
-        llm_response_with_sources = f"{llm_response.content}\n\nSource Documents:\n{source_documents}"
+        retrieved_documents = self.vector_db.query([request.message], self.collection_name, 4)
+        llm_response_with_sources = _create_and_process_rag_prompt(retrieved_documents[0], request.message, self.llm)
         self.send_response(WiseAgentMessage(llm_response_with_sources, self.name), request.sender)
         return True
 
@@ -141,3 +135,77 @@ class RAGWiseAgent(WiseAgent):
     def name(self) -> str:
         """Get the name of the agent."""
         return self._name
+
+class GraphRAGWiseAgent(WiseAgent):
+    """
+    This agent implementation is used to test a knowledge graph based RAG agent.
+    Use Stomp protocol
+    """
+    yaml_tag = u'!wiseagents.GraphRAGWiseAgent'
+
+    def __init__(self, name: str, description: str, llm: WiseAgentLLM, graph_db: WiseAgentGraphDB,
+                 transport: WiseAgentTransport):
+        self._name = name
+        self._description = description
+        self._transport = transport
+        self._graph_db = graph_db
+        llm_agent = llm
+        super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent,
+                         graph_db=graph_db)
+
+    def __repr__(self):
+        """Return a string representation of the agent."""
+        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+                f"graph_db={self.graph_db}, transport={self.transport})")
+
+    def process_event(self, event):
+        return True
+
+    def process_error(self, error):
+        logging.error(error)
+        return True
+
+    def process_request(self, request: WiseAgentMessage):
+        retrieved_documents = self.graph_db.query_with_embeddings(query=request.message, k=1, retrieval_query=self._get_retrieval_query())
+        llm_response_with_sources = _create_and_process_rag_prompt(retrieved_documents, request.message, self.llm)
+        self.send_response(WiseAgentMessage(llm_response_with_sources, self.name), request.sender)
+        return True
+
+    def process_response(self, response: WiseAgentMessage):
+        return True
+
+    def get_recipient_agent_name(self, message):
+        return self.name
+
+    def stop(self):
+        pass
+
+    @property
+    def name(self) -> str:
+        """Get the name of the agent."""
+        return self._name
+
+    def _get_retrieval_query(self) -> str:
+        # this is specific to the test
+        return """
+          WITH node AS landmark, score AS similarity
+          CALL  {
+            WITH landmark
+            MATCH (landmark)--(city)--(province)--(country)
+            RETURN country.name AS Country
+          }
+          RETURN landmark.name + ' is located in ' + Country AS text, similarity as score, {} AS metadata
+        """
+
+
+def _create_and_process_rag_prompt(retrieved_documents: List[Document], question: str, llm: WiseAgentLLM) -> str:
+    context = "\n".join([document.content for document in retrieved_documents])
+    prompt = (f"Answer the question based only on the following context:\n{context}\n"
+              f"Question: {question}\n")
+    llm_response = llm.process(prompt)
+
+    source_documents = ""
+    for document in retrieved_documents:
+        source_documents += f"Source Document:\n    Content: {document.content}\n    Metadata: {json.dumps(document.metadata)}\n\n"
+    llm_response_with_sources = f"{llm_response.content}\n\nSource Documents:\n{source_documents}"
+    return llm_response_with_sources

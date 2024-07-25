@@ -23,12 +23,6 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
     def embedding_model_name(self):
         return self._embedding_model_name
 
-    def get_embedding_function(self):
-        if not hasattr(self, "_embedding_function"):
-            # instances populated from PyYAML won't have this set initially
-            self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
-        return self._embedding_function
-
     def convert_to_lang_chain_node(self, entity: Entity) -> Node:
         return Node(id=entity.id, type=entity.label, properties=entity.metadata)
 
@@ -73,28 +67,33 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
         ...
 
     @abstractmethod
-    def create_vector_db_from_graph_db(self, properties: List[str], collection_name: str,
-                                       entity_label: Optional[str] = "entity"):
+    def create_vector_db_from_graph_db(self, retrieval_query: str = ""):
         ...
 
 
 class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     yaml_tag = u'!Neo4jLangChainWiseAgentGraphDB'
 
-    def __init__(self, url: Optional[str] = None, refresh_graph_schema: Optional[bool] = True,
-                 embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
+    def __init__(self, properties: List[str], collection_name: str, url: Optional[str] = None,
+                 refresh_graph_schema: Optional[bool] = True,
+                 embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME,
+                 entity_label: Optional[str] = "entity"):
         """Neo4jGraph will obtain the username, password, and database name to be used from
         the NEO4J_USERNAME, NEO4J_PASSWORD, and NEO4J_DATABASE environment variables."""
         super().__init__(embedding_model_name)
+        self._properties = properties
+        self._collection_name = collection_name
         self._url = url
         self._refresh_graph_schema = refresh_graph_schema
+        self._entity_label = entity_label
         self._neo4j_graph_db = None
         self._neo4j_vector_db = None
 
     def __repr__(self):
         """Return a string representation of the graph DB."""
-        return (f"{self.__class__.__name__}(url={self.url}, refresh_schema={self.refresh_graph_schema},"
-                f"embedding_model_name={self.embedding_model_name})")
+        return (f"{self.__class__.__name__}(properties={self.properties}, url={self.url}, refresh_schema={self.refresh_graph_schema},"
+                f"embedding_model_name={self.embedding_model_name}, collection_name={self.collection_name},"
+                f"entity_label={self._entity_label}")
 
     def __getstate__(self) -> object:
         """Return the state of the graph DB. Removing the instance variable neo4j_graph_db to avoid it being serialized/deserialized by pyyaml."""
@@ -103,6 +102,29 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         del state['_neo4j_vector_db']
         del state['_embedding_function']
         return state
+
+    @classmethod
+    def from_yaml(cls, loader, node):
+        data = loader.construct_mapping(node, deep=True)
+        url = data.get('_url', None)
+        refresh_graph_schema = data.get('_refresh_graph_schema', True)
+        embedding_model_name = data.get('_embedding_model_name', DEFAULT_EMBEDDING_MODEL_NAME)
+        entity_label = data.get('_entity_label', "entity")
+        return cls(properties=data.get('_properties'), collection_name=data.get('_collection_name'),
+                   url=url, refresh_graph_schema=refresh_graph_schema, embedding_model_name=embedding_model_name,
+                   entity_label=entity_label)
+
+    @property
+    def properties(self):
+        return self._properties
+
+    @property
+    def collection_name(self):
+        return self._collection_name
+
+    @property
+    def entity_label(self):
+        return self._entity_label
 
     @property
     def url(self):
@@ -145,21 +167,47 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         self._neo4j_graph_db.add_graph_documents([self.convert_to_lang_chain_graph_document(graph_document)
                                                   for graph_document in graph_documents])
 
-    def create_vector_db_from_graph_db(self, properties: List[str], collection_name: str,
-                                       entity_label: Optional[str] = "entity"):
+    def create_vector_db_from_graph_db(self, retrieval_query: str = ""):
         self.connect()
-        self._neo4j_vector_db = Neo4jVector.from_existing_graph(embedding=self.get_embedding_function(),
-                                                                node_label=entity_label,
+        self._neo4j_vector_db = Neo4jVector.from_existing_graph(embedding=self._embedding_function,
+                                                                node_label=self.entity_label,
                                                                 embedding_node_property="embedding",
-                                                                text_node_properties=properties,
+                                                                text_node_properties=self.properties,
                                                                 url=self.url,
-                                                                index_name=collection_name)
+                                                                index_name=self.collection_name,
+                                                                retrieval_query=retrieval_query)
 
-    def query_vector_db(self, query: str, k: int) -> List[Document]:
+    def query_with_embeddings(self, query: str, k: int, retrieval_query: str = "") -> List[Document]:
         if self._neo4j_vector_db is None:
-            raise ValueError("Vector DB is not initialized. Please call create_vector_db_from_graph_db() first.")
+            # this assumes that the vector DB has already been created prior to attempting to query it
+            # and we are simply retrieving the existing index here
+            self.get_vector_db_from_existing_index(embedding_node_property="embedding", retrieval_query=retrieval_query)
         return [Document(content=doc.page_content, metadata=doc.metadata)
                 for doc in self._neo4j_vector_db.similarity_search(query, k)]
+
+    def get_vector_db_from_existing_index(self, embedding_node_property: str,
+                                          retrieval_query: str = ""):
+        # Neo4jVector.from_existing_graph doesn't currently work when using HuggingFaceEmbeddings
+        # and trying to retrieve an existing graph (see https://github.com/langchain-ai/langchain/issues/24401).
+        # We'll work around this using Neo4jVector.from_existing_index instead.
+        self.connect()
+        if not retrieval_query:
+            retrieval_query = (
+                    f"RETURN reduce(str='', k IN {self.properties} |"
+                    " str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text, "
+                    "node {.*, `"
+                    + embedding_node_property
+                    + "`: Null, id: Null, "
+                    + ", ".join([f"`{prop}`: Null" for prop in self.properties])
+                    + "} AS metadata, score"
+            )
+        self._neo4j_vector_db = Neo4jVector.from_existing_index(embedding=self._embedding_function,
+                                                                node_label=self.entity_label,
+                                                                embedding_node_property="embedding",
+                                                                url=self.url,
+                                                                index_name=self.collection_name,
+                                                                retrieval_query=retrieval_query,
+                                                                keyword_index_name="keyword")
 
     def delete_vector_db(self):
         if self._neo4j_vector_db is not None:
