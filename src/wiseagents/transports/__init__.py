@@ -1,4 +1,4 @@
-# This is the __init__.py file for the wiseagents package
+# This is the __init__.py file for the wiseagents.transports package
 
 # Import any modules or subpackages here
 
