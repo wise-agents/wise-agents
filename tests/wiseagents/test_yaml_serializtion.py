@@ -7,7 +7,7 @@ from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import yaml
 import logging
 
-from wiseagents.transports.stomp import StompWiseAgentTransport
+from wiseagents.transports import StompWiseAgentTransport
 
 
 class DummyTransport(WiseAgentTransport):

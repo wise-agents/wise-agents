@@ -1,5 +1,4 @@
-from wiseagents import WiseAgentContext, WiseAgentRegistry, WiseAgent
-from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentContext, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport
 
 
 class DummyTransport(WiseAgentTransport):

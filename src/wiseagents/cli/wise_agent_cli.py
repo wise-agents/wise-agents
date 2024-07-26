@@ -4,7 +4,7 @@ import threading
 import yaml
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
 from wiseagents.wise_agent_impl import PassThroughClientAgent, LLMOnlyWiseAgent
-from wiseagents.transports.stomp import StompWiseAgentTransport
+from wiseagents.transports import StompWiseAgentTransport
 
 cond = threading.Condition()
 

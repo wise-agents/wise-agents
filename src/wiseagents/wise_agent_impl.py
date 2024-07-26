@@ -8,7 +8,6 @@ from wiseagents.vectordb import Document, WiseAgentVectorDB
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentTransport
 from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
-from wiseagents.transports.stomp import StompWiseAgentTransport
 
 
 class PassThroughClientAgent(WiseAgent):
