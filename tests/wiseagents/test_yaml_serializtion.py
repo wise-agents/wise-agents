@@ -2,8 +2,7 @@ from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentTransport
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
-from wiseagents.llm.lang_chain_wise_agent_remote_LLM import LangChainWiseAgentRemoteLLM
-from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
+from wiseagents.llm import OpenaiAPIWiseAgentLLM
 import yaml
 import logging
 
@@ -30,7 +29,7 @@ class DummyTransport(WiseAgentTransport):
 
 def test_serialize_wise_agent(monkeypatch):
     # Create a WiseAgent object
-    agent_llm = LangChainWiseAgentRemoteLLM(system_message="Answer my greeting saying Hello and my name",
+    agent_llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
                                             model_name="Phi-3-mini-4k-instruct-q4.gguf")
     agent_graph_db = Neo4jLangChainWiseAgentGraphDB(url="bolt://localhost:7687", refresh_graph_schema=False,
                                                     embedding_model_name="all-MiniLM-L6-v2", collection_name="test-cli-vector-db",
@@ -71,7 +70,7 @@ def test_serialize_wise_agent(monkeypatch):
 
 def test_using_deserialized_agent(monkeypatch):
     # Create a WiseAgent object
-    agent_llm = LangChainWiseAgentRemoteLLM(system_message="Answer my greeting saying Hello and my name",
+    agent_llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
                                             model_name="Phi-3-mini-4k-instruct-q4.gguf")
     agent_graph_db = Neo4jLangChainWiseAgentGraphDB(url="bolt://localhost:7687", refresh_graph_schema=False,
                                                     embedding_model_name="all-MiniLM-L6-v2", collection_name="test-cli-vector-db",

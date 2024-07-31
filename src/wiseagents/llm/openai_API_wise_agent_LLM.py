@@ -18,9 +18,10 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         return f"{self.__class__.__name__}(system_message={self.system_message}, model_name={self.model_name}, remote_address={self.remote_address})"
     
     def __getstate__(self) -> object:
-        '''Return the state of the agent. Removing the instance variable chain to avoid it is serialized/deserialized by pyyaml.'''
+        '''Return the state of the agent. Removing the instance variable client to avoid it is serialized/deserialized by pyyaml.'''
         state = self.__dict__.copy()
-        del state['client']
+        if 'client' in state.keys():
+            del state['client']
         return state 
     
     def connect(self):
