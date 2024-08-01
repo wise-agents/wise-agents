@@ -20,7 +20,7 @@ class WiseAgentRequestQueueListener(stomp.ConnectionListener):
     def on_message(self, message: stomp.utils.Frame):
         logging.debug(f"Received message: {message}")
         logging.debug(f"Received message type: {message.__class__}")
-        
+        logging.debug(f"Calling the callback function: {self.transport.request_receiver}")
         self.transport.request_receiver(yaml.load(message.body, yaml.Loader))
 
 class WiseAgentResponseQueueListener(stomp.ConnectionListener):

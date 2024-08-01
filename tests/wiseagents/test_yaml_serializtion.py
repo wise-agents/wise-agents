@@ -106,7 +106,7 @@ def test_using_deserialized_agent(monkeypatch):
     assert not deserialized_agent.graph_db.refresh_graph_schema
     assert deserialized_agent.graph_db.embedding_model_name == "all-MiniLM-L6-v2"
     logging.debug(deserialized_agent)
-    response = deserialized_agent.llm.process("Hello my name is Stefano")
+    response = deserialized_agent.llm.process_single_prompt("Hello my name is Stefano")
     assert response.content.__len__() > 0
     assert deserialized_agent.vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
     assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"

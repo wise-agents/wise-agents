@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
+import json
 import logging
-from typing import Optional
+from typing import Callable, Optional
 
 from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
@@ -9,6 +10,7 @@ from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentTransport, WiseAgentEvent
 from wiseagents.vectordb import WiseAgentVectorDB
 import yaml
+from openai.types.chat import ChatCompletionToolParam
 
 
 class WiseAgent(yaml.YAMLObject):
@@ -153,6 +155,64 @@ class WiseAgent(yaml.YAMLObject):
         """
         ...
 
+class WiseAgentTool(yaml.YAMLObject):
+    yaml_tag = u'!wiseagents.WiseAgentTool'
+    def __init__(self, name: str, description: str, parameters_json_schema: dict = {}, call_back : Optional[Callable[...,str]] = None):    
+       self._name = name
+       self._description = description
+       self._parameters_json_schema = parameters_json_schema
+       
+       if call_back is None:
+           self._call_back = self.default_call_back
+       else:
+           self._call_back = call_back
+       WiseAgentRegistry.register_tool(self)
+   
+    @classmethod
+    def from_yaml(cls, loader, node):
+        data = loader.construct_mapping(node, deep=True)
+        return cls(name=data.get('_name'), description=data.get('_description'), 
+                   parameters_json_schema=data.get('_parameters_json_schema'),
+                   call_back=data.get('_call_back'))
+    
+    @property
+    def name(self) -> str:
+        """Get the name of the tool."""
+        return self._name
+    
+    @property
+    def description(self) -> str:
+        """Get the description of the tool."""
+        return self._description
+    
+    @property
+    def call_back(self) -> Callable[...,str]:
+        """Get the callback function of the tool."""
+        return self._call_back
+    @property
+    def json_schema(self) -> dict:
+        """Get the json schema of the tool."""
+        return self._parameters_json_schema
+       
+    def get_tool_OpenAI_format(self) -> ChatCompletionToolParam:
+        '''The tool should be able to return itself in the form of a ChatCompletionToolParam'''
+        return {"type": "function",
+                "function": {
+                "name": self.name,
+                "description": self.description,
+                "parameters": self.json_schema
+                } 
+        }
+    
+    def gefault_call_back(self, **kwargs) -> str:
+        '''The tool should be able to execute the function with the given parameters'''
+        return json.dumps(kwargs)
+    
+    def exec(self, **kwargs) -> str:
+        '''The tool should be able to execute the function with the given parameters'''
+        return self.call_back(**kwargs)
+
+
 
 class WiseAgentContext():
     from typing import List
@@ -189,6 +249,7 @@ class WiseAgentRegistry:
     """
     agents : dict[str, WiseAgent] = {}
     contexts : dict[str, WiseAgentContext] = {}
+    tools: dict[str, WiseAgentTool] = {}
     
     @classmethod
     def register_agent(cls,agent : WiseAgent):
@@ -269,5 +330,26 @@ class WiseAgentRegistry:
         Clear all contexts from the registry
         """
         cls.contexts.clear()
+        
+    @classmethod
+    def register_tool(cls, tool : WiseAgentTool):
+        """
+        Register a tool with the registry
+        """
+        cls.tools[tool.name] = tool
+    
+    @classmethod
+    def get_tools(cls) -> dict[str, WiseAgentTool]:
+        """
+        Get the list of tools
+        """
+        return cls.tools
+    
+    @classmethod
+    def get_tool(cls, tool_name: str) -> WiseAgentTool:
+        """
+        Get the tool with the given name
+        """
+        return cls.tools.get(tool_name)
         
         

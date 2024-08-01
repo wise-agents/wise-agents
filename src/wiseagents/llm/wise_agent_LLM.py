@@ -1,5 +1,8 @@
 from abc import abstractmethod
+from typing import Iterable
 import yaml
+from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+
 class WiseAgentLLM(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentLLM."""
     yaml_tag = u'!WiseAgentLLM'    
@@ -21,5 +24,11 @@ class WiseAgentLLM(yaml.YAMLObject):
         return self._model_name     
 
     @abstractmethod
-    def process(self, message):
+    def process_single_prompt(self, prompt):
+        ...
+    
+    @abstractmethod
+    def process_chat_complition(self, 
+                                messages: Iterable[ChatCompletionMessageParam], 
+                                tools: Iterable[ChatCompletionToolParam]) -> ChatCompletion:
         ...

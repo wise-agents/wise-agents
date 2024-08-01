@@ -1,7 +1,8 @@
+from typing import Iterable
 from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import requests
 import openai
-
+from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
 class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     
     client = None
@@ -29,13 +30,13 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
                 api_key="sk-no-key-required")
     
    
-    def process(self, message):
+    def process_single_prompt(self, prompt):
         print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
         if (self.client is None):
             self.connect()
         messages = []
         messages.append({"role": "system", "content": self.system_message})
-        messages.append({"role": "user", "content": message})
+        messages.append({"role": "user", "content": prompt})
         response = self.client.chat.completions.create(
             messages=messages,
             model=self.model_name,
@@ -43,6 +44,23 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             tool_choice="auto",  # auto is default, but we'll be explicit
             )
         return response.choices[0].message
+   
+    def process_chat_complition(self, 
+                                messages: Iterable[ChatCompletionMessageParam], 
+                                tools: Iterable[ChatCompletionToolParam]) -> ChatCompletion:
+        print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
+        if (self.client is None):
+            self.connect()
+        #messages = []
+        #messages.append({"role": "system", "content": self.system_message})
+        #messages.append({"role": "user", "content": message})
+        response = self.client.chat.completions.create(
+            messages=messages,
+            model=self.model_name,
+            tools=tools,
+            tool_choice="auto",  # auto is default, but we'll be explicit
+            )
+        return response
         
     
         

@@ -21,7 +21,7 @@ def test_using_deserialized_agent():
     assert deserialized_agent.llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
     assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
     logging.debug(deserialized_agent)
-    response = deserialized_agent.llm.process("Hello my name is Stefano")
+    response = deserialized_agent.llm.process_single_prompt("Hello my name is Stefano")
     assert response.content.__len__() > 0
     assert deserialized_agent.graph_db.url == "bolt://localhost:7687"
     assert not deserialized_agent.graph_db.refresh_graph_schema
@@ -63,7 +63,7 @@ def test_using_multiple_deserialized_agents():
     assert deserialized_agent[1].llm.system_message == "Answer my greeting saying Hello and my name"
     assert deserialized_agent[1].llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
     assert deserialized_agent[1].llm.remote_address == "http://localhost:8001/v1"
-    response = deserialized_agent[1].llm.process("Hello my name is Stefano")
+    response = deserialized_agent[1].llm.process_single_prompt("Hello my name is Stefano")
     assert response.content.__len__() > 0
     assert deserialized_agent[1].graph_db.url == "bolt://localhost:7687"
     assert not deserialized_agent[1].graph_db.refresh_graph_schema
