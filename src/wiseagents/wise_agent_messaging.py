@@ -21,21 +21,22 @@ class WiseAgentEvent:
 
 class WiseAgentMessage(YAMLObject):
     yaml_tag = u'!wiseagents.WiseAgentMessage'
-    def __init__(self, message: str, sender: Optional[str] = None, message_type: Optional[WiseAgentMessageType] = None, identifier: Optional[int] = None, context_name: Optional[str] = None):
+    def __init__(self, message: str, sender: Optional[str] = None, message_type: Optional[WiseAgentMessageType] = None, 
+                 chat_id: Optional[str] = None, tool_id : Optional[str] = None, context_name: Optional[str] = None,
+                 route_response_to: Optional[str] = None):  
         self._message = message
         self._sender = sender
         self._message_type = message_type
-        if identifier is not None: 
-            self._identifier = identifier
-        else:
-            self._identifier = id(self)
+        self._chat_id = chat_id
+        self._tool_id = tool_id
+        self._route_response_to = route_response_to
         if context_name is not None:
             self._context_name = context_name
         else:
             self._context_name = 'default'
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(message={self.message}, sender={self.sender}, message_type={self.message_type}, id={self.identifier})"
+        return f"{self.__class__.__name__}(message={self.message}, sender={self.sender}, message_type={self.message_type}, id={self.chat_id})"
 
     @property
     def context_name(self) -> str:
@@ -60,9 +61,19 @@ class WiseAgentMessage(YAMLObject):
         """Get the type of the message (or None if the type was not specified)."""
         return self._message_type
     @property
-    def identifier(self) -> int:
+    def chat_id(self) -> str:
         """Get the id of the message."""
-        return self._identifier
+        return self._chat_id
+    
+    @property
+    def tool_id(self) -> str:
+        """Get the id of the tool."""
+        return self._tool_id
+    
+    @property
+    def route_response_to(self) -> str:
+        """Get the id of the tool."""
+        return self._route_response_to
 
 class WiseAgentTransport(YAMLObject):
     

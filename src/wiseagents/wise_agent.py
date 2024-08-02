@@ -1,7 +1,8 @@
 from abc import ABC, abstractmethod
 import json
 import logging
-from typing import Callable, Optional
+from typing import Any, Callable, Dict, Iterable, Optional
+from uuid import UUID
 
 from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
@@ -10,7 +11,7 @@ from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentTransport, WiseAgentEvent
 from wiseagents.vectordb import WiseAgentVectorDB
 import yaml
-from openai.types.chat import ChatCompletionToolParam
+from openai.types.chat import ChatCompletionToolParam, ChatCompletionMessageParam
 
 
 class WiseAgent(yaml.YAMLObject):
@@ -157,15 +158,13 @@ class WiseAgent(yaml.YAMLObject):
 
 class WiseAgentTool(yaml.YAMLObject):
     yaml_tag = u'!wiseagents.WiseAgentTool'
-    def __init__(self, name: str, description: str, parameters_json_schema: dict = {}, call_back : Optional[Callable[...,str]] = None):    
+    def __init__(self, name: str, description: str, agent_tool: bool, parameters_json_schema: dict = {}, 
+                 call_back : Optional[Callable[...,str]] = None):    
        self._name = name
        self._description = description
        self._parameters_json_schema = parameters_json_schema
-       
-       if call_back is None:
-           self._call_back = self.default_call_back
-       else:
-           self._call_back = call_back
+       self._agent_tool = agent_tool
+       self._call_back = call_back
        WiseAgentRegistry.register_tool(self)
    
     @classmethod
@@ -193,6 +192,11 @@ class WiseAgentTool(yaml.YAMLObject):
     def json_schema(self) -> dict:
         """Get the json schema of the tool."""
         return self._parameters_json_schema
+    
+    @property
+    def is_agent_tool(self) -> bool:
+        """Get the agent tool of the tool."""
+        return self._agent_tool
        
     def get_tool_OpenAI_format(self) -> ChatCompletionToolParam:
         '''The tool should be able to return itself in the form of a ChatCompletionToolParam'''
@@ -204,12 +208,14 @@ class WiseAgentTool(yaml.YAMLObject):
                 } 
         }
     
-    def gefault_call_back(self, **kwargs) -> str:
+    def default_call_back(self, **kwargs) -> str:
         '''The tool should be able to execute the function with the given parameters'''
         return json.dumps(kwargs)
     
     def exec(self, **kwargs) -> str:
         '''The tool should be able to execute the function with the given parameters'''
+        if self.call_back is None:
+            return self.default_call_back(**kwargs)
         return self.call_back(**kwargs)
 
 
@@ -219,12 +225,16 @@ class WiseAgentContext():
     
     _message_trace : List[WiseAgentMessage] = []
     _participants : List[WiseAgent] = []
+    _llm_chat_completion : Dict[str, List[ChatCompletionMessageParam]] = {}
+    _llm_required_tool_call : Dict[str, List[str]] = {}
+    _llm_available_tools_in_chat : Dict[str, List[ChatCompletionToolParam]] = {}
+    
     
     def __init__(self, name: str):
         self._name = name
         WiseAgentRegistry.register_context(self)
         
-    @property
+    @property   
     def name(self) -> str:
         """Get the name of the context."""
         return self._name
@@ -238,9 +248,56 @@ class WiseAgentContext():
         """Get the participants of the context."""
         return self._participants
     
+    @property
+    def llm_chat_completion(self) -> Dict[str, List[ChatCompletionMessageParam]]:
+        """Get the LLM chat completion of the context."""
+        return self._llm_chat_completion
+    
     def add_participant(self, agent: WiseAgent):
         if agent not in self._participants:
-            self._participants.append(agent) 
+            self._participants.append(agent)
+    
+    def append_chat_completion(self, chat_uuid: str, messages: Iterable[ChatCompletionMessageParam]):
+        if chat_uuid not in self._llm_chat_completion:
+            self._llm_chat_completion[chat_uuid] = []
+        self._llm_chat_completion[chat_uuid].append(messages)
+    
+    @property
+    def llm_required_tool_call(self) -> Dict[str, List[str]]:
+        """Get the LLM required tool call of the context."""
+        return self._llm_required_tool_call
+    
+    def append_required_tool_call(self, chat_uuid: str, tool_name: str):
+        if chat_uuid not in self._llm_required_tool_call:
+            self._llm_required_tool_call[chat_uuid] = []
+        self._llm_required_tool_call[chat_uuid].append(tool_name)
+    
+    def remove_required_tool_call(self, chat_uuid: str, tool_name: str):
+        if chat_uuid in self._llm_required_tool_call:
+            self._llm_required_tool_call[chat_uuid].remove(tool_name)
+            if len(self._llm_required_tool_call[chat_uuid]) == 0:
+                self._llm_required_tool_call.pop(chat_uuid)
+    def get_required_tool_calls(self, chat_uuid: str) -> List[str]:
+        if chat_uuid in self._llm_required_tool_call:
+            return self._llm_required_tool_call[chat_uuid]
+        else:
+            return []   
+        
+    @property
+    def llm_available_tools_in_chat(self) -> Dict[str, List[ChatCompletionToolParam]]:
+        """Get the LLM available tools in chat of the context."""
+        return self._llm_available_tools_in_chat
+    
+    def append_available_tool_in_chat(self, chat_uuid: str, tools: Iterable[ChatCompletionToolParam]):
+        if chat_uuid not in self._llm_available_tools_in_chat:
+            self._llm_available_tools_in_chat[chat_uuid] = []
+        self._llm_available_tools_in_chat[chat_uuid].append(tools)
+    
+    def get_available_tools_in_chat(self, chat_uuid: str) -> List[ChatCompletionToolParam]:
+        if chat_uuid in self._llm_available_tools_in_chat:
+            return self._llm_available_tools_in_chat[chat_uuid]
+        else:
+            return []         
         
 class WiseAgentRegistry:
 

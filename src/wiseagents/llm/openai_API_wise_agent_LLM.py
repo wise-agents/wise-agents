@@ -45,7 +45,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             )
         return response.choices[0].message
    
-    def process_chat_complition(self, 
+    def process_chat_completion(self, 
                                 messages: Iterable[ChatCompletionMessageParam], 
                                 tools: Iterable[ChatCompletionToolParam]) -> ChatCompletion:
         print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")

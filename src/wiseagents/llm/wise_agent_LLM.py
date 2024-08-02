@@ -28,7 +28,7 @@ class WiseAgentLLM(yaml.YAMLObject):
         ...
     
     @abstractmethod
-    def process_chat_complition(self, 
+    def process_chat_completion(self, 
                                 messages: Iterable[ChatCompletionMessageParam], 
                                 tools: Iterable[ChatCompletionToolParam]) -> ChatCompletion:
         ...
