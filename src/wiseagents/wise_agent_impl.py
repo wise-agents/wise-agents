@@ -321,6 +321,69 @@ class GraphRAGWiseAgent(WiseAgent):
         """
 
 
+class SequentialCoordinatorWiseAgent(WiseAgent):
+    """
+    This agent will coordinate the execution of a sequence of agents.
+    Use Stomp protocol.
+    """
+    yaml_tag = u'!wiseagents.SequentialCoordinatorWiseAgent'
+
+    def __init__(self, name: str, description: str, transport: WiseAgentTransport, agents: List[str]):
+        self._name = name
+        self._agents = agents
+        self._route_response_to = ""
+        super().__init__(name=name, description=description, transport=transport, llm=None)
+
+    def __repr__(self):
+        '''Return a string representation of the agent.'''
+        return f"{self.__class__.__name__}(name={self.name}, description={self.description}, agents={self.agents})"
+
+    def process_request(self, request):
+        logging.debug(f"Sequential coordinator received request: {request}")
+        self._route_response_to = request.sender
+        self.send_request(WiseAgentMessage(request.message, self.name), self._agents[0])
+
+    def process_response(self, response):
+        next_agent_index = self._agents.index(response.sender) + 1
+        if next_agent_index < len(self._agents):
+            logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + self._agents[next_agent_index])
+            self.send_request(WiseAgentMessage(response.message, self.name), self._agents[next_agent_index])
+        else:
+            logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + self._route_response_to)
+            self.send_response(WiseAgentMessage(response.message, self.name), self._route_response_to)
+        return True
+
+    def process_event(self, event):
+        return True
+
+    def process_error(self, error):
+        return True
+
+    def get_recipient_agent_name(self, message):
+        return self.name
+
+    def stop(self):
+        pass
+
+    @property
+    def name(self) -> str:
+        """Get the name of the agent."""
+        return self._name
+
+    @property
+    def agents(self) -> List[str]:
+        """Get the list of agents."""
+        return self._agents
+
+    @property
+    def response_delivery(self) -> Optional[Callable[[], WiseAgentMessage]]:
+        return self._response_delivery
+
+    def set_response_delivery(self, response_delivery: Callable[[], WiseAgentMessage]):
+        self._response_delivery = response_delivery
+
+
+
 def _create_and_process_rag_prompt(retrieved_documents: List[Document], question: str, llm: WiseAgentLLM) -> str:
     context = "\n".join([document.content for document in retrieved_documents])
     prompt = (f"Answer the question based only on the following context:\n{context}\n"
