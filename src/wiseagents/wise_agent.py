@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 import json
 import logging
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 from uuid import UUID
 
 from wiseagents.graphdb import WiseAgentGraphDB
@@ -17,11 +17,13 @@ from openai.types.chat import ChatCompletionToolParam, ChatCompletionMessagePara
 class WiseAgent(yaml.YAMLObject):
 
     yaml_tag = u'!wiseagents.WiseAgent'
-    def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
-                 vector_db: Optional[WiseAgentVectorDB] = None, collection_name: Optional[str] = "wise-agent-collection",
-                 graph_db: Optional[WiseAgentGraphDB] = None):
+    def __init__(self, name: str, description: str, transport: WiseAgentTransport, preconditions: List[str] = None,
+                 effects: List[str] = None, llm: Optional[WiseAgentLLM] = None, vector_db: Optional[WiseAgentVectorDB] = None,
+                 collection_name: Optional[str] = "wise-agent-collection", graph_db: Optional[WiseAgentGraphDB] = None):
         self._name = name
         self._description = description
+        self._preconditions = preconditions
+        self._effects = effects
         self._llm = llm
         self._vector_db = vector_db
         self._collection_name = collection_name
@@ -39,7 +41,8 @@ class WiseAgent(yaml.YAMLObject):
     
     def __repr__(self):
         '''Return a string representation of the agent.'''
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+        return (f"{self.__class__.__name__}(name={self.name}, description={self.description},"
+                f"preconditions={self.preconditions}, effects={self.effects}, llm={self.llm},"
                 f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db})")
     
     @property
@@ -51,6 +54,16 @@ class WiseAgent(yaml.YAMLObject):
     def description(self) -> str:
         """Get a description of what the agent does."""
         return self._description
+
+    @property
+    def preconditions(self) -> List[str]:
+        """Get the preconditions that need to be satisfied prior to invoking this agent"""
+        return self._preconditions
+
+    @property
+    def effects(self) -> List[str]:
+        """Get the effects of invoking this agent"""
+        return self._effects
 
     @property
     def llm(self) -> Optional[WiseAgentLLM]:
