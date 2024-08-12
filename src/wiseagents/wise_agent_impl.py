@@ -75,7 +75,7 @@ class LLMOnlyWiseAgent(WiseAgent):
     def process_request(self, request: WiseAgentMessage):
         #print(f"IA Request received: {request}")
         llm_response = self.llm.process_single_prompt(request.message)
-        self.send_response(WiseAgentMessage(llm_response.content, self.name), request.sender )
+        self.send_response(WiseAgentMessage(message=llm_response.content, sender=self.name, context_name=request.context_name), request.sender )
         return True
     def process_response(self, response : WiseAgentMessage):
         #print(f"Response received: {response}")
@@ -341,16 +341,19 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
     def process_request(self, request):
         logging.debug(f"Sequential coordinator received request: {request}")
         self._route_response_to = request.sender
-        self.send_request(WiseAgentMessage(request.message, self.name), self._agents[0])
+        ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
+        ctx.set_agents_sequence(self._agents)
+        self.send_request(WiseAgentMessage(message=request.message, sender=self.name, context_name=request.context_name), self._agents[0])
 
     def process_response(self, response):
-        next_agent_index = self._agents.index(response.sender) + 1
-        if next_agent_index < len(self._agents):
-            logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + self._agents[next_agent_index])
-            self.send_request(WiseAgentMessage(response.message, self.name), self._agents[next_agent_index])
-        else:
+        ctx = WiseAgentRegistry.get_or_create_context(response.context_name)
+        next_agent = ctx.get_next_agent_in_sequence(response.sender)
+        if next_agent is None:
             logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + self._route_response_to)
-            self.send_response(WiseAgentMessage(response.message, self.name), self._route_response_to)
+            self.send_response(WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name), self._route_response_to)
+        else:
+            logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + next_agent)
+            self.send_request(WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name), next_agent)
         return True
 
     def process_event(self, event):

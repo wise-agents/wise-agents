@@ -28,18 +28,15 @@ def test_sequential_coordinator():
                                  model_name="llama3.1", remote_address="http://localhost:11434/v1")
     agent1 = LLMOnlyWiseAgent(name="Agent1", description="This is a test agent", llm=llm1,
                               trasport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Agent1"))
-    agent1.startAgent()
 
     llm2 = OpenaiAPIWiseAgentLLM(system_message="Your name is Agent2. Answer my greeting saying Hello and include all names from the given message and tell me your name.",
                                  model_name="llama3.1", remote_address="http://localhost:11434/v1")
     agent2 = LLMOnlyWiseAgent(name="Agent2", description="This is a test agent", llm=llm2,
                               trasport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Agent2"))
-    agent2.startAgent()
 
     coordinator = SequentialCoordinatorWiseAgent(name="SequentialCoordinator", description="This is a coordinator agent",
                                                  transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="SequentialCoordinator"),
                                                  agents=["Agent1", "Agent2"])
-    coordinator.startAgent()
 
     with cond:
         client_agent1 = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",
