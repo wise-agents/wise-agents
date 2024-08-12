@@ -1,0 +1,22 @@
+site_name: wise-agents Docs
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Developer Quick Start: dev_quick_start.md
+  - Code Reference: reference/
+  - About:
+    - About: about.md
+    - Contact: contact.md
+    - GitHub: github.md
+    - License: license.md
+plugins: 
+  - search
+  - include-markdown
+  - gen-files:
+      scripts:
+      - mkdocs-scripts/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
+  - mkdocstrings
+theme: readthedocs
