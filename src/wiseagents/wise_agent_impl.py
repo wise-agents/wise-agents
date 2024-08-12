@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Set
 import uuid
 
 from openai import NOT_GIVEN
@@ -11,7 +11,8 @@ from wiseagents.graphdb import WiseAgentGraphDB
 
 from wiseagents.vectordb import Document, WiseAgentVectorDB
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport, WiseAgentTool
+from wiseagents import WiseAgent, WiseAgentContext, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport, \
+    WiseAgentTool
 from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 
 
@@ -319,6 +320,102 @@ class GraphRAGWiseAgent(WiseAgent):
           }
           RETURN landmark.name + ' is located in ' + Country AS text, similarity as score, {} AS metadata
         """
+
+class SimplePlanCoordinatorWiseAgent(WiseAgent):
+    """
+    This agent will coordinate the execution of a group of agents by taking into account the preconditions
+    and effects of the given agents in order to determine the order in which they should be invoked without
+    making use of an LLM.
+    Use Stomp protocol.
+    """
+    yaml_tag = u'!wiseagents.PlanCoordinatorWiseAgent'
+
+    def __init__(self, name: str, description: str, transport: WiseAgentTransport, agents: Set[str]):
+        self._name = name
+        self._agents = agents
+        self._route_response_to = ""
+        super().__init__(name=name, description=description, transport=transport, llm=None)
+
+    def __repr__(self):
+        '''Return a string representation of the agent.'''
+        return f"{self.__class__.__name__}(name={self.name}, description={self.description}, agents={self.agents})"
+
+    def process_request(self, request):
+        logging.debug(f"Plan coordinator received request: {request}")
+        self._route_response_to = request.sender
+
+        """Establish a plan for invoking the agents."""
+        ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
+        agents_sequence = self.plan_agent_execution()
+        ctx.set_agents_sequence(agents_sequence)
+
+        """Invoke the plan."""
+        self.send_request(WiseAgentMessage(message=request.message, sender=self.name, context_name=request.context_name),
+                          agents_sequence[0])
+
+    def process_response(self, response):
+        ctx = WiseAgentRegistry.get_or_create_context(response.context_name)
+        next_agent = ctx.get_next_agent_in_sequence(response.sender)
+        if next_agent is None:
+            logging.debug(
+                f"Plan coordinator sending response from " + response.sender + " to " + self._route_response_to)
+            self.send_response(
+                WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name),
+                self._route_response_to)
+        else:
+            logging.debug(f"Plan coordinator sending response from " + response.sender + " to " + next_agent)
+            self.send_request(
+                WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name),
+                next_agent)
+        return True
+    
+    def plan_agent_execution(self) -> List[str]:
+        """
+        Plan the execution of the agents by taking into account their preconditions and effects.
+        Returns:
+            List[str]: A list containing the agent names in the order that they should be invoked
+        """
+        agents_sequence = []
+        facts = []
+        while len(agents_sequence) < len(self.agents):
+            """Could use more advanced logic here to determine the order."""
+            for agent_name in self.agents:
+                if agent_name not in agents_sequence:
+                    agent: WiseAgent = WiseAgentRegistry.get_agent(agent_name)
+                    if set(agent.preconditions).issubset(facts):
+                        agents_sequence.append(agent_name)
+                        facts.extend(agent.effects)
+        return agents_sequence
+
+    def process_event(self, event):
+        return True
+
+    def process_error(self, error):
+        return True
+
+    def get_recipient_agent_name(self, message):
+        return self.name
+
+    def stop(self):
+        pass
+
+    @property
+    def name(self) -> str:
+        """Get the name of the agent."""
+        return self._name
+
+    @property
+    def agents(self) -> Set[str]:
+        """Get the set of agents."""
+        return self._agents
+
+    @property
+    def response_delivery(self) -> Optional[Callable[[], WiseAgentMessage]]:
+        return self._response_delivery
+
+    def set_response_delivery(self, response_delivery: Callable[[], WiseAgentMessage]):
+        self._response_delivery = response_delivery
+
 
 
 class SequentialCoordinatorWiseAgent(WiseAgent):
