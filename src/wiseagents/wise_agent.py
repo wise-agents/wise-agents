@@ -228,6 +228,7 @@ class WiseAgentContext():
     _llm_chat_completion : Dict[str, List[ChatCompletionMessageParam]] = {}
     _llm_required_tool_call : Dict[str, List[str]] = {}
     _llm_available_tools_in_chat : Dict[str, List[ChatCompletionToolParam]] = {}
+    _agents_sequence : List[str] = []
     
     
     def __init__(self, name: str):
@@ -297,8 +298,45 @@ class WiseAgentContext():
         if chat_uuid in self._llm_available_tools_in_chat:
             return self._llm_available_tools_in_chat[chat_uuid]
         else:
-            return []         
-        
+            return []
+
+    @property
+    def agents_sequence(self) -> List[str]:
+        """
+        Get the sequence of agents for this context.
+
+        Returns:
+            List[str]: the sequence of agents or an empty list if no sequence has been set
+        """
+        return self._agents_sequence
+
+    def set_agents_sequence(self, agents_sequence: List[str]):
+        """
+        Set the sequence of agents for this context.
+
+        Args:
+            agents_sequence (List[str]): the sequence of agents
+        """
+        self._agents_sequence = agents_sequence
+
+    def get_next_agent_in_sequence(self, current_agent: str):
+        """
+        Get the next agent in the sequence of agents for this context.
+
+        Args:
+            current_agent (str): the name of the current agent
+
+        Returns:
+            str: the name of the next agent in the sequence after the current agent or None if there are no remaining
+            agents in the sequence after the current agent
+        """
+        if current_agent in self._agents_sequence:
+            current_agent_index = self._agents_sequence.index(current_agent)
+            next_agent_index = current_agent_index + 1
+            if next_agent_index < len(self._agents_sequence):
+                return self._agents_sequence[next_agent_index]
+        return None
+
 class WiseAgentRegistry:
 
     """
