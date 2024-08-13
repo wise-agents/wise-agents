@@ -10,7 +10,7 @@ source .venv/bin/activate
 2. ``pip install .``
 
 
-# How to run test
+# How to run the tests
 
 1. Run ``pip install -e '.[test]'``
 2. Start the llm service (see [model-serving/README.MD](model-serving/README.MD))

@@ -2,13 +2,22 @@ site_name: wise-agents Docs
 nav:
   - Home: index.md
   - Getting Started:
+    - What are AI Agents: multi_agents.md
+    - Wise Agents architecture: wise_agents_architecture.md
     - Developer Quick Start: dev_quick_start.md
-  - Code Reference: reference/
+  - Details: 
+    - RAG Architecture: rag_architecture.md
+    - Using CLI: using_cli.md
+    - Declare agents in YAML: declare_agents.md
+  - Examples:
+    - Example 1: example_1.md
+    - Example 2: example_2.md
+  - API Reference: reference/
   - About:
-    - About: about.md
-    - Contact: contact.md
-    - GitHub: github.md
+    - Community: community.md
+    - Contributing: contributing.md
     - License: license.md
+    - Security: security.md
 plugins: 
   - search
   - include-markdown
