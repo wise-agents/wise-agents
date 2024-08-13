@@ -20,6 +20,7 @@ class Document(BaseModel):
 
 
 class WiseAgentVectorDB(yaml.YAMLObject):
+    """Abstract class to define the interface for a WiseAgentVectorDB."""
     yaml_tag = u'!WiseAgentVectorDB'
 
     @abstractmethod

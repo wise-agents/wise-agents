@@ -14,13 +14,23 @@ from ..constants import DEFAULT_EMBEDDING_MODEL_NAME
 
 
 class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
+    """
+    An abstract class that makes use of a LangChain graph database.
+    """
 
     def __init__(self, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
+        """
+        Initialize a new instance of LangChainWiseAgentGraphDB.
+
+        Args:
+            embedding_model_name (Optional[str]): the optional name of the embedding model to use 
+        """
         self._embedding_model_name = embedding_model_name
         self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
 
     @property
     def embedding_model_name(self):
+        """Get the name of the embedding model."""
         return self._embedding_model_name
 
     def convert_to_lang_chain_node(self, entity: Entity) -> Node:
@@ -72,14 +82,28 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
 
 
 class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
+    """
+    A LangChainWiseAgentGraphDB implementation that makes use of a LangChain Neo4j graph database
+    and a corresponding Neo4j vector database.
+    """
     yaml_tag = u'!Neo4jLangChainWiseAgentGraphDB'
 
     def __init__(self, properties: List[str], collection_name: str, url: Optional[str] = None,
                  refresh_graph_schema: Optional[bool] = True,
                  embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME,
                  entity_label: Optional[str] = "entity"):
-        """Neo4jGraph will obtain the username, password, and database name to be used from
-        the NEO4J_USERNAME, NEO4J_PASSWORD, and NEO4J_DATABASE environment variables."""
+        """
+        Initialize a new instance of Neo4jLangChainWiseAgent
+
+        Args:
+            properties (List[str]): the properties to be used as text node properties for the graph database
+            collection_name (str): the collection name to use for the vector database
+            url (Optional[str]): the URL of the Neo4j database (the username, password, and database name to be used
+            will be obtained from the NEO4J_USERNAME, NEO4J_PASSWORD, and NEO4J_DATABASE environment variables)
+            refresh_graph_schema (Optional[bool]): whether to refresh the graph schema
+            embedding_model_name (Optional[str]): the optional name of the embedding model to use
+            entity_label (Optional[str]): the label to use for entities in the graph database
+        """
         super().__init__(embedding_model_name)
         self._properties = properties
         self._collection_name = collection_name
@@ -116,22 +140,27 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
 
     @property
     def properties(self):
+        """Get the properties to be used as text node properties for the graph database."""
         return self._properties
 
     @property
     def collection_name(self):
+        """Get the collection name to use for the vector database."""
         return self._collection_name
 
     @property
     def entity_label(self):
+        """Get the label to use for entities in the graph database."""
         return self._entity_label
 
     @property
     def url(self):
+        """Get the URL of the Neo4j database."""
         return self._url
 
     @property
     def refresh_graph_schema(self):
+        """Get whether to refresh the graph schema."""
         return self._refresh_graph_schema
 
     def connect(self):
@@ -168,6 +197,12 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
                                                   for graph_document in graph_documents])
 
     def create_vector_db_from_graph_db(self, retrieval_query: str = ""):
+        """
+        Create a vector database from the graph database.
+
+        Args:
+            retrieval_query (str): the retrieval query to use for the vector database
+        """
         self.connect()
         self._neo4j_vector_db = Neo4jVector.from_existing_graph(embedding=self._embedding_function,
                                                                 node_label=self.entity_label,
@@ -178,6 +213,18 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
                                                                 retrieval_query=retrieval_query)
 
     def query_with_embeddings(self, query: str, k: int, retrieval_query: str = "") -> List[Document]:
+        """
+        Query the vector database that corresponds to this graph database using the given query and
+        retrieve the top k documents.
+
+        Args:
+            query (str): the query to execute
+            k (int): the number of documents to retrieve
+            retrieval_query (str): the retrieval query to use for the vector database
+
+        Returns:
+            List[Document]: the list of documents retrieved from the vector database
+        """
         if self._neo4j_vector_db is None:
             # this assumes that the vector DB has already been created prior to attempting to query it
             # and we are simply retrieving the existing index here
@@ -210,13 +257,16 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
                                                                 keyword_index_name="keyword")
 
     def delete_vector_db(self):
+        """
+        Delete the vector database that corresponds to this graph database.
+        """
         if self._neo4j_vector_db is not None:
             self._neo4j_vector_db.delete_index()
             self._neo4j_vector_db = None
 
     def close(self):
         """
-        Close the neo4j driver.
+        Close the Neo4j driver.
         """
         if self._neo4j_graph_db is not None:
             self._neo4j_graph_db._driver.close()

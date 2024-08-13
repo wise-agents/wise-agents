@@ -10,16 +10,27 @@ from ..constants import DEFAULT_EMBEDDING_MODEL_NAME
 
 
 class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
+    """
+    An abstract class that makes use of a LangChain vector database.
+    """
 
     def __init__(self, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
+        """
+        Initialize a new instance of LangChainWiseAgentVectorDB.
+
+        Args:
+            embedding_model_name (Optional[str]): the optional name of the embedding model to use
+        """
         self._embedding_model_name = embedding_model_name
         self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
 
     @property
     def embedding_model_name(self):
+        """Get the name of the embedding model."""
         return self._embedding_model_name
 
     def get_embedding_function(self):
+        """Get the embedding function."""
         if not hasattr(self, "_embedding_function"):
             # instances populated from PyYAML won't have this set initially
             self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
@@ -54,10 +65,20 @@ class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
 
 
 class PGVectorLangChainWiseAgentVectorDB(LangChainWiseAgentVectorDB):
+    """
+    A LangChainWiseAgentVectorDB implementation that makes use of a LangChain PGVector database.
+    """
 
     yaml_tag = u'!PGVectorLangChainWiseAgentVectorDB'
 
     def __init__(self, connection_string: str, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
+        """
+        Initialize a new instance of PGVectorLangChainWiseAgentVectorDB.
+
+        Args:
+            connection_string (str): the connection string for the PGVector database
+            embedding_model_name (Optional[str]): the optional name of the embedding model to use
+        """
         super().__init__(embedding_model_name)
         self._connection_string = connection_string
         self._vector_dbs = {}
@@ -77,6 +98,7 @@ class PGVectorLangChainWiseAgentVectorDB(LangChainWiseAgentVectorDB):
 
     @property
     def connection_string(self):
+        """Get the connection string."""
         return self._connection_string
 
     def get_or_create_collection(self, collection_name: str):
