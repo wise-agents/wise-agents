@@ -56,7 +56,7 @@ To setup your development environment you need to:
 
 1. First `cd` to the directory where you cloned the project (eg: `cd wise-agents`)
 
-2. Create a Python wirtual environment for the project.
+2. Create a Python virtual environment for the project.
 
     The venv module supports creating lightweight “virtual  environments”, each with their own independent set of Python packages installed in their site directories. A virtual environment is created on top of an existing Python installation, known as the virtual environment’s “base” Python, and may optionally be isolated from the packages in the base environment, so only those explicitly installed in the virtual environment are available.
 For more information about virtual environment see [here](https://docs.python.org/3/library/venv.html)
@@ -99,7 +99,8 @@ When submitting a PR, please keep the following guidelines in mind:
 
 1. In general, it's good practice to squash all of your commits into a single commit. For larger changes, it's ok to have multiple meaningful commits. If you need help with squashing your commits, feel free to ask us how to do this on your pull request. We're more than happy to help!
 
-2. Please include the issue you worked on in the title of your pull request and in your commit message. For example, for [issue-125](https://github.com/wise-agents/wise-agents/issues/125), the PR title and commit message should be `Go through TODOs in the code and create issues for them #125`.
+2. Please link the issue you worked on in the description of your pull request and in your commit message. For example, for issue-125, the PR description and commit message could be: ```Go through TODOs in the code and create issues for them  
+Fixes #125```
 
 
 ## Code Reviews
@@ -110,4 +111,4 @@ The [GitHub Pull Request Review Process](https://docs.github.com/en/pull-request
 
 
 ## Community
-For more information on how to get involved with WildFly Elytron, check out our [community](https://wildfly-security.github.io/wildfly-elytron/community/) page.
+For more information on how to get involved with Wise Agents, check out our [community](https://wise-agents.github.io/community/) page.

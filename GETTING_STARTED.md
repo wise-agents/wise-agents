@@ -1,6 +1,6 @@
 # wise-agents getting started
 
-# How to resolve dependencies declared in pyptoject.toml
+# How to resolve dependencies declared in pyproject.toml
 
 1. Create a venv and activate it
 ``` 
