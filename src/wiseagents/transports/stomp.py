@@ -7,31 +7,43 @@ import stomp
 import yaml
 
 class WiseAgentRequestQueueListener(stomp.ConnectionListener):
+    '''A listener for the request queue.'''
     
     def __init__(self, transport: WiseAgentTransport):
+        '''Initialize the listener.
+        Args:
+            '''
         self.transport = transport
     
     def on_event(self, event):
+        '''Handle an event.'''
         self.transport.event_receiver(event)
         
     def on_error(self, error):
+        '''Handle an error.'''
         self.transport.error_receiver(error)
 
     def on_message(self, message: stomp.utils.Frame):
+        '''Handle a message.'''
         logging.debug(f"Received message: {message}")
         logging.debug(f"Received message type: {message.__class__}")
         logging.debug(f"Calling the callback function: {self.transport.request_receiver}")
         self.transport.request_receiver(yaml.load(message.body, yaml.Loader))
 
 class WiseAgentResponseQueueListener(stomp.ConnectionListener):
-    
+    '''A listener for the response queue.'''
     def __init__(self, transport: WiseAgentTransport):
+        '''Initialize the listener.
+        Args:
+            transport (WiseAgentTransport): the transport'''
         self.transport = transport
             
     def on_error(self, error):
+        '''Handle an error.'''
         self.transport.error_receiver(error)
 
     def on_message(self, message: stomp.utils.Frame):
+        '''Handle a message.'''
         logging.debug(f"Received message: {message}")
         logging.debug(f"Received message type: {message.__class__}")
         
@@ -39,11 +51,17 @@ class WiseAgentResponseQueueListener(stomp.ConnectionListener):
 
 
 class StompWiseAgentTransport(WiseAgentTransport):
+    '''A transport for sending messages between agents using the STOMP protocol.'''
     
     yaml_tag = u'!wiseagents.transport.StompWiseAgentTransport'
     conn : stomp.Connection = None
     conn2 : stomp.Connection = None
     def __init__(self, host: str, port: int, agent_name: str):
+        '''Initialize the transport.
+        Args:
+            host (str): the host
+            port (int): the port
+            agent_name (str): the agent name'''
         self._host = host
         self._port = port
         self._agent_name = agent_name
@@ -63,6 +81,9 @@ class StompWiseAgentTransport(WiseAgentTransport):
 
 
     def start(self):
+        '''
+        Start the transport.
+        require the environment variables STOMP_USER and STOMP_PASSWORD to be set'''
         hosts = [(self.host, self.port)] 
         self.conn = stomp.Connection(host_and_ports=hosts, heartbeats=(60000, 60000))
         self.conn.set_listener('WiseAgentRequestTopicListener', WiseAgentRequestQueueListener(self))
@@ -78,6 +99,10 @@ class StompWiseAgentTransport(WiseAgentTransport):
 
 
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
+        '''Send a request message to an agent.
+        Args:
+            message (WiseAgentMessage): the message to send
+            dest_agent_name (str): the destination agent name'''
         # Send the message using the STOMP protocol
         if self.conn is None or self.conn2 is None:
             self.start()
@@ -89,6 +114,10 @@ class StompWiseAgentTransport(WiseAgentTransport):
         self.conn.send(body=yaml.dump(message), destination=request_destination)
         
     def send_response(self, message: WiseAgentMessage, dest_agent_name: str):
+        '''Send a response message to an agent.
+        Args:
+            message (WiseAgentMessage): the message to send
+            dest_agent_name (str): the destination agent name'''
         # Send the message using the STOMP protocol
         if self.conn is None or self.conn2 is None:
             self.start()
@@ -96,6 +125,7 @@ class StompWiseAgentTransport(WiseAgentTransport):
         self.conn2.send(body=yaml.dump(message), destination=response_destination)
 
     def stop(self):
+        '''Stop the transport.'''
         if self.conn is not None:
             #unsubscribe from the request topic
             self.conn.unsubscribe(destination=self.request_queue, id=id(self))
@@ -108,18 +138,23 @@ class StompWiseAgentTransport(WiseAgentTransport):
         
     @property
     def host(self) -> str:
+        '''Get the host.'''
         return self._host
     @property
     def port(self) -> int:
+        '''Get the port.'''
         return self._port
     @property
     def agent_name(self) -> str:
+        '''Get the agent name.'''
         return self._agent_name
     @property
     def request_queue(self) -> str:
+        '''Get the request queue.'''
         return '/queue/request/' + self.agent_name
     @property
     def response_queue(self) -> str:
+        '''Get the response queue.'''
         return '/queue/response/' + self.agent_name
     
     
