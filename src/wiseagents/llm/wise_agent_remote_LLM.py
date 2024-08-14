@@ -1,7 +1,8 @@
 from typing import Iterable
 
 from openai.types.chat import ChatCompletion, ChatCompletionMessageParam, ChatCompletionToolParam
-from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
+from wiseagents.llm import WiseAgentLLM
+
 from abc import abstractmethod
 
 

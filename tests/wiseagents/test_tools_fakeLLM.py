@@ -5,9 +5,9 @@ from typing import Iterable
 
 import pytest
 
-from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
+from wiseagents.llm import WiseAgentRemoteLLM
 from wiseagents import WiseAgentMessage, WiseAgentRegistry, WiseAgentTool
-from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
+from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
 from wiseagents.wise_agent_impl import LLMWiseAgentWithTools, PassThroughClientAgent
 
@@ -19,7 +19,7 @@ from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCo
 class FakeOpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     
     client = None
-    yaml_tag = u'!OpenaiAPIWiseAgentLLM'    
+    yaml_tag = u'!FakeOpenaiAPIWiseAgentLLM'    
     
     
     def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1"):

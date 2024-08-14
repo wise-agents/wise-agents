@@ -1,4 +1,4 @@
-from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
+from wiseagents.llm import OpenaiAPIWiseAgentLLM
 
   
 def test_openai():

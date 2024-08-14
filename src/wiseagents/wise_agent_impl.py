@@ -12,7 +12,7 @@ from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.vectordb import Document, WiseAgentVectorDB
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport, WiseAgentTool
-from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
+from wiseagents.llm import WiseAgentLLM
 
 
 class PassThroughClientAgent(WiseAgent):

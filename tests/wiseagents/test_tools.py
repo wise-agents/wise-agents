@@ -3,7 +3,7 @@ import logging
 import threading
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTool
-from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
+from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
 from wiseagents.wise_agent_impl import LLMWiseAgentWithTools, PassThroughClientAgent
 
