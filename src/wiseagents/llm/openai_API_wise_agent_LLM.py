@@ -1,5 +1,5 @@
 from typing import Iterable
-from wiseagents.llm import WiseAgentRemoteLLM
+from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import requests
 import openai
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
