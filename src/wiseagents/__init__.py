@@ -17,18 +17,3 @@ from wiseagents.wise_agent_messaging import WiseAgentEvent
 # __all__ = ['module1', 'module2', 'subpackage']
 __all__ = ['WiseAgentRegistry', 'WiseAgentContext', 'WiseAgent', 'WiseAgentTool',
            'WiseAgentMessage', 'WiseAgentMessageType', 'WiseAgentTransport', 'WiseAgentEvent']
-
-''' A package for creating and managing agents. 
-    Each agent is a separate entity that can send and receive messages.
-    Agents can be created, started, stopped, and removed.
-    Agents can send and receive messages.
-    Agents can be assigned to tools.
-    Exports the following classes:
-    WiseAgentRegistry: a registry for managing agents.
-    WiseAgentContext: a context for an agent.
-    WiseAgent: a base class for agents.
-    WiseAgentTool: a tool for agents.
-    WiseAgentMessage: a message for agents.
-    WiseAgentMessageType: a message type for agents.
-    WiseAgentTransport: a transport for agents.
-    WiseAgentEvent: an event for agents.'''

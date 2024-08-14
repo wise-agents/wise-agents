@@ -91,6 +91,7 @@ class WiseAgentGraphDB(yaml.YAMLObject):
         """
         Query the graph DB.
 
+
         Args:
             query (str): the query to execute
             params (dict): the optional parameters for the query
@@ -105,6 +106,7 @@ class WiseAgentGraphDB(yaml.YAMLObject):
         """
         Insert an entity into the graph DB.
 
+
         Args:
             entity (Entity): the entity to insert
             source (Source): information about the source from which the entity has been derived from
@@ -116,6 +118,7 @@ class WiseAgentGraphDB(yaml.YAMLObject):
         """
         Insert a relationship into the graph DB.
 
+
         Args:
             relationship (Relationship): the relationship to insert
             source (Source): information about the source from which the relationship has been derived from
@@ -126,6 +129,7 @@ class WiseAgentGraphDB(yaml.YAMLObject):
     def insert_graph_documents(self, graph_documents: List[GraphDocument]):
         """
         Insert a list of graph documents into the graph DB.
+
 
         Args:
             graph_documents (List[GraphDocuments]): the graph documents to insert

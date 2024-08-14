@@ -21,6 +21,7 @@ class PassThroughClientAgent(WiseAgent):
     yaml_tag = u'!wiseagents.PassThroughClientAgent'
     def __init__(self, name, description , transport):
         '''Initialize the agent.
+        
         Args:
             name (str): the name of the agent
             description (str): a description of the agent
@@ -62,6 +63,7 @@ class PassThroughClientAgent(WiseAgent):
         return self._response_delivery
     def set_response_delivery(self, response_delivery: Callable[[], WiseAgentMessage]):
         '''Set the function to deliver the response to the client.
+        
         Args:
             response_delivery (Callable[[], WiseAgentMessage]): the function to deliver the response to the client'''
         self._response_delivery = response_delivery
@@ -71,6 +73,7 @@ class LLMOnlyWiseAgent(WiseAgent):
     yaml_tag = u'!wiseagents.LLMOnlyWiseAgent'
     def __init__(self, name: str, description: str, llm : WiseAgentLLM, trasport: WiseAgentTransport):
         '''Initialize the agent.
+
         Args:
             name (str): the name of the agent
             description (str): a description of the agent
@@ -95,6 +98,7 @@ class LLMOnlyWiseAgent(WiseAgent):
         return True
     def process_request(self, request: WiseAgentMessage):
         '''Process a request message by passing it to the LLM agent and sending the response back to the client.
+
         Args:
             request (WiseAgentMessage): the request message to process'''
         llm_response = self.llm.process_single_prompt(request.message)
@@ -105,6 +109,7 @@ class LLMOnlyWiseAgent(WiseAgent):
         return True
     def get_recipient_agent_name(self, message):
         '''Return the name of the agent to send the message to.
+
         Args:
             message (WiseAgentMessage): the message to process'''
         return self.name
@@ -125,6 +130,7 @@ class LLMWiseAgentWithTools(WiseAgent):
     yaml_tag = u'!wiseagents.LLMWiseAgentWithTools'
     def __init__(self, name: str, description: str, llm : WiseAgentLLM, transport: WiseAgentTransport, tools: List[str]):
         '''Initialize the agent.
+
         Args:
             name (str): the name of the agent
             description (str): a description of the agent
@@ -151,6 +157,7 @@ class LLMWiseAgentWithTools(WiseAgent):
     def process_request(self, request: WiseAgentMessage):
         '''Process a request message by passing it to the LLM agent and sending the response back to the client.
         It invoke also the tool if required. Tool could be a callback function or another agent.
+
         Args:
             request (WiseAgentMessage): the request message to process'''
         logging.debug(f"IA Request received: {request}")
@@ -217,7 +224,8 @@ class LLMWiseAgentWithTools(WiseAgent):
     def process_response(self, response : WiseAgentMessage):
         '''Process a response message and sending the response back to the client.
         It invoke also the tool if required. Tool could be a callback function or another agent.
-        args:
+
+        Args:
             response (WiseAgentMessage): the response message to process
             '''
         print(f"Response received: {response}")
@@ -243,6 +251,7 @@ class LLMWiseAgentWithTools(WiseAgent):
             return True
     def get_recipient_agent_name(self, message):
         '''Return the name of the agent to send the message to.
+
         Args:
             message (WiseAgentMessage): the message to process'''
         return self.name
@@ -266,6 +275,7 @@ class RAGWiseAgent(WiseAgent):
     def __init__(self, name: str, description: str, llm: WiseAgentLLM, vector_db: WiseAgentVectorDB,
                  transport: WiseAgentTransport, collection_name: Optional[str] = "wise-agents-collection"):
         '''Initialize the agent.
+
         Args:
             name (str): the name of the agent
             description (str): a description of the agent
@@ -298,6 +308,7 @@ class RAGWiseAgent(WiseAgent):
 
     def process_request(self, request: WiseAgentMessage):
         '''Process a request message by passing it to the RAG agent and sending the response back to the client.
+
         Args:
             request (WiseAgentMessage): the request message to process'''
         retrieved_documents = self.vector_db.query([request.message], self.collection_name, 4)
@@ -332,6 +343,7 @@ class GraphRAGWiseAgent(WiseAgent):
     def __init__(self, name: str, description: str, llm: WiseAgentLLM, graph_db: WiseAgentGraphDB,
                  transport: WiseAgentTransport):
         '''Initialize the agent.
+
         Args:
             name (str): the name of the agent
             description (str): a description of the agent
@@ -362,6 +374,7 @@ class GraphRAGWiseAgent(WiseAgent):
 
     def process_request(self, request: WiseAgentMessage):
         '''Process a request message by passing it to the RAG agent and sending the response back to the client.
+
         Args:
             request (WiseAgentMessage): the request message to process'''
         retrieved_documents = self.graph_db.query_with_embeddings(query=request.message, k=1, retrieval_query=self._get_retrieval_query())
@@ -409,6 +422,7 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
 
     def __init__(self, name: str, description: str, transport: WiseAgentTransport, agents: List[str]):
         '''Initialize the agent.
+
         Args:
             name (str): the name of the agent
             description (str): a description of the agent
@@ -425,6 +439,7 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
 
     def process_request(self, request):
         '''Process a request message by passing it to the first agent in the sequence.
+
         Args:
             request (WiseAgentMessage): the request message to process'''
         logging.debug(f"Sequential coordinator received request: {request}")
@@ -435,6 +450,7 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
 
     def process_response(self, response):
         '''Process a response message by passing it to the next agent in the sequence.
+
         Args:
             response (WiseAgentMessage): the response message to process'''
         ctx = WiseAgentRegistry.get_or_create_context(response.context_name)
@@ -458,7 +474,8 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
 
     def get_recipient_agent_name(self, message):
         '''Return the name of the agent to send the message to.
-        args:
+
+        Args:
             message (WiseAgentMessage): the message to process'''
         return self.name
 
@@ -490,6 +507,7 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
 
 def _create_and_process_rag_prompt(retrieved_documents: List[Document], question: str, llm: WiseAgentLLM) -> str:
     '''Create a RAG prompt and process it with the LLM agent.
+
     Args:
         retrieved_documents (List[Document]): the list of retrieved documents
         question (str): the question to ask

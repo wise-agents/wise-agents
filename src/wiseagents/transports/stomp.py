@@ -11,6 +11,7 @@ class WiseAgentRequestQueueListener(stomp.ConnectionListener):
     
     def __init__(self, transport: WiseAgentTransport):
         '''Initialize the listener.
+
         Args:
             '''
         self.transport = transport
@@ -34,6 +35,7 @@ class WiseAgentResponseQueueListener(stomp.ConnectionListener):
     '''A listener for the response queue.'''
     def __init__(self, transport: WiseAgentTransport):
         '''Initialize the listener.
+
         Args:
             transport (WiseAgentTransport): the transport'''
         self.transport = transport
@@ -58,6 +60,7 @@ class StompWiseAgentTransport(WiseAgentTransport):
     conn2 : stomp.Connection = None
     def __init__(self, host: str, port: int, agent_name: str):
         '''Initialize the transport.
+
         Args:
             host (str): the host
             port (int): the port
@@ -100,6 +103,7 @@ class StompWiseAgentTransport(WiseAgentTransport):
 
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
         '''Send a request message to an agent.
+
         Args:
             message (WiseAgentMessage): the message to send
             dest_agent_name (str): the destination agent name'''
@@ -115,6 +119,7 @@ class StompWiseAgentTransport(WiseAgentTransport):
         
     def send_response(self, message: WiseAgentMessage, dest_agent_name: str):
         '''Send a response message to an agent.
+
         Args:
             message (WiseAgentMessage): the message to send
             dest_agent_name (str): the destination agent name'''

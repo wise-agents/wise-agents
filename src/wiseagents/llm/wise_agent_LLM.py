@@ -8,6 +8,7 @@ class WiseAgentLLM(yaml.YAMLObject):
     yaml_tag = u'!WiseAgentLLM'    
     def __init__(self, system_message, model_name):
         '''Initialize the agent.
+
         Args:
             system_message (str): the system message
             model_name (str): the model name
@@ -34,6 +35,7 @@ class WiseAgentLLM(yaml.YAMLObject):
     def process_single_prompt(self, prompt):
         '''Process a single prompt. This method should be implemented by subclasses.
         The single prompt is processed and the result is returned, all the context and state is maintained locally in the method
+
         Args:
             prompt (str): the prompt to process'''
         
@@ -46,9 +48,11 @@ class WiseAgentLLM(yaml.YAMLObject):
         '''Process a chat completion. This method should be implemented by subclasses.
         The context and state is passed in input and returned as part of the output.
         Deal with the messages and tools is responsibility of the caller.
+
         Args:
             messages (Iterable[ChatCompletionMessageParam]): the messages to process
             tools (Iterable[ChatCompletionToolParam]): the tools to use
-            Returns:
+        
+        Returns:
                 ChatCompletion: the chat completion result'''
         ...

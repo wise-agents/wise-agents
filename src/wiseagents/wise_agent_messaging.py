@@ -26,6 +26,7 @@ class WiseAgentMessage(YAMLObject):
                  chat_id: Optional[str] = None, tool_id : Optional[str] = None, context_name: Optional[str] = None,
                  route_response_to: Optional[str] = None):
         '''Initialize the message.
+
         Args:
             message (str): the message contents (a natural language string)
             sender Optional(str): the sender of the message (or None if the sender was not specified)
@@ -66,6 +67,7 @@ class WiseAgentMessage(YAMLObject):
     @sender.setter
     def sender(self, sender: str):
         '''Set the sender of the message.
+
         Args:
             sender (str): the sender of the message
         '''
@@ -97,6 +99,7 @@ class WiseAgentTransport(YAMLObject):
                  error_receiver: Optional[Callable[[], WiseAgentMessage]] = None,
                  response_receiver: Optional[Callable[[], WiseAgentMessage]] = None):
         '''Set the call back functions for the transport.
+
         Args:
             request_receiver Optional(Callable[[], WiseAgentMessage]): the call back function for receiving requests
             event_receiver Optional(Callable[[], WiseAgentEvent]): the call back function for receiving events
@@ -120,6 +123,7 @@ class WiseAgentTransport(YAMLObject):
         """
         Send a request message to an agent.
 
+
         Args:
             message (WiseAgentMessage): the message to send
         """
@@ -129,6 +133,7 @@ class WiseAgentTransport(YAMLObject):
     def send_response(self, message: WiseAgentMessage, dest_agent_name: str):
         """
         Send a request message to an agent.
+
 
         Args:
             message (WiseAgentMessage): the message to send

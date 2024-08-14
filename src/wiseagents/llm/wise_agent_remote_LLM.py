@@ -23,6 +23,7 @@ class WiseAgentRemoteLLM(WiseAgentLLM):
     def process_single_prompt(self, prompt):
         '''Process a single prompt. This method should be implemented by subclasses.
         The single prompt is processed and the result is returned, all the context and state is maintained locally in the method
+
         Args:
             prompt (str): the prompt to process'''
         
@@ -35,9 +36,11 @@ class WiseAgentRemoteLLM(WiseAgentLLM):
         '''Process a chat completion. This method should be implemented by subclasses.
         The context and state is passed in input and returned as part of the output.
         Deal with the messages and tools is responsibility of the caller.
+
         Args:
             messages (Iterable[ChatCompletionMessageParam]): the messages to process
             tools (Iterable[ChatCompletionToolParam]): the tools to use
-            Returns:
+        
+        Returns:
                 ChatCompletion: the chat completion result'''
         ...

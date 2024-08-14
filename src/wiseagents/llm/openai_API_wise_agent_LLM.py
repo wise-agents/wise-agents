@@ -11,6 +11,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     
     def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1"):
         '''Initialize the agent.
+
         Args:
             system_message (str): the system message
             model_name (str): the model name
@@ -39,6 +40,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     def process_single_prompt(self, prompt):
         '''Process a single prompt. This method is implemented from superclass WiseAgentLLM.
         The single prompt is processed and the result is returned, all the context and state is maintained locally in the method
+
         Args:
             prompt (str): the prompt to process'''
         print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
@@ -61,10 +63,12 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         '''Process a chat completion. This method is implemented from superclass WiseAgentLLM.
         The context and state is passed in input and returned as part of the output.
         Deal with the messages and tools is responsibility of the caller.
+
         Args:
             messages (Iterable[ChatCompletionMessageParam]): the messages to process
             tools (Iterable[ChatCompletionToolParam]): the tools to use
-            Returns:
+        
+        Returns:
                 ChatCompletion: the chat completion result'''
         print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
         if (self.client is None):

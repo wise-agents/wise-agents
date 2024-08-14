@@ -21,7 +21,10 @@ class WiseAgent(yaml.YAMLObject):
     def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
                  vector_db: Optional[WiseAgentVectorDB] = None, collection_name: Optional[str] = "wise-agent-collection",
                  graph_db: Optional[WiseAgentGraphDB] = None):
-        ''' Initialize the agent with the given name, description, transport, LLM, vector DB, collection name, and graph DB.
+        ''' 
+        Initialize the agent with the given name, description, transport, LLM, vector DB, collection name, and graph DB.
+        
+
         Args:
             name (str): the name of the agent
             description (str): a description of what the agent does
@@ -92,6 +95,7 @@ class WiseAgent(yaml.YAMLObject):
     
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
         '''Send a request message to the destination agent with the given name.
+
         Args:
             message (WiseAgentMessage): the message to send
             dest_agent_name (str): the name of the destination agent'''
@@ -103,6 +107,7 @@ class WiseAgent(yaml.YAMLObject):
     
     def send_response(self, message: WiseAgentMessage, dest_agent_name):
         '''Send a response message to the destination agent with the given name.
+
         Args:
             message (WiseAgentMessage): the message to send
             dest_agent_name (str): the name of the destination agent'''
@@ -117,6 +122,7 @@ class WiseAgent(yaml.YAMLObject):
         """
         Callback method to process the given request for this agent.
 
+
         Args:
             message (WiseAgentMessage): the message to be processed
 
@@ -129,6 +135,7 @@ class WiseAgent(yaml.YAMLObject):
     def process_response(self, message: WiseAgentMessage) -> bool:
         """
         Callback method to process the response received from another agent which processed a request from this agent.
+
 
         Args:
             message (WiseAgentMessage): the message to be processed
@@ -143,6 +150,7 @@ class WiseAgent(yaml.YAMLObject):
         """
         Callback method to process the given event.
 
+
         Args:
             event (WiseAgentEvent): the event to be processed
 
@@ -156,6 +164,7 @@ class WiseAgent(yaml.YAMLObject):
         """
         Callback method to process the given error.
 
+
         Args:
             error (Exception): the error to be processed
 
@@ -168,6 +177,7 @@ class WiseAgent(yaml.YAMLObject):
     def get_recipient_agent_name(self, message: WiseAgentMessage) -> str:
         """
         Get the name of the agent to send the given message to.
+
 
         Args:
              message (WiseAgentMessage): the message to be sent
@@ -183,6 +193,7 @@ class WiseAgentTool(yaml.YAMLObject):
     def __init__(self, name: str, description: str, agent_tool: bool, parameters_json_schema: dict = {}, 
                  call_back : Optional[Callable[...,str]] = None):
        ''' Initialize the tool with the given name, description, agent tool, parameters json schema, and call back.
+
        Args:
            name (str): the name of the tool
            description (str): a description of what the tool does
@@ -199,6 +210,7 @@ class WiseAgentTool(yaml.YAMLObject):
     @classmethod
     def from_yaml(cls, loader, node):
         '''Load the tool from a YAML node.
+
         Args:
             loader (yaml.Loader): the YAML loader
             node (yaml.Node): the YAML node'''
@@ -233,7 +245,9 @@ class WiseAgentTool(yaml.YAMLObject):
        
     def get_tool_OpenAI_format(self) -> ChatCompletionToolParam:
         '''The tool should be able to return itself in the form of a ChatCompletionToolParam
-        return ChatCompletionToolParam'''
+        
+        Returns:
+            ChatCompletionToolParam'''
         return {"type": "function",
                 "function": {
                 "name": self.name,
@@ -269,6 +283,7 @@ class WiseAgentContext():
     
     def __init__(self, name: str):
         ''' Initialize the context with the given name.
+
         Args:
             name (str): the name of the context'''
         self._name = name
@@ -295,6 +310,7 @@ class WiseAgentContext():
     
     def add_participant(self, agent: WiseAgent):
         '''Add a participant to the context.
+
         Args:
             agent (WiseAgent): the agent to add'''
             
@@ -303,6 +319,7 @@ class WiseAgentContext():
     
     def append_chat_completion(self, chat_uuid: str, messages: Iterable[ChatCompletionMessageParam]):
         '''Append chat completion to the context.
+
         Args:
             chat_uuid (str): the chat uuid
             messages (Iterable[ChatCompletionMessageParam]): the messages to append'''
@@ -319,6 +336,7 @@ class WiseAgentContext():
     
     def append_required_tool_call(self, chat_uuid: str, tool_name: str):
         '''Append required tool call to the context.
+
         Args:
             chat_uuid (str): the chat uuid
             tool_name (str): the tool name to append'''
@@ -328,6 +346,7 @@ class WiseAgentContext():
     
     def remove_required_tool_call(self, chat_uuid: str, tool_name: str):
         '''Remove required tool call from the context.
+
         Args:
             chat_uuid (str): the chat uuid
             tool_name (str): the tool name to remove'''
@@ -338,6 +357,7 @@ class WiseAgentContext():
                 
     def get_required_tool_calls(self, chat_uuid: str) -> List[str]:
         '''Get required tool calls from the context.
+
         Args:
             chat_uuid (str): the chat uuid
             return List[str]'''
@@ -353,6 +373,7 @@ class WiseAgentContext():
     
     def append_available_tool_in_chat(self, chat_uuid: str, tools: Iterable[ChatCompletionToolParam]):
         '''Append available tool in chat to the context.
+
         Args:
             chat_uuid (str): the chat uuid
             tools (Iterable[ChatCompletionToolParam]): the tools to append'''
@@ -362,6 +383,7 @@ class WiseAgentContext():
     
     def get_available_tools_in_chat(self, chat_uuid: str) -> List[ChatCompletionToolParam]:
         '''Get available tools in chat from the context.
+
         Args:
             chat_uuid (str): the chat uuid
             return List[ChatCompletionToolParam]'''
@@ -384,6 +406,7 @@ class WiseAgentContext():
         """
         Set the sequence of agents for this context.
 
+
         Args:
             agents_sequence (List[str]): the sequence of agents
         """
@@ -392,6 +415,7 @@ class WiseAgentContext():
     def get_next_agent_in_sequence(self, current_agent: str):
         """
         Get the next agent in the sequence of agents for this context.
+
 
         Args:
             current_agent (str): the name of the current agent
