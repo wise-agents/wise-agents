@@ -8,3 +8,6 @@ from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
 # Optionally, you can define __all__ to specify the public interface of the package
 # __all__ = ['module1', 'module2', 'subpackage']
 __all__ = ['OpenaiAPIWiseAgentLLM']
+''' A package for creating and managing agents that use the OpenAI API.
+Export the following classes:
+OpenaiAPIWiseAgentLLM: a WiseAgentLLM that uses the OpenAI API.'''
