@@ -5,8 +5,8 @@ from typing import Any, Callable, Dict, Iterable, Optional
 from uuid import UUID
 
 from wiseagents.graphdb import WiseAgentGraphDB
-from wiseagents.llm.openai_API_wise_agent_LLM import OpenaiAPIWiseAgentLLM
-from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
+from wiseagents.llm import OpenaiAPIWiseAgentLLM
+from wiseagents.llm import WiseAgentLLM
 
 from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentTransport, WiseAgentEvent
 from wiseagents.vectordb import WiseAgentVectorDB
