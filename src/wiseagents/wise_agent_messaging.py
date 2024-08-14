@@ -20,10 +20,21 @@ class WiseAgentEvent:
 
 
 class WiseAgentMessage(YAMLObject):
+    ''' A message that can be sent between agents. '''
     yaml_tag = u'!wiseagents.WiseAgentMessage'
     def __init__(self, message: str, sender: Optional[str] = None, message_type: Optional[WiseAgentMessageType] = None, 
                  chat_id: Optional[str] = None, tool_id : Optional[str] = None, context_name: Optional[str] = None,
-                 route_response_to: Optional[str] = None):  
+                 route_response_to: Optional[str] = None):
+        '''Initialize the message.
+        Args:
+            message (str): the message contents (a natural language string)
+            sender Optional(str): the sender of the message (or None if the sender was not specified)
+            message_type Optional(WiseAgentMessageType): the type of the message (or None if the type was not specified)
+            chat_id Optional(str): the id of the message
+            tool_id Optional(str): the id of the tool
+            context_name Optional(str): the context name of the message
+            route_response_to Optional(str): the id of the tool to route the response to
+            ''' 
         self._message = message
         self._sender = sender
         self._message_type = message_type
@@ -54,6 +65,10 @@ class WiseAgentMessage(YAMLObject):
         return self._sender
     @sender.setter
     def sender(self, sender: str):
+        '''Set the sender of the message.
+        Args:
+            sender (str): the sender of the message
+        '''
         self._sender = sender
     
     @property
@@ -76,11 +91,18 @@ class WiseAgentMessage(YAMLObject):
         return self._route_response_to
 
 class WiseAgentTransport(YAMLObject):
-    
+    ''' A transport for sending messages between agents. '''    
     def set_call_backs(self, request_receiver: Optional[Callable[[], WiseAgentMessage]] = None,
                  event_receiver: Optional[Callable[[], WiseAgentEvent]] = None,
                  error_receiver: Optional[Callable[[], WiseAgentMessage]] = None,
                  response_receiver: Optional[Callable[[], WiseAgentMessage]] = None):
+        '''Set the call back functions for the transport.
+        Args:
+            request_receiver Optional(Callable[[], WiseAgentMessage]): the call back function for receiving requests
+            event_receiver Optional(Callable[[], WiseAgentEvent]): the call back function for receiving events
+            error_receiver Optional(Callable[[], WiseAgentMessage]): the call back function for receiving errors
+            response_receiver Optional(Callable[[], WiseAgentMessage]): the call back function for receiving responses
+        '''
         self._request_receiver = request_receiver
         self._event_receiver = event_receiver
         self._error_receiver = error_receiver
