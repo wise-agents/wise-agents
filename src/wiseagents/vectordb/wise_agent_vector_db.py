@@ -28,6 +28,7 @@ class WiseAgentVectorDB(yaml.YAMLObject):
         """
         Get the collection for the vector DB or create it if it doesn't already exist.
 
+
         Args:
             collection_name (str): the name of the collection
         """
@@ -38,6 +39,7 @@ class WiseAgentVectorDB(yaml.YAMLObject):
         """
         Delete the collection with the specified name from the vector DB.
 
+
         Args:
             collection_name (str): the name of the collection to delete
         """
@@ -47,6 +49,7 @@ class WiseAgentVectorDB(yaml.YAMLObject):
     def insert_documents(self, documents: List[Document], collection_name: str):
         """
         Insert the given documents into the specified collection in the vector DB.
+
 
         Args:
             documents (List[Document]): the documents to be inserted into the specified collection
@@ -60,6 +63,7 @@ class WiseAgentVectorDB(yaml.YAMLObject):
         Insert the given documents into the specified collection in the vector DB, updating any
         documents that already exist in the collection.
 
+
         Args:
             documents (List[Document]): the documents to be inserted into the specified collection
             collection_name (str): the name of the collection in the vector DB to insert the documents into
@@ -71,6 +75,7 @@ class WiseAgentVectorDB(yaml.YAMLObject):
         """
         Delete documents from the specified collection in the vector DB.
 
+
         Args:
             ids (List[str]): the list of document IDs to be deleted
             collection_name (str): the name of the collection in the vector DB to delete the documents from
@@ -81,6 +86,7 @@ class WiseAgentVectorDB(yaml.YAMLObject):
     def query(self, queries: List[str], collection_name: str, k: Optional[int]) -> List[List[Document]]:
         """
         Retrieve documents from the specified collection in the vector DB using the given queries.
+
 
         Args:
             queries (List[str]): the list of queries where each query is a string

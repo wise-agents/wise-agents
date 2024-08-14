@@ -1,30 +1,16 @@
-# wise-agents
+# Wise Agents: A Distributed AI Multi-Agent Framework
 
-# How to resolve dependencies declared in pyptoject.toml
+Wise-agent is a framework implementing an architecture of distributed multi AI agents.
 
-1. Create a venv and activate it
-``` 
-python -m venv .venv
-source .venv/bin/activate
-```
-2. ``pip install .``
+## Multi-agent system
+Agents can be considered composable and adaptable AI components which have memory,  and are able to receive an input request, collect external information, take actions and collaborate with other agents or humans to get the outcomes requested.
 
+Gartner’s definition of a multi-agent system is: 
+>A multiagent system (MAS) is a type of AI system composed of multiple, independent (but interactive) agents, each capable of perceiving their environment and taking actions. Agents can be AI models, software programs, robots and other computational entities. Multiple agents can work toward a common goal that goes beyond the ability of individual agents, with increased adaptability and robustness.
 
-# How to run test
+For more details refer to our [documentation](https://wise-agents.github.io/multi_agents/#)
 
-1. Run ``pip install -e '.[test]'``
-2. Start the llm service (see [model-serving/README.MD](model-serving/README.MD))
-3. From project's root directory run ``pytest``
-4. If you need log enable it running ``pytest --log-cli-level=DEBUG``
-5. If you want to run a single test you can specify the test with -k option: ``pytest -k test_register_agents --log-cli-level=DEBUG``
-6. You can also run all tests contained in a single file with the same option ``pytest -k test_WiseAgentRegistry --log-cli-level=DEBUG``
-7. Note the name of the file could be partial so for example ``pytest -k test_yaml --log-cli-level=DEBUG`` will run test contained in ``tests/wiseagents/test_yaml_deserializer.py`` and ``tests/wiseagents/test_yaml_serialization.py)
+For more information on how to build, test and experiment with the project please refer to [GETTING_STARTED.md](GETTING_STARTED.md)
 
+If you want to contribute, please have a look to [CONTRIBUTING.md](CONTRIBUTING.md)
 
-
-# How to run the chatbot
-1. Run ``pip install .``
-2. Start the llm service (see [model-serving/README.MD](model-serving/README.MD))
-2. Start artemis service (see [artemis/README.MD])(artemis/README.MD)
-3. Set the ``STOMP_USER`` and ``STOMP_PASSWORD`` environment variables
-4. Run the CLI ``python src/wiseagents/cli/wise_agent_cli.py``

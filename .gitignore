@@ -166,3 +166,6 @@ models
 
 #VSCode
 .vscode/
+
+#mkdocs build
+website

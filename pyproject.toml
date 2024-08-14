@@ -18,6 +18,12 @@ dependencies = [
     "streamlit==1.36.0",
     "pyyaml==6.0.1",
     "stomp.py==8.1.2",
+    "mkdocstrings-python",
+    "mkdocs",
+    "mkdocs-gen-files",
+    "mkdocs-literate-nav",
+    "mkdocs-section-index",
+    "mkdocs-include-markdown-plugin",
 ]
 
 [project.optional-dependencies]

@@ -1,0 +1,31 @@
+site_name: wise-agents Docs
+nav:
+  - Home: index.md
+  - Getting Started:
+    - What are AI Agents: multi_agents.md
+    - Wise Agents architecture: wise_agents_architecture.md
+    - Developer Quick Start: dev_quick_start.md
+  - Details: 
+    - RAG Architecture: rag_architecture.md
+    - Using CLI: using_cli.md
+    - Declare agents in YAML: declare_agents.md
+  - Examples:
+    - Example 1: example_1.md
+    - Example 2: example_2.md
+  - API Reference: reference/
+  - About:
+    - Community: community.md
+    - Contributing: contributing.md
+    - License: license.md
+    - Security: security.md
+plugins: 
+  - search
+  - include-markdown
+  - gen-files:
+      scripts:
+      - mkdocs-scripts/gen_ref_pages.py
+  - literate-nav:
+      nav_file: SUMMARY.md
+  - section-index
+  - mkdocstrings
+theme: readthedocs

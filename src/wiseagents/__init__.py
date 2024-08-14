@@ -17,4 +17,3 @@ from wiseagents.wise_agent_messaging import WiseAgentEvent
 # __all__ = ['module1', 'module2', 'subpackage']
 __all__ = ['WiseAgentRegistry', 'WiseAgentContext', 'WiseAgent', 'WiseAgentTool',
            'WiseAgentMessage', 'WiseAgentMessageType', 'WiseAgentTransport', 'WiseAgentEvent']
-

@@ -4,12 +4,18 @@ import requests
 import openai
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
 class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
-    
+    '''A class to define a WiseAgentLLM that uses the OpenAI API.'''
     client = None
     yaml_tag = u'!OpenaiAPIWiseAgentLLM'    
     
     
     def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1"):
+        '''Initialize the agent.
+
+        Args:
+            system_message (str): the system message
+            model_name (str): the model name
+            remote_address (str): the remote address of the agent. Default is "http://localhost:8001/v1"'''
         super().__init__(system_message, model_name, remote_address)
         self.chain = None
     
@@ -26,11 +32,17 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         return state 
     
     def connect(self):
+        '''Connect to the remote machine.'''
         self.client = openai.OpenAI(base_url=self.remote_address, 
                 api_key="sk-no-key-required")
     
    
     def process_single_prompt(self, prompt):
+        '''Process a single prompt. This method is implemented from superclass WiseAgentLLM.
+        The single prompt is processed and the result is returned, all the context and state is maintained locally in the method
+
+        Args:
+            prompt (str): the prompt to process'''
         print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
         if (self.client is None):
             self.connect()
@@ -48,6 +60,16 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     def process_chat_completion(self, 
                                 messages: Iterable[ChatCompletionMessageParam], 
                                 tools: Iterable[ChatCompletionToolParam]) -> ChatCompletion:
+        '''Process a chat completion. This method is implemented from superclass WiseAgentLLM.
+        The context and state is passed in input and returned as part of the output.
+        Deal with the messages and tools is responsibility of the caller.
+
+        Args:
+            messages (Iterable[ChatCompletionMessageParam]): the messages to process
+            tools (Iterable[ChatCompletionToolParam]): the tools to use
+        
+        Returns:
+                ChatCompletion: the chat completion result'''
         print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
         if (self.client is None):
             self.connect()

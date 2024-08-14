@@ -22,6 +22,7 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
         """
         Initialize a new instance of LangChainWiseAgentGraphDB.
 
+
         Args:
             embedding_model_name (Optional[str]): the optional name of the embedding model to use 
         """
@@ -94,6 +95,7 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
                  entity_label: Optional[str] = "entity"):
         """
         Initialize a new instance of Neo4jLangChainWiseAgent
+
 
         Args:
             properties (List[str]): the properties to be used as text node properties for the graph database
@@ -200,6 +202,7 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         """
         Create a vector database from the graph database.
 
+
         Args:
             retrieval_query (str): the retrieval query to use for the vector database
         """
@@ -216,6 +219,7 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         """
         Query the vector database that corresponds to this graph database using the given query and
         retrieve the top k documents.
+
 
         Args:
             query (str): the query to execute

@@ -18,6 +18,7 @@ class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
         """
         Initialize a new instance of LangChainWiseAgentVectorDB.
 
+
         Args:
             embedding_model_name (Optional[str]): the optional name of the embedding model to use
         """
@@ -74,6 +75,7 @@ class PGVectorLangChainWiseAgentVectorDB(LangChainWiseAgentVectorDB):
     def __init__(self, connection_string: str, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
         """
         Initialize a new instance of PGVectorLangChainWiseAgentVectorDB.
+
 
         Args:
             connection_string (str): the connection string for the PGVector database
