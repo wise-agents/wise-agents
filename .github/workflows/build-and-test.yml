@@ -1,0 +1,95 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Build and Test
+
+on:
+  push:
+    #branches: [ "main" ]
+  pull_request:
+    #branches: [ "main" ]
+
+permissions:
+  contents: read
+
+# Only run the latest job
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.ref || github.run_id }}'
+  cancel-in-progress: true
+
+env:
+  # Common for the tests
+  POD_CONTAINER: docker
+  # Env vars to configure Stomp
+  STOMP_USER: artemis
+  STOMP_PASSWORD: artemis
+  # Env vars to configure the Neo4j db. Currently, these values are hardcoded in the tests
+  NEO4J_USERNAME: neo4j
+  NEO4J_PASSWORD: neo4jpassword
+  NEO4J_DATABASE: neo4j
+  # Env vars to configure the PgVector db. Currently, these values are hardcoded in the tests
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+  POSTGRES_DB: postgres
+  # Env vars to log in to hugging faces and download the model
+  HUGGING_FACE_TOKEN: ${{ secrets.HUGGING_FACE_TOKEN }}
+  MODEL_PATH: .models
+  MODEL_REPO: microsoft/Phi-3-mini-4k-instruct-gguf
+  MODEL_NAME: Phi-3-mini-4k-instruct-q4.gguf
+
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+    - run: echo $MODEL_PATH
+    - run: echo ${GITHUB_WORKSPACE}
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.12
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.12"
+    - uses: actions/cache@v4
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/pyproject.toml') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    - name:  Update pip
+      run: |
+        python -m pip install --upgrade pip
+    - name: Install HuggingFaces Hub
+      run: pip install huggingface_hub
+    - name: Download the model
+      run: |
+        huggingface-cli login --token "$HUGGING_FACE_TOKEN"
+        huggingface-cli download "$MODEL_REPO" "$MODEL_NAME" --local-dir "$MODEL_PATH" --local-dir-use-symlinks False
+    - name: Start model server
+      # This one takes some time, and needs to be started in the background for the other steps to proceed.
+      # Start it first before all the other preparatory steps so it is ready when the tests start.
+      # TODO Find a better way to check if it is ready...
+      working-directory: model-serving
+      run: |
+        # Get absolute path to the model
+        export MODEL_PATH="${GITHUB_WORKSPACE}/$MODEL_PATH"
+        ./model-inference.sh &
+    - name: Start Neo4j graph db
+      working-directory: graphdb
+      run: |
+        ./run_graphdb.sh &
+    - name: Start PGVector vector db
+      working-directory: vectordb
+      run: |
+        ./run_vectordb.sh
+    - name: Start Artemis
+      working-directory: artemis
+      run: |
+        ./artemis.sh &
+    - name: Install wise-agents dependencies
+      run: |
+        pip install .
+        pip install -e '.[test]'
+    - name: Test with pytest
+      run: |
+        pytest --log-cli-level=DEBUG
