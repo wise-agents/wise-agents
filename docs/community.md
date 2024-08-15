@@ -26,3 +26,12 @@ see our [dedicated page](contributing.md)
   build together 💪.
 
   To get started, jump to [GitHub Discussion](https://github.com/wise-agents/wise-agents/discussions) and start your first thread.
+
+## 👋 Zulip Chat!
+  We’re using Zulip Chat as another place to connect with other members of our community. 
+  This is a good place to connect directly and quickly with other community members.
+  You can ask question and start discussions there, just remember it's not a support chat, but just a community chat.
+  For more involved discussions or to help keep track things, other community members might ask you to start a GitHub Discussion.
+  Chat gives the community a great power...but you know from a great power comes great responsibility, so be open-minded and remember this is a community we are building together.
+
+  To get started, jump on [wise-agents.zulip.com](https://wise-agents.zulipchat.com/) and start your first chat.
