@@ -35,3 +35,7 @@ see our [dedicated page](contributing.md)
   Chat gives the community a great power...but you know from a great power comes great responsibility, so be open-minded and remember this is a community we are building together.
 
   To get started, jump on [wise-agents.zulip.com](https://wise-agents.zulipchat.com/) and start your first chat.
+
+## 👀 Follow Us
+  Stay tuned for updates about the Wise Agents project by following us on:
+  * [X ](https://twitter.com/OpenWiseAgents)
