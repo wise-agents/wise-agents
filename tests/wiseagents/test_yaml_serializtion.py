@@ -5,6 +5,7 @@ from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 import yaml
 import logging
+import pytest
 
 from wiseagents.transports import StompWiseAgentTransport
 
@@ -68,6 +69,7 @@ def test_serialize_wise_agent(monkeypatch):
     logging.debug(deserialized_agent)
 
 
+@pytest.mark.needsllm
 def test_using_deserialized_agent(monkeypatch):
     # Create a WiseAgent object
     agent_llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",

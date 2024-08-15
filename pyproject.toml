@@ -38,4 +38,6 @@ pythonpath = "src"
 addopts = [
     "--import-mode=importlib",
 ]
-
+markers = [
+    "needsllm: The LMM is too big to run in GitHub Actions, so we need to disable tests requiring it there.",
+]
