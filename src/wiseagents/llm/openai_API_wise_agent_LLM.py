@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Optional
 from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import requests
 import openai
@@ -9,13 +9,16 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     yaml_tag = u'!OpenaiAPIWiseAgentLLM'    
     
     
-    def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1"):
+    def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1", api_key: Optional[str]="sk-no-key-required"):
         '''Initialize the agent.
 
         Args:
             system_message (str): the system message
             model_name (str): the model name
-            remote_address (str): the remote address of the agent. Default is "http://localhost:8001/v1"'''
+            remote_address (str): the remote address of the agent. Default is "http://localhost:8001/v1"
+            api_key (str): the API key. Default is "sk-no-key-required"'''
+        
+        self._api_key = api_key    
         super().__init__(system_message, model_name, remote_address)
         self.chain = None
     
@@ -34,7 +37,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     def connect(self):
         '''Connect to the remote machine.'''
         self.client = openai.OpenAI(base_url=self.remote_address, 
-                api_key="sk-no-key-required")
+                api_key=self.api_key)
     
    
     def process_single_prompt(self, prompt):
@@ -84,7 +87,10 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             )
         return response
         
-    
+    @property
+    def api_key(self):
+        '''Get the API key.'''
+        return self._api_key
         
 
         
