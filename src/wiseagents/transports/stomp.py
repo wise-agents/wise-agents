@@ -26,7 +26,7 @@ class WiseAgentRequestQueueListener(stomp.ConnectionListener):
 
     def on_message(self, message: stomp.utils.Frame):
         '''Handle a message.'''
-        logging.debug(f"Received message: {message}")
+        logging.debug(f"{self}: Received message: {message}")
         logging.debug(f"Received message type: {message.__class__}")
         logging.debug(f"Calling the callback function: {self.transport.request_receiver}")
         self.transport.request_receiver(yaml.load(message.body, yaml.Loader))
@@ -114,7 +114,8 @@ class StompWiseAgentTransport(WiseAgentTransport):
             self.conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
         if self.conn2.is_connected() == False:
             self.conn2.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
-        request_destination = '/queue/request/' + dest_agent_name    
+        request_destination = '/queue/request/' + dest_agent_name
+        logging.debug(f"Sending request {message} to {request_destination}")    
         self.conn.send(body=yaml.dump(message), destination=request_destination)
         
     def send_response(self, message: WiseAgentMessage, dest_agent_name: str):

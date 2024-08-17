@@ -134,7 +134,6 @@ def test_agent_tool():
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
 
-@pytest.mark.skip(reason="Intermittent failure. Need investigation see issue #176.") 
 def test_tool():
     json_schema = {
                     "type": "object",
