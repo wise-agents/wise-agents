@@ -25,8 +25,8 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     
     def __repr__(self):
         '''Return a string representation of the agent.'''
-        return f"{self.__class__.__name__}(system_message={self.system_message}, model_name={self.model_name}, 
-            remote_address={self.remote_address}, api_key={self.api_key})"
+        return (f"{self.__class__.__name__}(system_message={self.system_message}, model_name={self.model_name},"
+                f"remote_address={self.remote_address}, api_key={self.api_key})")
     
     def __getstate__(self) -> object:
         '''Return the state of the agent. Removing the instance variable client to avoid it is serialized/deserialized by pyyaml.'''
