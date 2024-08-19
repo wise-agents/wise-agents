@@ -8,7 +8,7 @@ from wiseagents.transports import StompWiseAgentTransport
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
 from wiseagents.wise_agent_impl import PassThroughClientAgent
 
-from src.wiseagents.wise_agent_impl import CoVeChallengerRAGWiseAgent
+from wiseagents.wise_agent_impl import CoVeChallengerRAGWiseAgent
 
 cond = threading.Condition()
 
