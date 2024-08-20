@@ -31,11 +31,6 @@ env:
   POSTGRES_USER: postgres
   POSTGRES_PASSWORD: postgres
   POSTGRES_DB: postgres
-  # Env vars to log in to hugging faces and download the model
-  HUGGING_FACE_TOKEN: ${{ secrets.HUGGING_FACE_TOKEN }}
-  MODEL_PATH: .models
-  MODEL_REPO: microsoft/Phi-3-mini-4k-instruct-gguf
-  MODEL_NAME: Phi-3-mini-4k-instruct-q4.gguf
 
 
 jobs:
