@@ -7,8 +7,9 @@
 # If a .env file is present, it will read the environment variables from there
 # The .env file should be in the same directory as the script
 # Rename the .env.example file to .env and set the environment variables
-if [ -f ./.env ]; then
-	. ./.env
+WORKING_DIR="$(dirname "${BASH_SOURCE[0]}")"
+if [ -f $WORKING_DIR/.env ]; then
+	. $WORKING_DIR/.env
 fi
 
 echo "Pod container: $POD_CONTAINER"
