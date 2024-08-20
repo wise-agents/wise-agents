@@ -20,7 +20,7 @@ def response_delivered(message: WiseAgentMessage):
         print(f"C Response delivered: {response}")
         cond.notify()
 
-@pytest.mark.skip(reason="does not pass CI/CD")
+@pytest.mark.needsllama
 def test_sequential_coordinator():
     """
     Requires STOMP_USER and STOMP_PASSWORD.

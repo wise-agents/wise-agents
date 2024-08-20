@@ -72,7 +72,7 @@ def response_delivered(message: WiseAgentMessage):
         cond.notify()
 
 
-@pytest.mark.needsllm
+@pytest.mark.needsllama
 def test_cove_challenger():
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
     llm1 = OpenaiAPIWiseAgentLLM(system_message="You are a retrieval augmented chatbot. You answer users' questions based on the context provided by the user. If you can't answer the question using the given context, just say you don't know the answer.",
