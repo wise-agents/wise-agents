@@ -85,7 +85,7 @@ class WiseAgentWeather(WiseAgent):
 #Note: this test work using GROQ as inference system and llama3.1 as model
 #You need to set the environment variable API_KEY with the value of your OpenAI API key
 #get your GROQ API key from https://groq.com/ and set it in the environment variable API_KEY
-
+@pytest.mark.needsqroq
 def test_agent_tool():
     json_schema = {
                     "type": "object",
@@ -134,6 +134,8 @@ def test_agent_tool():
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
 
+
+@pytest.mark.needsllm
 def test_tool():
     json_schema = {
                     "type": "object",

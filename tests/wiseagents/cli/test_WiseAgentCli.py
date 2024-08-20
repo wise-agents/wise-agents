@@ -94,6 +94,7 @@ def set_env(monkeypatch):
     monkeypatch.setenv("POSTGRES_DB", "postgres")
 
 
+@pytest.mark.needsllm
 def test_cli_with_rag_agent(monkeypatch, pytestconfig, capsys):
     inputs = ['/load-agents', '', '/send', 'RAGWiseAgent1', 'Who won the NBA championship in 2024?', '/exit']
 
@@ -116,6 +117,7 @@ def test_cli_with_rag_agent(monkeypatch, pytestconfig, capsys):
     assert "Boston Celtics" in captured.out
 
 
+@pytest.mark.needsllm
 def test_cli_with_graph_rag_agent(monkeypatch, pytestconfig, capsys):
     inputs = ['/load-agents', '', '/send', 'GraphRAGWiseAgent1', 'what country is the tall building located in', '/exit']
 

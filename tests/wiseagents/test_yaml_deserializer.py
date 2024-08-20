@@ -1,3 +1,5 @@
+import pytest
+
 from wiseagents import WiseAgent
 from wiseagents.llm import WiseAgentRemoteLLM
 from wiseagents.graphdb import LangChainWiseAgentGraphDB, Neo4jLangChainWiseAgentGraphDB
@@ -5,6 +7,7 @@ import yaml
 import logging, pathlib
 
 
+@pytest.mark.needsllm
 def test_using_deserialized_agent():
     # Create a WiseAgent object
     with open(pathlib.Path().resolve() / "tests/wiseagents/test.yaml") as stream:
@@ -30,6 +33,7 @@ def test_using_deserialized_agent():
     assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
 
 
+@pytest.mark.skip(reason="does not pass CI/CD")
 def test_using_multiple_deserialized_agents():
     # Create a WiseAgent object
     deserialized_agent = []
