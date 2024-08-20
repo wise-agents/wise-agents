@@ -83,9 +83,8 @@ class WiseAgentWeather(WiseAgent):
 
 
 #Note: this test work using GROQ as inference system and llama3.1 as model
-#You need to set the environment variable API_KEY with the value of your OpenAI API key
-#get your GROQ API key from https://groq.com/ and set it in the environment variable API_KEY
-@pytest.mark.needsqroq
+#You need to set the environment variable GROQ_API_KEY with the value of your OpenAI API key
+#get your GROQ API key from https://groq.com/ and set it in the environment variable GROQ_API_KEY
 def test_agent_tool():
     json_schema = {
                     "type": "object",
@@ -100,7 +99,7 @@ def test_agent_tool():
                     }
     WiseAgentTool(name="WeatherAgent", description="Get the current weather in a given location", agent_tool=True,
                  parameters_json_schema=json_schema, call_back=None) 
-    groq_api_key= os.getenv("API_KEY")
+    groq_api_key= os.getenv("GROQ_API_KEY")
     assert groq_api_key is not None
     llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
                                          model_name="llama-3.1-70b-versatile",
