@@ -1,7 +1,8 @@
+import copy
 from abc import ABC, abstractmethod
 import json
 import logging
-from typing import Any, Callable, Dict, Iterable, Optional
+from typing import Any, Callable, Dict, Iterable, List, Optional
 from uuid import UUID
 
 from wiseagents.graphdb import WiseAgentGraphDB
@@ -279,7 +280,10 @@ class WiseAgentContext():
     _llm_required_tool_call : Dict[str, List[str]] = {}
     _llm_available_tools_in_chat : Dict[str, List[ChatCompletionToolParam]] = {}
     _agents_sequence : List[str] = []
-    
+    _agent_phase_assignments : Dict[str, List[List[str]]] = {}
+    _current_phase : Dict[str, int] = {}
+    _required_agents_for_current_phase : Dict[str, List[str]] = {}
+    _queries : Dict[str, List[str]] = {}
     
     def __init__(self, name: str):
         ''' Initialize the context with the given name.
@@ -431,6 +435,135 @@ class WiseAgentContext():
                 return self._agents_sequence[next_agent_index]
         return None
 
+    def get_agent_phase_assignments(self, chat_uuid: str) -> List[List[str]]:
+        """
+        Get the phases of agents for the given chat uuid for this context.
+
+        Args:
+            chat_uuid (str): the chat uuid
+
+        Returns:
+            List[List[str]]: the phases of agents or an empty list if no phases have been set for the given chat uuid
+        """
+        if chat_uuid in self._agent_phase_assignments:
+            return self._agent_phase_assignments.get(chat_uuid)
+        return []
+
+    def set_agent_phase_assignments(self, chat_uuid: str, phases: List[List[str]]):
+        """
+        Set the phases of agents for the given chat uuid for this context.
+
+        Args:
+            chat_uuid (str): the chat uuid
+            phases (List[List[str]]): the phases of agents
+        """
+        self._agent_phase_assignments[chat_uuid] = phases
+
+    def get_current_phase(self, chat_uuid: str) -> int:
+        """
+        Get the current phase for the given chat uuid for this context.
+        
+        Args:
+            chat_uuid (str): the chat uuid
+
+        Returns:
+            int: the current phase
+        """
+        return self._current_phase.get(chat_uuid)
+
+    def set_current_phase(self, chat_uuid: str, phase: int):
+        """
+        Set the current phase for the given chat uuid for this context. This method also
+        sets the required agents for the current phase.
+
+        Args:
+            chat_uuid (str): the chat uuid
+            phase (int): the current phase
+        """
+        self._current_phase[chat_uuid] = phase
+        self._required_agents_for_current_phase[chat_uuid] = copy.deepcopy(self._agent_phase_assignments[chat_uuid][phase])
+
+    def get_next_phase(self, chat_uuid: str) -> Optional[List]:
+        """
+        Get the list of agents for the next phase for the given chat uuid for this context.
+
+        Args:
+            chat_uuid (str): the chat uuid
+
+        Returns:
+            Optional[List[str]]: the list of agents for the next phase or None if there are no more phases
+        """
+        current_phase = self.get_current_phase(chat_uuid)
+        next_phase = current_phase + 1
+        if next_phase < len(self._agent_phase_assignments[chat_uuid]):
+            self.set_current_phase(chat_uuid, next_phase)
+            return self._agent_phase_assignments[chat_uuid][next_phase]
+        return None
+
+    def get_required_agents_for_current_phase(self, chat_uuid: str) -> List[str]:
+        """
+        Get the list of required agents for the current phase for the given chat uuid for this context.
+
+        Args:
+            chat_uuid (str): the chat uuid
+
+        Returns:
+            List[str]: the list of required agents for the current phase or an empty list if there are no required agents
+        """
+        if chat_uuid in self._required_agents_for_current_phase:
+            return self._required_agents_for_current_phase.get(chat_uuid)
+        return []
+
+    def remove_required_agent_for_current_phase(self, chat_uuid: str, agent_name: str):
+        """
+        Remove the given agent from the list of required agents for the current phase for the given chat uuid for this context.
+
+        Args:
+            chat_uuid (str): the chat uuid
+            agent_name (str): the name of the agent to remove
+        """
+        if chat_uuid in self._required_agents_for_current_phase:
+            self._required_agents_for_current_phase.get(chat_uuid).remove(agent_name)
+
+    def get_current_query(self, chat_uuid: str):
+        """
+        Get the current query for the given chat uuid for this context.
+
+        Args:
+            chat_uuid (str): the chat uuid
+        """
+        if chat_uuid in self._queries:
+            if self._queries.get(chat_uuid):
+                # return the last query
+                return self._queries.get(chat_uuid)[-1]
+        else:
+            return None
+
+    def add_query(self, chat_uuid: str, query: str):
+        """
+        Add the current query for the given chat uuid for this context.
+
+        Args:
+            chat_uuid (str): the chat uuid
+            query (str): the current query
+        """
+        if chat_uuid not in self._queries:
+            self._queries[chat_uuid] = []
+        self._queries[chat_uuid].append(query)
+
+    def get_queries(self, chat_uuid: str) -> List[str]:
+        """
+        Get the queries attempted for the given chat uuid for this context.
+
+        Returns:
+            List[str]: the queries attempted for the given chat uuid for this context
+        """
+        if chat_uuid in self._queries:
+            return self._queries.get(chat_uuid)
+        else:
+            return []
+
+
 class WiseAgentRegistry:
 
     """
@@ -540,5 +673,19 @@ class WiseAgentRegistry:
         Get the tool with the given name
         """
         return cls.tools.get(tool_name)
-        
-        
+
+    @classmethod
+    def get_agent_names_and_descriptions(cls) -> List[str]:
+        """
+        Get the list of agent names and descriptions.
+
+        Returns:
+            List[str]: the list of agent descriptions
+        """
+        agent_descriptions = []
+        for agent_name, agent in cls.agents.items():
+            agent_descriptions.append("Agent Name: " + agent_name + " Agent Description: " + agent.description)
+
+        return agent_descriptions
+
+
