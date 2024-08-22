@@ -1,0 +1,55 @@
+# Since we are using secrets in our tests, we need to take some extra precautions.
+# on pull_request: jobs do not have access to secrets.defaults:
+# This job will only run if a pull request is opened by a member of the team. If opened by an external contributor
+# approval from a team member is required.
+# Once this job completes, the build-and-test-workflow-run.yml workflow will run.
+#
+# See https://www.kenmuse.com/blog/the-many-shas-of-a-github-pull-request/ for the SHA's which are important:
+# * github.sha - the SHA used by the checkout action. It represents the behind-the-schenes
+#  merge of the PR into the base branch.
+# • github.event.pull_request.head.sha - the commit SHA identifying the PR. We need this to update the status check
+# for the PR. See https://www.kenmuse.com/blog/creating-github-checks/ for more information.
+
+name: Build and Test
+
+on:
+  push:
+    #branches: [ "main" ]
+  pull_request:
+    #branches: [ "main" ]
+
+permissions:
+  contents: read
+
+# Only run the latest job
+concurrency:
+  group: '${{ github.workflow }} @ ${{ github.ref || github.run_id }}'
+  cancel-in-progress: true
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    steps:
+    - name: Get pull request number
+      run: |
+        event_name="${{ github.event_name }}"
+        
+        if [ "${event_name}" == "pull_request" ]; then
+          echo "This is a pull request"
+          echo "PR_NUMBER=${{ github.event.number }}" >> .job-env
+          echo "GITHUB_SHA=${{ github.sha }}" >> .job-env
+          echo "GITHUB_EVENT_PULL_REQUEST_HEAD_SHA=${{ github.event.pull_request.head.sha }}" >> .job-env
+        elif [ "${event_name}" == "push" ]; then
+          echo "This is a push"
+          echo "PR_NUMBER=push" >> .job-env
+          echo "GITHUB_SHA=${{ github.sha }}" >> .job-env
+        else
+          echo "The ${event_name} event is not handled by this workflow"
+          exit 1
+        fi
+        cat .job-env
+    - uses: actions/upload-artifact@v4
+      with:
+        name: .job-env
+        path: .job-env
