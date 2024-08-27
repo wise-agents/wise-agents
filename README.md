@@ -1,6 +1,6 @@
 # Wise Agents: A Distributed AI Multi-Agent Framework
 
-Wise-agent is a framework implementing an architecture of distributed multi AI agents.
+Wise-agent is a framework implementing an architecture of distributed multi-AI agents.
 
 ## Multi-agent system
 Agents can be considered composable and adaptable AI components which have memory,  and are able to receive an input request, collect external information, take actions and collaborate with other agents or humans to get the outcomes requested.
