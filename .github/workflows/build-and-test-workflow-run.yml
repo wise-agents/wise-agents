@@ -107,7 +107,7 @@ jobs:
         pip install -e '.[test]'
     - name: Test with pytest
       run: |
-        pytest --log-cli-level=DEBUG -m "not needsllm and not needsqroq and not needsllama"
+        pytest --log-cli-level=DEBUG -m "not needsllm and not needsllama"
     - name: Save success
       if: ${{ always() }} && env.PR_NUMBER != 'push'
       env:
