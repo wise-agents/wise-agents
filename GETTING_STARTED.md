@@ -25,6 +25,6 @@ source .venv/bin/activate
 # How to run the cli chatbot
 1. Run ``pip install .``
 2. Start the llm service (see [model-serving/README.MD](model-serving/README.MD))
-2. Start artemis service (see [artemis/README.MD])(artemis/README.MD)
+2. Start artemis service (see [artemis/README.MD](artemis/README.MD))
 3. Set the ``STOMP_USER`` and ``STOMP_PASSWORD`` environment variables
 4. Run the CLI ``python src/wiseagents/cli/wise_agent_cli.py``
