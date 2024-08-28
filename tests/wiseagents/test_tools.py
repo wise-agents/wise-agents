@@ -79,11 +79,6 @@ class WiseAgentWeather(WiseAgent):
         pass    
 
 
-
-#Note: this test work using ollama as inference system and llama3.1 as model
-#Install ollam from their official website https://ollama.com/
-#run ollama with the following command: ollama run llama3.1
-
 @pytest.mark.needsllama
 def test_agent_tool():
     json_schema = {
