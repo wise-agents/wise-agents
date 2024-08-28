@@ -4,7 +4,7 @@ nav:
   - Getting Started:
     - What are AI Agents: multi_agents.md
     - Wise Agents architecture: wise_agents_architecture.md
-    - Developer Quick Start: dev_quick_start.md
+    - How to contribute: contributing.md
   - Details: 
     - RAG Architecture: rag_architecture.md
     - Using CLI: using_cli.md

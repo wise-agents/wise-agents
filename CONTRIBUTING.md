@@ -15,7 +15,7 @@ Welcome to the wise-agents project! We welcome contributions from the community.
 To contribute, you will first need to fork the [wise-agents](https://github.com/wise-agents/wise-agents) repository. 
 
 This can be done by looking in the top-right corner of the repository page and clicking "Fork".
-![fork](/docs/images/fork.jpg)
+![fork](/images/fork.jpg)
 
 The next step is to clone your newly forked repository onto your local workspace. This can be done by going to your newly forked repository, which should be at `https://github.com/USERNAME/wise-agents`. 
 
@@ -65,32 +65,74 @@ For more information about virtual environment see [here](https://docs.python.or
     python -m venv ./venv
     ```
 
+    OR just using our Makefile
+
+    ```
+    make venv
+    ```
+
 3. Activate the venv
+    
     ```
     source .venv/bin/activate
     ```
+    
+    OR just using our Makefile
+    
+    ```
+    make activate_venv
+    ```
+
 4. Add a remote ref to upstream, for pulling future updates.
 For example:
 
     ```
     git remote add upstream https://github.com/wise-agents/wise-agents
     ```
+
 5. To build `wise-agents` run:
-    ```bash
-    TODO: waiting for makefile
+    
+    ```
+    make install
     ```
 
-6. To skip the tests, use:
+6. To run the tests:
+    * start artemis: set .env for artemis see [artemis/README.MD](artemis/). Then start it using
+        
+        ```
+        make artemis
+        ```
 
-    ```bash
-    TODO: waiting for makefile
-    ```
+    * start graphdb: set .env for graphdb see [graphdb/README.MD](graphdb/). Then start it using
+        
+        ```
+        make graphdb
+        ```
+
+    * start vectordb: set .env for vectordb see [vectordb/README.MD](vectordb/). Then start it using
+        
+        ```
+        make vectordb
+        ```
+
+    * start LLM model serving: set .env for model-serving see [model-serving/README.MD](model-serving/). Then start it using
+        
+        ```
+        make model
+        ```
+
+    * run the tests:
+        
+        ```
+        make test
+        ```
+
 
 7. To run only a specific test, use:
+    * If you want to run a single test you can specify the test with -k option: ``pytest -k test_register_agents --log-cli-level=DEBUG``
+    * You can also run all tests contained in a single file with the same option ``pytest -k test_WiseAgentRegistry --log-cli-level=DEBUG``
+    * Note the name of the file could be partial so for example ``pytest -k test_yaml --log-cli-level=DEBUG`` will run test contained in ``tests/wiseagents/test_yaml_deserializer.py`` and ``tests/wiseagents/test_yaml_serialization.py)
 
-    ```bash
-    TODO: waiting for makefile
-    ```
 
 
 ## Contributing Guidelines
