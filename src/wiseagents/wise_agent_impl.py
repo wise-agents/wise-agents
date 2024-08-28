@@ -17,6 +17,7 @@ from wiseagents.llm import WiseAgentLLM
 WISE_AGENT_ACK = "WISE_AGENT_ACK"
 CONFIDENCE_SCORE_THRESHOLD = 85
 MAX_ITERATIONS_FOR_COORDINATOR = 5
+CANNOT_ANSWER = "I don't know the answer to the query."
 
 class PassThroughClientAgent(WiseAgent):
     '''This agent is used mainly for test purposes. It just passes the request to another agent and sends back the response to the client.'''
@@ -778,9 +779,13 @@ class CoordinatorWiseAgent(WiseAgent):
                     score = 0
 
                 # Determine if we should return the final answer or iterate
-                if score >= self.confidence_score_threshold or len(ctx.get_queries(chat_id)) == self.max_iterations:
+                if score >= self.confidence_score_threshold:
                     self.send_response(WiseAgentMessage(message=final_answer, sender=self.name,
                                                         context_name=response.context_name, chat_id=chat_id), self._route_response_to)
+                elif len(ctx.get_queries(chat_id)) == self.max_iterations:
+                    self.send_response(WiseAgentMessage(message=CANNOT_ANSWER, sender=self.name,
+                                                        context_name=response.context_name, chat_id=chat_id),
+                                       self._route_response_to)
                 else:
                     # Rephrase the query and iterate
                     if len(ctx.get_queries(chat_id)) < self.max_iterations:
