@@ -3,12 +3,23 @@ from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 import requests
 import openai
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+
+
 class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     '''A class to define a WiseAgentLLM that uses the OpenAI API.'''
     client = None
-    yaml_tag = u'!OpenaiAPIWiseAgentLLM'    
+    yaml_tag = u'!OpenaiAPIWiseAgentLLM'
+
+
     
-    
+    def __new__(cls, *args, **kwargs):
+        '''Create a new instance of the class, setting default values for the instance variables.'''
+        obj = super().__new__(cls)
+        obj._api_key = "sk-no-key-required"
+        obj._remote_address = "http://localhost:8001/v1"
+        obj.chain = None
+        return obj
+
     def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1", api_key: Optional[str]="sk-no-key-required"):
         '''Initialize the agent.
 
@@ -18,8 +29,8 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             remote_address (str): the remote address of the agent. Default is "http://localhost:8001/v1"
             api_key (str): the API key. Default is "sk-no-key-required"'''
         
-        self._api_key = api_key    
         super().__init__(system_message, model_name, remote_address)
+        self._api_key = api_key
         self.chain = None
     
     

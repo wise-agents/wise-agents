@@ -18,6 +18,16 @@ class WiseAgent(yaml.YAMLObject):
     ''' A WiseAgent is an abstract class that represents an agent that can send and receive messages to and from other agents.
     '''
     yaml_tag = u'!wiseagents.WiseAgent'
+
+    def __new__(cls, *args, **kwargs):
+        '''Create a new instance of the class, setting default values for the instance variables.'''
+        obj = super().__new__(cls)
+        obj._llm = None
+        obj._vector_db = None
+        obj._graph_db = None
+        obj._collection_name = "wise-agent-collection"
+        return obj
+
     def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
                  vector_db: Optional[WiseAgentVectorDB] = None, collection_name: Optional[str] = "wise-agent-collection",
                  graph_db: Optional[WiseAgentGraphDB] = None):
