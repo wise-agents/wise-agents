@@ -803,11 +803,13 @@ class CoordinatorWiseAgent(WiseAgent):
                     if len(ctx.get_queries(chat_id)) < self.max_iterations:
                         rephrase_query_prompt = ("The final answer was not considered good enough to respond to the original query.\n" +
                                                  " The original query was: " + ctx.get_queries(chat_id)[0] + "\n" +
-                                                 " Your task is to analyze the original query for its intent and rephrase it in a way"
-                                                 " to yield a better final answer. The response should contain only the rephrased query."
+                                                 " Your task is to analyze the original query for its intent along with the conversation" +
+                                                 " history and final answer to rephrase the original query to yield a better final answer." +
+                                                 " The response should contain only the rephrased query."
                                                  " Don't include anything else in the response.\n")
                         ctx.append_chat_completion(chat_uuid=chat_id,
                                                    messages={"role": "user", "content": rephrase_query_prompt})
+                        # Note that llm_chat_completion[chat_id] is being used here so we have the full history
                         llm_response = self.llm.process_chat_completion(ctx.llm_chat_completion[chat_id], tools=[])
                         rephrased_query = llm_response.choices[0].message.content
                         ctx.append_chat_completion(chat_uuid=chat_id, messages=llm_response.choices[0].message)
