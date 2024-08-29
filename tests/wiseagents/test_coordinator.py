@@ -22,54 +22,45 @@ def test_coordinator():
     Requires STOMP_USER, STOMP_PASSWORD, and a Groq API_KEY.
     """
     groq_api_key = os.getenv("GROQ_API_KEY")
-    llm1 = OpenaiAPIWiseAgentLLM(system_message="You will be coordinating a group of agents to solve a problem.",
-                                 model_name="llama-3.1-70b-versatile",
-                                 remote_address="https://api.groq.com/openai/v1",
-                                 api_key=groq_api_key)
-    agent1 = CoordinatorWiseAgent(name="Coordinator", description="This is a coordinator agent", llm=llm1,
+
+    llm = OpenaiAPIWiseAgentLLM(system_message="You are a helpful assistant.",
+                                model_name="llama-3.1-70b-versatile",
+                                remote_address="https://api.groq.com/openai/v1",
+                                api_key=groq_api_key)
+
+    agent1 = CoordinatorWiseAgent(name="Coordinator", description="This is a coordinator agent", llm=llm,
                                   transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Coordinator"),
                                   phases=["Information Gathering", "Verification of Information", "Analysis"],
+                                  system_message="You will be coordinating a group of agents to solve a problem.",
                                   max_iterations=2)
 
-    llm4 = OpenaiAPIWiseAgentLLM(system_message="You are a helpful assistant that will provide information about the given error message",
-                                 model_name="llama-3.1-70b-versatile",
-                                 remote_address="https://api.groq.com/openai/v1",
-                                 api_key=groq_api_key)
-    agent4 = CollaboratorWiseAgent(name="Agent4", description="This agent provides information about error messages using Source1", llm=llm4,
+    agent2 = CollaboratorWiseAgent(name="Agent2", description="This agent provides information about error messages using Source1", llm=llm,
                                    transport=StompWiseAgentTransport(host='localhost', port=61616,
-                                                                     agent_name="Agent4"))
+                                                                     agent_name="Agent2"),
+                                   system_message="You are a helpful assistant that will provide information about the given error message")
 
-    llm5 = OpenaiAPIWiseAgentLLM(system_message="You are a helpful assistant that will provide information about the given error message",
-                                 model_name="llama-3.1-70b-versatile",
-                                 remote_address="https://api.groq.com/openai/v1",
-                                 api_key=groq_api_key)
-    agent5 = CollaboratorWiseAgent(name="Agent5", description="This agent provides information about error messages using Source2",
-                                   llm=llm5,
+    agent3 = CollaboratorWiseAgent(name="Agent3", description="This agent provides information about error messages using Source2",
+                                   llm=llm,
                                    transport=StompWiseAgentTransport(host='localhost', port=61616,
-                                                                     agent_name="Agent5"))
+                                                                     agent_name="Agent3"),
+                                   system_message="You are a helpful assistant that will provide information about the given error message")
 
-    llm6 = OpenaiAPIWiseAgentLLM(system_message="You are a helpful assistant that will determine the underlying cause of a problem given information about the problem",
-                                 model_name="llama-3.1-70b-versatile",
-                                 remote_address="https://api.groq.com/openai/v1",
-                                 api_key=groq_api_key)
-    agent6 = CollaboratorWiseAgent(name="Agent6",
-                              description="This agent describes the underlying cause of a problem given information about the problem. This agent" + 
-                                          " should be called after getting information about the problem using Agent4 or Agent5.",
-                              llm=llm6,
-                              transport=StompWiseAgentTransport(host='localhost', port=61616,
-                                                               agent_name="Agent6"))
+    agent4 = CollaboratorWiseAgent(name="Agent4",
+                                   description="This agent describes the underlying cause of a problem given information about the problem. This agent" +
+                                               " should be called after getting information about the problem using Agent2 or Agent3.",
+                                   llm=llm,
+                                   transport=StompWiseAgentTransport(host='localhost', port=61616,
+                                                                     agent_name="Agent4"),
+                                   system_message="You are a helpful assistant that will determine the underlying cause of a problem given information about the problem")
 
-    llm7 = OpenaiAPIWiseAgentLLM(system_message="You will determine if the information provided by other agents is accurate.",
-                                 model_name="llama-3.1-70b-versatile",
-                                 remote_address="https://api.groq.com/openai/v1",
-                                 api_key=groq_api_key)
-    agent7 = CollaboratorWiseAgent(name="Agent7",
+    agent5 = CollaboratorWiseAgent(name="Agent5",
                                    description="This agent is used to verify if the information provided by other agents is accurate. This " +
-                                               "agent should be called after getting information about a problem using Agent4 or Agent5. This agent " +
-                                               "should be called before calling Agent6.",
-                                   llm=llm7,
+                                               "agent should be called after getting information about a problem using Agent2 or Agent3. This agent " +
+                                               "should be called before calling Agent4.",
+                                   llm=llm,
                                    transport=StompWiseAgentTransport(host='localhost', port=61616,
-                                                                     agent_name="Agent7"))
+                                                                     agent_name="Agent5"),
+                                   system_message="You will determine if the information provided by other agents is accurate.")
 
     with cond:
         client_agent1 = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",

@@ -27,11 +27,12 @@ class WiseAgent(yaml.YAMLObject):
         obj._vector_db = None
         obj._graph_db = None
         obj._collection_name = "wise-agent-collection"
+        obj._system_message = None
         return obj
 
     def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
                  vector_db: Optional[WiseAgentVectorDB] = None, collection_name: Optional[str] = "wise-agent-collection",
-                 graph_db: Optional[WiseAgentGraphDB] = None):
+                 graph_db: Optional[WiseAgentGraphDB] = None, system_message: Optional[str] = None):
         ''' 
         Initialize the agent with the given name, description, transport, LLM, vector DB, collection name, and graph DB.
         
@@ -43,7 +44,9 @@ class WiseAgent(yaml.YAMLObject):
             llm Optional(WiseAgentLLM): the LLM associated with the agent
             vector_db Optional(WiseAgentVectorDB): the vector DB associated with the agent
             collection_name Optional(str) = "wise-agent-collection": the vector DB collection name associated with the agent
-            graph_db Optional (WiseAgentGraphDB): the graph DB associated with the agent 
+            graph_db Optional (WiseAgentGraphDB): the graph DB associated with the agent
+            system_message Optional(str): an optional system message that can be used by the agent when processing chat
+            completions using its LLM
         '''
         self._name = name
         self._description = description
@@ -52,6 +55,7 @@ class WiseAgent(yaml.YAMLObject):
         self._collection_name = collection_name
         self._graph_db = graph_db
         self._transport = transport
+        self._system_message = system_message
         self.startAgent()
         
     def startAgent(self):
@@ -67,7 +71,8 @@ class WiseAgent(yaml.YAMLObject):
     def __repr__(self):
         '''Return a string representation of the agent.'''
         return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
-                f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db})")
+                f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db},"
+                f"system_message={self.system_message})")
     
     @property
     def name(self) -> str:
@@ -103,7 +108,12 @@ class WiseAgent(yaml.YAMLObject):
     def transport(self) -> WiseAgentTransport:
         """Get the transport associated with the agent."""
         return self._transport
-    
+
+    @property
+    def system_message(self) -> Optional[str]:
+        """Get the system message associated with the agent."""
+        return self._system_message
+
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
         '''Send a request message to the destination agent with the given name.
 

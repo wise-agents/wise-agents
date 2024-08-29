@@ -645,9 +645,18 @@ class CoordinatorWiseAgent(WiseAgent):
     """
     yaml_tag = u'!wiseagents.CoordinatorWiseAgent'
 
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the instance variables."""
+        obj = super().__new__(cls)
+        obj._phases = ["Data Collection", "Data Analysis"]
+        obj._max_iterations = MAX_ITERATIONS_FOR_COORDINATOR
+        obj._confidence_score_threshold = CONFIDENCE_SCORE_THRESHOLD
+        obj._system_message = None
+        return obj
+
     def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: WiseAgentLLM,
                  phases: Optional[List[str]] = None, max_iterations: Optional[int] = MAX_ITERATIONS_FOR_COORDINATOR,
-                 confidence_score_threshold: Optional[int] = CONFIDENCE_SCORE_THRESHOLD):
+                 confidence_score_threshold: Optional[int] = CONFIDENCE_SCORE_THRESHOLD, system_message: Optional[str] = None):
         """
         Initialize the agent.
 
@@ -660,18 +669,21 @@ class CoordinatorWiseAgent(WiseAgent):
             max_iterations (Optional[int]): the maximum number of iterations to run the phases, defaults to 5
             confidence_score_threshold (Optional[int]): the confidence score threshold to determine if the final answer
             is acceptable, defaults to 85
+            system_message (Optional[str]): the optional system message to be used by the coordinator when processing
+            chat completions using its LLM
         """
         self._name = name
         self._route_response_to = ""
         self._phases = phases if phases is not None else ["Data Collection", "Data Analysis"]
         self._max_iterations = max_iterations
         self._confidence_score_threshold = confidence_score_threshold
-        super().__init__(name=name, description=description, transport=transport, llm=llm)
+        self._system_message = system_message
+        super().__init__(name=name, description=description, transport=transport, llm=llm, system_message=system_message)
 
     def __repr__(self):
         """Return a string representation of the agent."""
         return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, transport={self.transport},"
-                f"llm={self.llm}, phases={self.phases},max_iterations={self.max_iterations}")
+                f"llm={self.llm}, phases={self.phases},max_iterations={self.max_iterations}, system_message={self.system_message}")
 
     @property
     def phases(self) -> List[str]:
@@ -710,7 +722,7 @@ class CoordinatorWiseAgent(WiseAgent):
                                   " anything else in the response.\n" +
                                   " Query: " + request.message + "\n" + "Available agents:\n" +
                                   "\n".join(WiseAgentRegistry.get_agent_names_and_descriptions()) + "\n")
-        ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "system", "content": self.llm.system_message})
+        ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "system", "content": self.system_message or self.llm.system_message})
         ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "user", "content": agent_selection_prompt})
 
         logging.debug(f"messages: {ctx.llm_chat_completion[chat_id]}")
@@ -867,7 +879,14 @@ class CollaboratorWiseAgent(WiseAgent):
     """
     yaml_tag = u'!wiseagents.CollaboratorWiseAgent'
 
-    def __init__(self, name: str, description: str, llm: WiseAgentLLM, transport: WiseAgentTransport):
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the instance variables."""
+        obj = super().__new__(cls)
+        obj._system_message = None
+        return obj
+
+    def __init__(self, name: str, description: str, llm: WiseAgentLLM, transport: WiseAgentTransport,
+                 system_message: Optional[str] = None):
         """
         Initialize the agent.
 
@@ -876,16 +895,20 @@ class CollaboratorWiseAgent(WiseAgent):
             description (str): a description of the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
             transport (WiseAgentTransport): the transport to use for communication
+            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
+            chat completions using its LLM
         """
         self._name = name
         self._description = description
         self._transport = transport
         self._llm = llm
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm)
+        self._system_message = system_message
+        super().__init__(name=name, description=description, transport=self.transport, llm=llm, system_message=system_message)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm}, transport={self.transport})"
+        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+                f"transport={self.transport}, system_message={self.system_message})")
 
     def process_event(self, event):
         """Do nothing"""
@@ -912,7 +935,7 @@ class CollaboratorWiseAgent(WiseAgent):
         else:
             messages = []
 
-        messages.append({"role": "system", "content": self.llm.system_message})
+        messages.append({"role": "system", "content": self.system_message or self.llm.system_message})
         messages.append({"role": "user", "content": request.message})
         llm_response = self.llm.process_chat_completion(messages, [])
 
