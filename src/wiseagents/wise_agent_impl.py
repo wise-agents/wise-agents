@@ -11,10 +11,10 @@ from wiseagents.graphdb import WiseAgentGraphDB
 
 from wiseagents.vectordb import Document, WiseAgentVectorDB
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport, WiseAgentTool
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMessageType, WiseAgentRegistry, WiseAgentTransport, \
+    WiseAgentTool
 from wiseagents.llm import WiseAgentLLM
 
-WISE_AGENT_ACK = "WISE_AGENT_ACK"
 CONFIDENCE_SCORE_THRESHOLD = 85
 MAX_ITERATIONS_FOR_COORDINATOR = 5
 CANNOT_ANSWER = "I don't know the answer to the query."
@@ -749,7 +749,7 @@ class CoordinatorWiseAgent(WiseAgent):
         ctx = WiseAgentRegistry.get_or_create_context(response.context_name)
         chat_id = response.chat_id
 
-        if response.message != WISE_AGENT_ACK:
+        if response.message_type != WiseAgentMessageType.ACK:
             raise ValueError(f"Unexpected response message: {response.message}")
 
         # Remove the agent from the required agents for this phase
@@ -783,8 +783,8 @@ class CoordinatorWiseAgent(WiseAgent):
                     self.send_response(WiseAgentMessage(message=final_answer, sender=self.name,
                                                         context_name=response.context_name, chat_id=chat_id), self._route_response_to)
                 elif len(ctx.get_queries(chat_id)) == self.max_iterations:
-                    self.send_response(WiseAgentMessage(message=CANNOT_ANSWER, sender=self.name,
-                                                        context_name=response.context_name, chat_id=chat_id),
+                    self.send_response(WiseAgentMessage(message=CANNOT_ANSWER, message_type=WiseAgentMessageType.CANNOT_ANSWER,
+                                                        sender=self.name, context_name=response.context_name, chat_id=chat_id),
                                        self._route_response_to)
                 else:
                     # Rephrase the query and iterate
@@ -921,7 +921,7 @@ class CollaboratorWiseAgent(WiseAgent):
 
         # Let the sender know that this agent has finished processing the request
         self.send_response(
-            WiseAgentMessage(message=WISE_AGENT_ACK, sender=self.name, context_name=request.context_name,
+            WiseAgentMessage(message="", message_type=WiseAgentMessageType.ACK, sender=self.name, context_name=request.context_name,
                              chat_id=request.chat_id), request.sender)
         return True
 

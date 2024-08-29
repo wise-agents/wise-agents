@@ -7,7 +7,9 @@ from yaml import YAMLObject
 
 
 class WiseAgentMessageType(Enum):
+    ACK = auto()
     ALERT = auto()
+    CANNOT_ANSWER = auto()
     QUERY = auto()
     RESPONSE = auto()
     ACTION_REQUEST = auto()
