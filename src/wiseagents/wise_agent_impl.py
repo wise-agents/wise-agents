@@ -665,7 +665,7 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
             description (str): a description of the agent
             transport (WiseAgentTransport): the transport to use for communication
             llm (WiseAgentLLM): the LLM to use for coordinating the collaboration
-            phases (Optional[List[str]]): the optional list of phases, defaults to "Data Collection" and "Data Analysis"
+            phases (Optional[List[str]]): the optional list of phase names, defaults to "Data Collection" and "Data Analysis"
             max_iterations (Optional[int]): the maximum number of iterations to run the phases, defaults to 5
             confidence_score_threshold (Optional[int]): the confidence score threshold to determine if the final answer
             is acceptable, defaults to 85
@@ -770,7 +770,7 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
         # If there are no more agents remaining in this phase, move on to the next phase,
         # return the final answer, or iterate
         if len(ctx.get_required_agents_for_current_phase(chat_id)) == 0:
-            next_phase = ctx.get_next_phase(chat_id)
+            next_phase = ctx.get_agents_for_next_phase(chat_id)
             if next_phase is None:
                 # Determine the final answer
                 final_answer_prompt = ("What is the final answer for the original query? Provide the answer followed" +

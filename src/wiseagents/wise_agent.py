@@ -299,12 +299,26 @@ class WiseAgentContext():
     _llm_chat_completion : Dict[str, List[ChatCompletionMessageParam]] = {}
     _llm_required_tool_call : Dict[str, List[str]] = {}
     _llm_available_tools_in_chat : Dict[str, List[ChatCompletionToolParam]] = {}
+
+    # The sequence of agent names for this context
+    # Used by a sequential coordinator
     _agents_sequence : List[str] = []
+
+    # Maps a chat uuid to a list that contains a list of agent names to be executed for each phase
+    # Used by a phased coordinator
     _agent_phase_assignments : Dict[str, List[List[str]]] = {}
+
+    # Maps a chat uuid to the current phase. Used by a phased coordinator.
     _current_phase : Dict[str, int] = {}
+
+    # Maps a chat uuid to a list of agent names that need to be executed for the current phase
+    # Used by a phased coordinator
     _required_agents_for_current_phase : Dict[str, List[str]] = {}
+
+    # Maps a chat uuid to a list containing the queries attempted for each iteration executed by
+    # the phased coordinator
     _queries : Dict[str, List[str]] = {}
-    
+
     def __init__(self, name: str):
         ''' Initialize the context with the given name.
 
@@ -419,27 +433,30 @@ class WiseAgentContext():
     @property
     def agents_sequence(self) -> List[str]:
         """
-        Get the sequence of agents for this context.
+        Get the sequence of agent for this context. This is used by a sequential coordinator
+        to execute its agents in a specific order, passing the output from one agent in the sequence
+        to the next agent in the sequence.
 
         Returns:
-            List[str]: the sequence of agents or an empty list if no sequence has been set
+            List[str]: the sequence of agents names or an empty list if no sequence has been set for this context
         """
         return self._agents_sequence
 
     def set_agents_sequence(self, agents_sequence: List[str]):
         """
-        Set the sequence of agents for this context.
-
+        Set the sequence of agents for this context. This is used by a sequential coordinator
+        to execute its agents in a specific order, passing the output from one agent in the
+        sequence to the next agent in the sequence.
 
         Args:
-            agents_sequence (List[str]): the sequence of agents
+            agents_sequence (List[str]): the sequence of agent names
         """
         self._agents_sequence = agents_sequence
 
     def get_next_agent_in_sequence(self, current_agent: str):
         """
-        Get the next agent in the sequence of agents for this context.
-
+        Get the name of the next agent in the sequence of agents for this context. This is used by
+        a sequential coordinator to determine the name of the next agent to execute.
 
         Args:
             current_agent (str): the name of the current agent
@@ -457,61 +474,69 @@ class WiseAgentContext():
 
     def get_agent_phase_assignments(self, chat_uuid: str) -> List[List[str]]:
         """
-        Get the phases of agents for the given chat uuid for this context.
+        Get the agents to be executed in each phase for the given chat uuid for this context. This is used
+        by a phased coordinator.
 
         Args:
             chat_uuid (str): the chat uuid
 
         Returns:
-            List[List[str]]: the phases of agents or an empty list if no phases have been set for the given chat uuid
+            List[List[str]]: The agents to be executed in each phase, represented as a list of lists, where the
+            size of the outer list corresponds to the number of phases and each element in the list is a list of
+            agent names for that phase. An empty list is returned if no phases have been set for the
+            given chat uuid
         """
         if chat_uuid in self._agent_phase_assignments:
             return self._agent_phase_assignments.get(chat_uuid)
         return []
 
-    def set_agent_phase_assignments(self, chat_uuid: str, phases: List[List[str]]):
+    def set_agent_phase_assignments(self, chat_uuid: str, agent_phase_assignments: List[List[str]]):
         """
-        Set the phases of agents for the given chat uuid for this context.
+        Set the agents to be executed in each phase for the given chat uuid for this context. This is used
+        by a phased coordinator.
 
         Args:
             chat_uuid (str): the chat uuid
-            phases (List[List[str]]): the phases of agents
+            agent_phase_assignments (List[List[str]]): The agents to be executed in each phase, represented as a
+            list of lists, where the size of the outer list corresponds to the number of phases and each element
+            in the list is a list of agent names for that phase.
         """
-        self._agent_phase_assignments[chat_uuid] = phases
+        self._agent_phase_assignments[chat_uuid] = agent_phase_assignments
 
     def get_current_phase(self, chat_uuid: str) -> int:
         """
-        Get the current phase for the given chat uuid for this context.
-        
+        Get the current phase for the given chat uuid for this context. This is used by a phased coordinator.
+
         Args:
             chat_uuid (str): the chat uuid
 
         Returns:
-            int: the current phase
+            int: the current phase, represented as an integer in the zero-indexed list of phases
         """
         return self._current_phase.get(chat_uuid)
 
     def set_current_phase(self, chat_uuid: str, phase: int):
         """
         Set the current phase for the given chat uuid for this context. This method also
-        sets the required agents for the current phase.
+        sets the required agents for the current phase. This is used by a phased coordinator.
 
         Args:
             chat_uuid (str): the chat uuid
-            phase (int): the current phase
+            phase (int): the current phase, represented as an integer in the zero-indexed list of phases
         """
         self._current_phase[chat_uuid] = phase
         self._required_agents_for_current_phase[chat_uuid] = copy.deepcopy(self._agent_phase_assignments[chat_uuid][phase])
 
-    def get_next_phase(self, chat_uuid: str) -> Optional[List]:
+    def get_agents_for_next_phase(self, chat_uuid: str) -> Optional[List]:
         """
-        Get the list of agents for the next phase for the given chat uuid for this context.
+        Get the list of agents to be executed for the next phase for the given chat uuid for this context.
+        This is used by a phased coordinator.
 
         Args:
             chat_uuid (str): the chat uuid
 
         Returns:
-            Optional[List[str]]: the list of agents for the next phase or None if there are no more phases
+            Optional[List[str]]: the list of agent names for the next phase or None if there are no more phases
         """
         current_phase = self.get_current_phase(chat_uuid)
         next_phase = current_phase + 1
@@ -522,13 +547,15 @@ class WiseAgentContext():
 
     def get_required_agents_for_current_phase(self, chat_uuid: str) -> List[str]:
         """
-        Get the list of required agents for the current phase for the given chat uuid for this context.
+        Get the list of agents that still need to be executed for the current phase for the given chat uuid for this
+        context. This is used by a phased coordinator.
 
         Args:
             chat_uuid (str): the chat uuid
 
         Returns:
-            List[str]: the list of required agents for the current phase or an empty list if there are no required agents
+            List[str]: the list of agent names that still need to be executed for the current phase or an empty list
+            if there are no remaining agents that need to be executed for the current phase
         """
         if chat_uuid in self._required_agents_for_current_phase:
             return self._required_agents_for_current_phase.get(chat_uuid)
@@ -536,7 +563,8 @@ class WiseAgentContext():
 
     def remove_required_agent_for_current_phase(self, chat_uuid: str, agent_name: str):
         """
-        Remove the given agent from the list of required agents for the current phase for the given chat uuid for this context.
+        Remove the given agent from the list of required agents for the current phase for the given chat uuid for this
+        context. This is used by a phased coordinator.
 
         Args:
             chat_uuid (str): the chat uuid
@@ -545,12 +573,15 @@ class WiseAgentContext():
         if chat_uuid in self._required_agents_for_current_phase:
             self._required_agents_for_current_phase.get(chat_uuid).remove(agent_name)
 
-    def get_current_query(self, chat_uuid: str):
+    def get_current_query(self, chat_uuid: str) -> Optional[str]:
         """
-        Get the current query for the given chat uuid for this context.
+        Get the current query for the given chat uuid for this context. This is used by a phased coordinator.
 
         Args:
             chat_uuid (str): the chat uuid
+
+        Returns:
+            Optional[str]: the current query or None if there is no current query
         """
         if chat_uuid in self._queries:
             if self._queries.get(chat_uuid):
@@ -561,7 +592,7 @@ class WiseAgentContext():
 
     def add_query(self, chat_uuid: str, query: str):
         """
-        Add the current query for the given chat uuid for this context.
+        Add the current query for the given chat uuid for this context. This is used by a phased coordinator.
 
         Args:
             chat_uuid (str): the chat uuid
@@ -573,7 +604,7 @@ class WiseAgentContext():
 
     def get_queries(self, chat_uuid: str) -> List[str]:
         """
-        Get the queries attempted for the given chat uuid for this context.
+        Get the queries attempted for the given chat uuid for this context. This is used by a phased coordinator.
 
         Returns:
             List[str]: the queries attempted for the given chat uuid for this context
