@@ -636,14 +636,14 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
         self._response_delivery = response_delivery
 
 
-class CoordinatorWiseAgent(WiseAgent):
+class PhasedCoordinatorWiseAgent(WiseAgent):
     """
     This agent will coordinate the execution of a group of agents in order to determine the response
     to a query. The agents will be executed in phases, where agents within a phase will be executed
     in parallel. After the phases have completed, the coordinator may choose to repeat the phases
     until it is satisfied with the final response or determines it's not possible to answer the query.
     """
-    yaml_tag = u'!wiseagents.CoordinatorWiseAgent'
+    yaml_tag = u'!wiseagents.PhasedCoordinatorWiseAgent'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
