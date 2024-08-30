@@ -300,9 +300,13 @@ class WiseAgentContext():
     _llm_required_tool_call : Dict[str, List[str]] = {}
     _llm_available_tools_in_chat : Dict[str, List[ChatCompletionToolParam]] = {}
 
-    # The sequence of agent names for this context
+    # Maps a chat uuid to a list of agent names that need to be executed in sequence
     # Used by a sequential coordinator
-    _agents_sequence : List[str] = []
+    _agents_sequence : Dict[str, List[str]] = {}
+
+    # Maps a chat uuid to the agent where the final response should be routed to
+    # Used by both a sequential coordinator and a phased coordinator
+    _route_response_to : Dict[str, str] = {}
 
     # Maps a chat uuid to a list that contains a list of agent names to be executed for each phase
     # Used by a phased coordinator
@@ -430,46 +434,77 @@ class WiseAgentContext():
         else:
             return []
 
-    @property
-    def agents_sequence(self) -> List[str]:
+    def get_agents_sequence(self, chat_uuid: str) -> List[str]:
         """
-        Get the sequence of agent for this context. This is used by a sequential coordinator
-        to execute its agents in a specific order, passing the output from one agent in the sequence
+        Get the sequence of agents for the given chat uuid for this context. This is used by a sequential
+        coordinator to execute its agents in a specific order, passing the output from one agent in the sequence
         to the next agent in the sequence.
+
+        Args:
+            chat_uuid (str): the chat uuid
 
         Returns:
             List[str]: the sequence of agents names or an empty list if no sequence has been set for this context
         """
-        return self._agents_sequence
+        if chat_uuid in self._agents_sequence:
+            return self._agents_sequence[chat_uuid]
+        return []
 
-    def set_agents_sequence(self, agents_sequence: List[str]):
+    def set_agents_sequence(self, chat_uuid: str, agents_sequence: List[str]):
         """
-        Set the sequence of agents for this context. This is used by a sequential coordinator
-        to execute its agents in a specific order, passing the output from one agent in the
-        sequence to the next agent in the sequence.
+        Set the sequence of agents for the given chat uuid for this context. This is used by
+        a sequential coordinator to execute its agents in a specific order, passing the output
+        from one agent in the sequence to the next agent in the sequence.
 
         Args:
+            chat_uuid (str): the chat uuid
             agents_sequence (List[str]): the sequence of agent names
         """
-        self._agents_sequence = agents_sequence
+        self._agents_sequence[chat_uuid] = agents_sequence
 
-    def get_next_agent_in_sequence(self, current_agent: str):
+    def get_route_response_to(self, chat_uuid: str) -> Optional[str]:
         """
-        Get the name of the next agent in the sequence of agents for this context. This is used by
-        a sequential coordinator to determine the name of the next agent to execute.
+        Get the name of the agent where the final response should be routed to for the given chat uuid for this
+        context. This is used by a sequential coordinator and a phased coordinator.
+
+        Returns:
+            Optional[str]: the name of the agent where the final response should be routed to or None if no agent is set
+        """
+        if chat_uuid in self._route_response_to:
+            return self._route_response_to[chat_uuid]
+        else:
+            return None
+
+    def set_route_response_to(self, chat_uuid: str, agent: str):
+        """
+        Set the name of the agent where the final response should be routed to for the given chat uuid for this
+        context. This is used by a sequential coordinator and a phased coordinator.
 
         Args:
+            chat_uuid (str): the chat uuid
+            agent (str): the name of the agent where the final response should be routed to
+        """
+        self._route_response_to[chat_uuid] = agent
+
+    def get_next_agent_in_sequence(self, chat_uuid: str, current_agent: str):
+        """
+        Get the name of the next agent in the sequence of agents for the given chat uuid for this context.
+        This is used by a sequential coordinator to determine the name of the next agent to execute.
+
+        Args:
+            chat_uuid (str): the chat uuid
             current_agent (str): the name of the current agent
 
         Returns:
             str: the name of the next agent in the sequence after the current agent or None if there are no remaining
             agents in the sequence after the current agent
         """
-        if current_agent in self._agents_sequence:
-            current_agent_index = self._agents_sequence.index(current_agent)
+        agents_sequence = self.get_agents_sequence(chat_uuid)
+        if current_agent in agents_sequence:
+            current_agent_index = agents_sequence.index(current_agent)
             next_agent_index = current_agent_index + 1
-            if next_agent_index < len(self._agents_sequence):
-                return self._agents_sequence[next_agent_index]
+            if next_agent_index < len(agents_sequence):
+                return agents_sequence[next_agent_index]
         return None
 
     def get_agent_phase_assignments(self, chat_uuid: str) -> List[List[str]]:
