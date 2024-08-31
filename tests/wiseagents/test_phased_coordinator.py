@@ -4,7 +4,7 @@ import threading
 from wiseagents import WiseAgentMessage, WiseAgentRegistry
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
-from wiseagents.wise_agent_impl import CollaboratorWiseAgent, CoordinatorWiseAgent, PassThroughClientAgent
+from wiseagents.wise_agent_impl import CollaboratorWiseAgent, PassThroughClientAgent, PhasedCoordinatorWiseAgent
 
 cond = threading.Condition()
 
@@ -17,7 +17,7 @@ def final_response_delivered(message: WiseAgentMessage):
         cond.notify()
 
 
-def test_coordinator():
+def test_phased_coordinator():
     """
     Requires STOMP_USER, STOMP_PASSWORD, and a Groq API_KEY.
     """
@@ -28,7 +28,7 @@ def test_coordinator():
                                 remote_address="https://api.groq.com/openai/v1",
                                 api_key=groq_api_key)
 
-    agent1 = CoordinatorWiseAgent(name="Coordinator", description="This is a coordinator agent", llm=llm,
+    agent1 = PhasedCoordinatorWiseAgent(name="Coordinator", description="This is a coordinator agent", llm=llm,
                                   transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Coordinator"),
                                   phases=["Information Gathering", "Verification of Information", "Analysis"],
                                   system_message="You will be coordinating a group of agents to solve a problem.",

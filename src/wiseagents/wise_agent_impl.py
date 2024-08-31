@@ -562,7 +562,6 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
             agents (List[str]): the list of agents to coordinate'''
         self._name = name
         self._agents = agents
-        self._route_response_to = ""
         super().__init__(name=name, description=description, transport=transport, llm=None)
 
     def __repr__(self):
@@ -575,10 +574,15 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
         Args:
             request (WiseAgentMessage): the request message to process'''
         logging.debug(f"Sequential coordinator received request: {request}")
-        self._route_response_to = request.sender
+
+        # Generate a chat ID that will be used to collaborate on this query
+        chat_id = str(uuid.uuid4())
+
         ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
-        ctx.set_agents_sequence(self._agents)
-        self.send_request(WiseAgentMessage(message=request.message, sender=self.name, context_name=request.context_name), self._agents[0])
+        ctx.set_agents_sequence(chat_id, self._agents)
+        ctx.set_route_response_to(chat_id, request.sender)
+        self.send_request(WiseAgentMessage(message=request.message, sender=self.name, context_name=request.context_name,
+                                           chat_id=chat_id), self._agents[0])
 
     def process_response(self, response):
         '''Process a response message by passing it to the next agent in the sequence.
@@ -586,13 +590,16 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
         Args:
             response (WiseAgentMessage): the response message to process'''
         ctx = WiseAgentRegistry.get_or_create_context(response.context_name)
-        next_agent = ctx.get_next_agent_in_sequence(response.sender)
+        chat_id = response.chat_id
+        next_agent = ctx.get_next_agent_in_sequence(chat_id, response.sender)
         if next_agent is None:
-            logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + self._route_response_to)
-            self.send_response(WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name), self._route_response_to)
+            logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + ctx.get_route_response_to(chat_id))
+            self.send_response(WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name),
+                               ctx.get_route_response_to(chat_id))
         else:
             logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + next_agent)
-            self.send_request(WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name), next_agent)
+            self.send_request(WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name,
+                                               chat_id=chat_id), next_agent)
         return True
 
     def process_event(self, event):
@@ -636,14 +643,14 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
         self._response_delivery = response_delivery
 
 
-class CoordinatorWiseAgent(WiseAgent):
+class PhasedCoordinatorWiseAgent(WiseAgent):
     """
     This agent will coordinate the execution of a group of agents in order to determine the response
     to a query. The agents will be executed in phases, where agents within a phase will be executed
     in parallel. After the phases have completed, the coordinator may choose to repeat the phases
     until it is satisfied with the final response or determines it's not possible to answer the query.
     """
-    yaml_tag = u'!wiseagents.CoordinatorWiseAgent'
+    yaml_tag = u'!wiseagents.PhasedCoordinatorWiseAgent'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
@@ -665,7 +672,7 @@ class CoordinatorWiseAgent(WiseAgent):
             description (str): a description of the agent
             transport (WiseAgentTransport): the transport to use for communication
             llm (WiseAgentLLM): the LLM to use for coordinating the collaboration
-            phases (Optional[List[str]]): the optional list of phases, defaults to "Data Collection" and "Data Analysis"
+            phases (Optional[List[str]]): the optional list of phase names, defaults to "Data Collection" and "Data Analysis"
             max_iterations (Optional[int]): the maximum number of iterations to run the phases, defaults to 5
             confidence_score_threshold (Optional[int]): the confidence score threshold to determine if the final answer
             is acceptable, defaults to 85
@@ -673,7 +680,6 @@ class CoordinatorWiseAgent(WiseAgent):
             chat completions using its LLM
         """
         self._name = name
-        self._route_response_to = ""
         self._phases = phases if phases is not None else ["Data Collection", "Data Analysis"]
         self._max_iterations = max_iterations
         self._confidence_score_threshold = confidence_score_threshold
@@ -708,12 +714,12 @@ class CoordinatorWiseAgent(WiseAgent):
             request (WiseAgentMessage): the request message to process
         """
         logging.debug(f"Coordinator received request: {request}")
-        self._route_response_to = request.sender
 
         # Generate a chat ID that will be used to collaborate on this query
         chat_id = str(uuid.uuid4())
 
         ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
+        ctx.set_route_response_to(chat_id, request.sender)
 
         # Determine the agents required to answer the query
         agent_selection_prompt = ("Given the following query and a description of the agents that are available," +
@@ -770,7 +776,7 @@ class CoordinatorWiseAgent(WiseAgent):
         # If there are no more agents remaining in this phase, move on to the next phase,
         # return the final answer, or iterate
         if len(ctx.get_required_agents_for_current_phase(chat_id)) == 0:
-            next_phase = ctx.get_next_phase(chat_id)
+            next_phase = ctx.get_agents_for_next_phase(chat_id)
             if next_phase is None:
                 # Determine the final answer
                 final_answer_prompt = ("What is the final answer for the original query? Provide the answer followed" +
@@ -793,11 +799,11 @@ class CoordinatorWiseAgent(WiseAgent):
                 # Determine if we should return the final answer or iterate
                 if score >= self.confidence_score_threshold:
                     self.send_response(WiseAgentMessage(message=final_answer, sender=self.name,
-                                                        context_name=response.context_name, chat_id=chat_id), self._route_response_to)
+                                                        context_name=response.context_name, chat_id=chat_id), ctx.get_route_response_to(chat_id))
                 elif len(ctx.get_queries(chat_id)) == self.max_iterations:
                     self.send_response(WiseAgentMessage(message=CANNOT_ANSWER, message_type=WiseAgentMessageType.CANNOT_ANSWER,
                                                         sender=self.name, context_name=response.context_name, chat_id=chat_id),
-                                       self._route_response_to)
+                                       ctx.get_route_response_to(chat_id))
                 else:
                     # Rephrase the query and iterate
                     if len(ctx.get_queries(chat_id)) < self.max_iterations:
