@@ -1,5 +1,5 @@
 # What are AI Agents?
-AI agents are autonomous software systems that can perceive their environment, make decisions, and take actions to achieve specific goals. They are designed to operate without human intervention, leveraging advanced AI techniques like natural language processing and machine learning.
+AI agents are autonomous software systems that can perceive their environment, make decisions, and take actions to achieve specific goals. They are designed to operate without human intervention (even if sometimes human input could be considered as part of the process), leveraging advanced AI techniques like natural language processing and machine learning.
 ## Key characteristics of AI agents
 * **Autonomy**: AI agents can make decisions and act independently based on their goals and the information they gather.
 * **Flexibility**: They can adapt to changing circumstances and learn from experience to improve their performance over time.

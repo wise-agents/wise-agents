@@ -296,8 +296,14 @@ class WiseAgentContext():
     
     _message_trace : List[WiseAgentMessage] = []
     _participants : List[WiseAgent] = []
+    
+    # Maps a chat uuid to a list of chat completion messages
     _llm_chat_completion : Dict[str, List[ChatCompletionMessageParam]] = {}
+    
+    # Maps a chat uuid to a list of tool names that need to be executed
     _llm_required_tool_call : Dict[str, List[str]] = {}
+    
+    # Maps a chat uuid to a list of available tools in chat
     _llm_available_tools_in_chat : Dict[str, List[ChatCompletionToolParam]] = {}
 
     # Maps a chat uuid to a list of agent names that need to be executed in sequence
