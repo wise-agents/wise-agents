@@ -144,6 +144,20 @@ When submitting a PR, please keep the following guidelines in mind:
 2. Please link the issue you worked on in the description of your pull request and in your commit message. For example, for issue-125, the PR description and commit message could be: ```Go through TODOs in the code and create issues for them  
 Fixes #125```
 
+3. Your PR should include [docstrings](https://google.github.io/styleguide/pyguide.html) for all functions and classes, as well as comments to help make your code easier to understand.
+
+4. Your PR should include [tests](https://github.com/wise-agents/wise-agents/tree/main/tests) for the functionality that you are adding.
+
+5. Your PR should include appropriate [documentation](https://github.com/wise-agents/wise-agents/tree/main/docs) for the functionality that you are adding. This could involve updating an existing section in the documentation or adding a new page in the documentation.
+
+6. Your PR should include an [example](https://github.com/wise-agents/wise-agents/tree/main/examples) of how to use the new functionality that you are adding.
+
+> [!NOTE]
+> There might be times where the documentation or example you need to add is a bit more involved. For cases like this, if
+the functionality you are adding is needed urgently (e.g., to allow someone else to work on a feature that depends on yours),
+you can create an issue to track the documentation or example to be added and make sure to reference this issue in your PR.
+This way, we can merge your PR while still ensuring that the documentation or example is added soon after.
+
 
 ## Code Reviews
 
