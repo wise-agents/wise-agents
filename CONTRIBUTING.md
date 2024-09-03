@@ -74,7 +74,7 @@ For more information about virtual environment see [here](https://docs.python.or
 3. Activate the venv
     
     ```
-    source .venv/bin/activate
+    source venv/bin/activate
     ```
     
     OR just using our Makefile
