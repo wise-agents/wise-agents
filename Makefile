@@ -1,6 +1,6 @@
 # system python interpreter. used only to create virtual environment
 PY = python3
-VENV = venv
+VENV = .venv
 BIN=$(VENV)/bin
 
 # make it work on windows too
