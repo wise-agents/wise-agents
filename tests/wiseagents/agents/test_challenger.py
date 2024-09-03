@@ -11,6 +11,7 @@ from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
 
 
 cond = threading.Condition()
+assertError : AssertionError = None
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -45,6 +46,9 @@ def run_after_all_tests():
     reset_env_variable("POSTGRES_DB", original_postgres_db)
     reset_env_variable("STOMP_USER", original_stomp_user)
     reset_env_variable("STOMP_PASSWORD", original_stomp_password)
+    
+    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_contexts()
 
 
 def set_env_variable(env_variable: str, value: str) -> str:
@@ -65,18 +69,26 @@ def get_connection_string():
 
 
 def response_delivered(message: WiseAgentMessage):
+    global assertError
     with cond:
         response = message.message
-        assert "4 medals" not in response
+        try:
+            assert "4 medals" not in response
+        except AssertionError:
+            assertError = AssertionError
         print(f"C Response delivered: {response}")
         cond.notify()
 
 
 @pytest.mark.needsllama
 def test_cove_challenger():
+    global assertError
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
     llm1 = OpenaiAPIWiseAgentLLM(system_message="You are a retrieval augmented chatbot. You answer users' questions based on the context provided by the user. If you can't answer the question using the given context, just say you don't know the answer.",
-                                 model_name="llama3.1", remote_address="http://localhost:11434/v1")
+                                 model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
+                                 api_key=groq_api_key)
     agent = CoVeChallengerRAGWiseAgent(name="ChallengerWiseAgent1", description="This is a test agent", llm=llm1, vector_db=pg_vector_db,
                               transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="ChallengerWiseAgent1"),
                                        k=2, num_verification_questions=2)
@@ -92,7 +104,8 @@ def test_cove_challenger():
                                                     "PassThroughClientAgent1"),
                                    "ChallengerWiseAgent1")
         cond.wait()
-
+        if assertError is not None:
+            raise assertError
         for agent in WiseAgentRegistry.get_agents():
             print(f"Agent: {agent}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:

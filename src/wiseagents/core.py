@@ -2,8 +2,13 @@ import copy
 from abc import ABC, abstractmethod
 import json
 import logging
+import os
+import pickle
 from typing import Any, Callable, Dict, Iterable, List, Optional
 from uuid import UUID
+
+import redis
+
 
 from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
@@ -73,6 +78,9 @@ class WiseAgent(yaml.YAMLObject):
         return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
                 f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db},"
                 f"system_message={self.system_message})")
+    
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, WiseAgent) and self.__repr__() == value.__repr__()
     
     @property
     def name(self) -> str:
@@ -290,7 +298,7 @@ class WiseAgentTool(yaml.YAMLObject):
 
 
 class WiseAgentContext():
-    from typing import List
+    
     ''' A WiseAgentContext is a class that represents a context in which agents can communicate with each other.
     '''
     
@@ -328,14 +336,49 @@ class WiseAgentContext():
     # Maps a chat uuid to a list containing the queries attempted for each iteration executed by
     # the phased coordinator
     _queries : Dict[str, List[str]] = {}
-
-    def __init__(self, name: str):
+    
+    _redis_db : redis.Redis = None
+    _use_redis : bool = False
+    _config : Dict[str, Any] = {}
+    
+    def __init__(self, name: str, config : Optional[Dict[str,Any]] = {"use_redis": False}):
         ''' Initialize the context with the given name.
 
         Args:
             name (str): the name of the context'''
         self._name = name
+        self._config = config
+        if config.get("use_redis") == True and self._redis_db is None:
+            self._redis_db = redis.Redis(host=self._config["redis_host"], port=self._config["redis_port"])
+            self._use_redis = True
+            
         WiseAgentRegistry.register_context(self)
+    
+    def __repr__(self) -> str:
+        '''Return a string representation of the context.'''
+        return (f"{self.__class__.__name__}(name={self.name}, message_trace={self.message_trace},"
+                f"participants={self.participants}, llm_chat_completion={self.llm_chat_completion},"
+                f"llm_required_tool_call={self.llm_required_tool_call}, llm_available_tools_in_chat={self.llm_available_tools_in_chat},"
+                f"agents_sequence={self._agents_sequence}, route_response_to={self._route_response_to},"
+                f"agent_phase_assignments={self._agent_phase_assignments}, current_phase={self._current_phase},"
+                f"required_agents_for_current_phase={self._required_agents_for_current_phase}, queries={self._queries})")
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, WiseAgentContext) and self.__repr__() == value.__repr__()
+    
+    def __getstate__(self) -> object:
+        '''Get the state of the context.'''
+        state = self.__dict__.copy()
+        if '_redis_db' in state:
+            del state['_redis_db']
+            del state['_use_redis']
+        return state
+    
+    def __setstate__(self, state: object):
+        '''Set the state of the context.'''
+        self.__dict__.update(state)
+        if self._config.get("use_redis") == True and self._redis_db is None:
+            self._redis_db = redis.Redis(host=self._config["redis_host"], port=self._config["redis_port"])
+            self._use_redis = True
         
     @property   
     def name(self) -> str:
@@ -345,25 +388,50 @@ class WiseAgentContext():
     @property
     def message_trace(self) -> List[WiseAgentMessage]:
         """Get the message trace of the context."""
-        return self._message_trace
+        if (self._use_redis == True):
+            return_list : List[WiseAgentMessage] = []
+            redis_list = self._redis_db.lrange("message_trace", 0, -1)
+            for message in redis_list:
+                return_list.append(pickle.loads(message))
+            return return_list
+        else:
+            return self._message_trace
+        
+        
     @property
     def participants(self) -> List[WiseAgent]:
         """Get the participants of the context."""
-        return self._participants
+        if (self._use_redis == True):
+            return_list : List[WiseAgent] = []
+            redis_list = self._redis_db.lrange("participants", 0, -1)
+            for message in redis_list:
+                return_list.append(pickle.loads(message))
+            return return_list
+        else:
+            return self._participants
     
     @property
     def llm_chat_completion(self) -> Dict[str, List[ChatCompletionMessageParam]]:
         """Get the LLM chat completion of the context."""
-        return self._llm_chat_completion
+        if (self._use_redis == True):
+            return_dict : Dict[str, List[ChatCompletionMessageParam]] = {}
+            redis_dict = self._redis_db.hgetall("llm_chat_completion")
+            for key in redis_dict:
+                return_dict[key.decode('utf-8')] = pickle.loads(redis_dict[key])
+            return return_dict
+        else:
+            return self._llm_chat_completion
     
     def add_participant(self, agent: WiseAgent):
         '''Add a participant to the context.
 
         Args:
             agent (WiseAgent): the agent to add'''
-            
-        if agent not in self._participants:
-            self._participants.append(agent)
+        if agent not in self.participants:    
+            if (self._use_redis == True):
+                self._redis_db.rpush("participants", pickle.dumps(agent))
+            else:
+                self._participants.append(agent)
     
     def append_chat_completion(self, chat_uuid: str, messages: Iterable[ChatCompletionMessageParam]):
         '''Append chat completion to the context.
@@ -372,15 +440,44 @@ class WiseAgentContext():
             chat_uuid (str): the chat uuid
             messages (Iterable[ChatCompletionMessageParam]): the messages to append'''
             
-        if chat_uuid not in self._llm_chat_completion:
-            self._llm_chat_completion[chat_uuid] = []
-        self._llm_chat_completion[chat_uuid].append(messages)
+        if (self._use_redis == True):
+            pipe = self._redis_db.pipeline(transaction=True)
+            if(self._redis_db.hexists("llm_chat_completion", key=chat_uuid) == False):
+                self._redis_db.hset("llm_chat_completion", key=chat_uuid, value=pickle.dumps([messages]))
+                pipe.execute()
+            else:
+                while True:
+                    try:
+                        lock = f"llm_chat_completion_{chat_uuid}_lock"
+                        pipe.watch("llm_chat_completion")
+                        redis_stored_messages = pipe.hget("llm_chat_completion", key=chat_uuid)
+                        stored_messages : List[ChatCompletionMessageParam] = pickle.loads(redis_stored_messages)
+                        stored_messages.append(messages)
+                        pipe.multi()
+                        pipe.hset("llm_chat_completion", key=chat_uuid, value=pickle.dumps(stored_messages))
+                        pipe.execute()
+                        break
+                    except redis.WatchError:
+                        raise redis.WatchError
+                        logging.warning("WatchError in append_chat_completion")
+                        continue
+        else:
+            if chat_uuid not in self._llm_chat_completion:
+                self._llm_chat_completion[chat_uuid] = []
+            self._llm_chat_completion[chat_uuid].append(messages)
     
     @property
     def llm_required_tool_call(self) -> Dict[str, List[str]]:
         """Get the LLM required tool call of the context.
         return Dict[str, List[str]]"""
-        return self._llm_required_tool_call
+        if (self._use_redis == True):
+            redis_dict = self._redis_db.hgetall("llm_required_tool_call")
+            return_dict : Dict[str, List[str]] = {}
+            for key in redis_dict:
+                return_dict[key] = pickle.loads(redis_dict[key])
+            return return_dict
+        else:
+            return self._llm_required_tool_call
     
     def append_required_tool_call(self, chat_uuid: str, tool_name: str):
         '''Append required tool call to the context.
@@ -388,9 +485,29 @@ class WiseAgentContext():
         Args:
             chat_uuid (str): the chat uuid
             tool_name (str): the tool name to append'''
-        if chat_uuid not in self._llm_required_tool_call:
-            self._llm_required_tool_call[chat_uuid] = []
-        self._llm_required_tool_call[chat_uuid].append(tool_name)
+        if (self._use_redis == True):
+            pipe = self._redis_db.pipeline(transaction=True)
+            if (self._redis_db.hexists("llm_required_tool_call", key=chat_uuid) == False):
+                self._redis_db.hset("llm_required_tool_call", key=chat_uuid, value=pickle.dumps([tool_name]))
+                pipe.execute()
+            else :
+                while True:
+                    try:
+                        pipe.watch("llm_required_tool_call")
+                        redis_stored_tool_names = pipe.hget("llm_required_tool_call", key=chat_uuid)
+                        stored_tool_names : List[str] = pickle.loads(redis_stored_tool_names)
+                        stored_tool_names.append(tool_name)
+                        pipe.multi()
+                        pipe.hset("llm_required_tool_call", key=chat_uuid, value=pickle.dumps(stored_tool_names))
+                        pipe.execute()
+                        break
+                    except redis.WatchError:
+                        logging.warning("WatchError in append_required_tool_call")
+                        continue
+        else:
+            if chat_uuid not in self.llm_required_tool_call:
+                self._llm_required_tool_call[chat_uuid] = []
+            self._llm_required_tool_call[chat_uuid].append(tool_name)
     
     def remove_required_tool_call(self, chat_uuid: str, tool_name: str):
         '''Remove required tool call from the context.
@@ -398,6 +515,30 @@ class WiseAgentContext():
         Args:
             chat_uuid (str): the chat uuid
             tool_name (str): the tool name to remove'''
+        if (self._use_redis == True):
+            while True:
+                try:
+                    pipe = self._redis_db.pipeline(transaction=True)
+                    pipe.watch("llm_required_tool_call")
+                    if (pipe.hexists("llm_required_tool_call", key=chat_uuid) == False):
+                        pipe.unwatch()
+                        return
+                    redis_stored_tool_names = pipe.hget("llm_required_tool_call", key=chat_uuid)
+                    if (redis_stored_tool_names == None):
+                        stored_tool_names : List[str] = []
+                    else:
+                        stored_tool_names : List[str] = pickle.loads(redis_stored_tool_names)
+                        stored_tool_names.remove(tool_name)
+                    pipe.multi()
+                    if len(stored_tool_names) == 0:
+                        pipe.hdel("llm_required_tool_call", chat_uuid)
+                    else:
+                        pipe.hset("llm_required_tool_call", key=chat_uuid, value=pickle.dumps(stored_tool_names))
+                    pipe.execute()
+                    break
+                except redis.WatchError:
+                    logging.warning("WatchError in remove_required_tool_call")
+                    continue
         if chat_uuid in self._llm_required_tool_call:
             self._llm_required_tool_call[chat_uuid].remove(tool_name)
             if len(self._llm_required_tool_call[chat_uuid]) == 0:
@@ -409,6 +550,12 @@ class WiseAgentContext():
         Args:
             chat_uuid (str): the chat uuid
             return List[str]'''
+        if (self._use_redis == True):
+            llm_req_tools = self._redis_db.hget("llm_required_tool_call", key=chat_uuid)
+            if (llm_req_tools is not None):
+                return pickle.loads(llm_req_tools)
+            else:
+                return []
         if chat_uuid in self._llm_required_tool_call:
             return self._llm_required_tool_call[chat_uuid]
         else:
@@ -417,6 +564,12 @@ class WiseAgentContext():
     @property
     def llm_available_tools_in_chat(self) -> Dict[str, List[ChatCompletionToolParam]]:
         """Get the LLM available tools in chat of the context."""
+        if (self._use_redis == True):
+            redis_dict = self._redis_db.hgetall("llm_available_tools_in_chat")
+            return_dict : Dict[str, List[ChatCompletionToolParam]] = {}
+            for key in redis_dict:
+                return_dict[key] = pickle.loads(redis_dict[key])
+            return return_dict
         return self._llm_available_tools_in_chat
     
     def append_available_tool_in_chat(self, chat_uuid: str, tools: Iterable[ChatCompletionToolParam]):
@@ -425,9 +578,31 @@ class WiseAgentContext():
         Args:
             chat_uuid (str): the chat uuid
             tools (Iterable[ChatCompletionToolParam]): the tools to append'''
-        if chat_uuid not in self._llm_available_tools_in_chat:
-            self._llm_available_tools_in_chat[chat_uuid] = []
-        self._llm_available_tools_in_chat[chat_uuid].append(tools)
+        if (self._use_redis == True):
+            while True:
+                try:
+                    pipe = self._redis_db.pipeline(transaction=True)
+                    pipe.watch("llm_available_tools_in_chat")
+                    if (pipe.hexists("llm_available_tools_in_chat", key=chat_uuid) == False):
+                        pipe.multi()    
+                        pipe.hset("llm_available_tools_in_chat", key=chat_uuid, value=pickle.dumps([tools]))
+                        pipe.execute()
+                        break
+                    else :
+                        redis_stored_tools = pipe.hget("llm_available_tools_in_chat", key=chat_uuid)
+                        stored_tools : List[ChatCompletionToolParam] = pickle.loads(redis_stored_tools)
+                        stored_tools.append(tools)
+                        pipe.multi()
+                        pipe.hset("llm_available_tools_in_chat", key=chat_uuid, value=pickle.dumps(stored_tools))
+                        pipe.execute()
+                        break
+                except redis.WatchError:
+                    logging.warning("WatchError in append_available_tool_in_chat")
+                    continue
+        else:
+            if chat_uuid not in self._llm_available_tools_in_chat:
+                self._llm_available_tools_in_chat[chat_uuid] = []
+            self._llm_available_tools_in_chat[chat_uuid].append(tools)
     
     def get_available_tools_in_chat(self, chat_uuid: str) -> List[ChatCompletionToolParam]:
         '''Get available tools in chat from the context.
@@ -435,10 +610,17 @@ class WiseAgentContext():
         Args:
             chat_uuid (str): the chat uuid
             return List[ChatCompletionToolParam]'''
-        if chat_uuid in self._llm_available_tools_in_chat:
-            return self._llm_available_tools_in_chat[chat_uuid]
+        if (self._use_redis == True):
+            llm_av_tools = self._redis_db.hget("llm_available_tools_in_chat", key=chat_uuid)   
+            if (llm_av_tools is not None):
+                return pickle.loads(llm_av_tools)
+            else:
+                return []
         else:
-            return []
+            if chat_uuid in self._llm_available_tools_in_chat:
+                return self._llm_available_tools_in_chat[chat_uuid]
+            else:
+                return []
 
     def get_agents_sequence(self, chat_uuid: str) -> List[str]:
         """
@@ -452,9 +634,16 @@ class WiseAgentContext():
         Returns:
             List[str]: the sequence of agents names or an empty list if no sequence has been set for this context
         """
-        if chat_uuid in self._agents_sequence:
-            return self._agents_sequence[chat_uuid]
-        return []
+        if (self._use_redis == True):
+            agent_sequence = self._redis_db.hget("agents_sequence", key=chat_uuid)
+            if (agent_sequence is not None):
+                return pickle.loads(agent_sequence)
+            else:
+                return []
+        else:
+            if chat_uuid in self._agents_sequence:
+                return self._agents_sequence[chat_uuid]
+            return []
 
     def set_agents_sequence(self, chat_uuid: str, agents_sequence: List[str]):
         """
@@ -466,7 +655,10 @@ class WiseAgentContext():
             chat_uuid (str): the chat uuid
             agents_sequence (List[str]): the sequence of agent names
         """
-        self._agents_sequence[chat_uuid] = agents_sequence
+        if (self._use_redis == True):
+            self._redis_db.hset("agents_sequence", key=chat_uuid, value=pickle.dumps(agents_sequence))
+        else:
+            self._agents_sequence[chat_uuid] = agents_sequence
 
     def get_route_response_to(self, chat_uuid: str) -> Optional[str]:
         """
@@ -476,10 +668,17 @@ class WiseAgentContext():
         Returns:
             Optional[str]: the name of the agent where the final response should be routed to or None if no agent is set
         """
-        if chat_uuid in self._route_response_to:
-            return self._route_response_to[chat_uuid]
-        else:
-            return None
+        if (self._use_redis == True):
+            route = self._redis_db.hget("route_response_to", key=chat_uuid)
+            if (route is not None):
+                return pickle.loads(route)
+            else:
+                return None
+        else: 
+            if chat_uuid in self._route_response_to:
+                return self._route_response_to[chat_uuid]
+            else:
+                return None
 
     def set_route_response_to(self, chat_uuid: str, agent: str):
         """
@@ -490,7 +689,10 @@ class WiseAgentContext():
             chat_uuid (str): the chat uuid
             agent (str): the name of the agent where the final response should be routed to
         """
-        self._route_response_to[chat_uuid] = agent
+        if (self._use_redis == True):
+            self._redis_db.hset("route_response_to", key=chat_uuid, value=pickle.dumps(agent))
+        else:
+            self._route_response_to[chat_uuid] = agent
 
     def get_next_agent_in_sequence(self, chat_uuid: str, current_agent: str):
         """
@@ -527,9 +729,16 @@ class WiseAgentContext():
             agent names for that phase. An empty list is returned if no phases have been set for the
             given chat uuid
         """
-        if chat_uuid in self._agent_phase_assignments:
-            return self._agent_phase_assignments.get(chat_uuid)
-        return []
+        if (self._use_redis == True):
+            agent_phase = self._redis_db.hget("agent_phase_assignments", key=chat_uuid)
+            if (agent_phase is not None):
+                return pickle.loads(agent_phase)
+            else:
+                return []
+        else:
+            if chat_uuid in self._agent_phase_assignments:
+                return self._agent_phase_assignments.get(chat_uuid)
+            return []
 
     def set_agent_phase_assignments(self, chat_uuid: str, agent_phase_assignments: List[List[str]]):
         """
@@ -542,7 +751,10 @@ class WiseAgentContext():
             list of lists, where the size of the outer list corresponds to the number of phases and each element
             in the list is a list of agent names for that phase.
         """
-        self._agent_phase_assignments[chat_uuid] = agent_phase_assignments
+        if (self._use_redis == True):
+            self._redis_db.hset("agent_phase_assignments", key=chat_uuid, value=pickle.dumps(agent_phase_assignments))
+        else:
+            self._agent_phase_assignments[chat_uuid] = agent_phase_assignments
 
     def get_current_phase(self, chat_uuid: str) -> int:
         """
@@ -554,7 +766,14 @@ class WiseAgentContext():
         Returns:
             int: the current phase, represented as an integer in the zero-indexed list of phases
         """
-        return self._current_phase.get(chat_uuid)
+        if (self._use_redis == True):
+            cur_phase = self._redis_db.hget("current_phase", key=chat_uuid)
+            if (cur_phase is not None):
+                return pickle.loads(cur_phase)
+            else:
+                return None
+        else:
+            return self._current_phase.get(chat_uuid)
 
     def set_current_phase(self, chat_uuid: str, phase: int):
         """
@@ -565,8 +784,14 @@ class WiseAgentContext():
             chat_uuid (str): the chat uuid
             phase (int): the current phase, represented as an integer in the zero-indexed list of phases
         """
-        self._current_phase[chat_uuid] = phase
-        self._required_agents_for_current_phase[chat_uuid] = copy.deepcopy(self._agent_phase_assignments[chat_uuid][phase])
+        if (self._use_redis == True):
+            self._redis_db.pipeline(transaction=True)\
+                .hset("current_phase", key=chat_uuid, value=pickle.dumps(phase))\
+                .hset("required_agents_for_current_phase", key=chat_uuid, value=pickle.dumps(self.get_agent_phase_assignments(chat_uuid)[phase]))\
+                .execute()
+        else:
+            self._current_phase[chat_uuid] = phase
+            self._required_agents_for_current_phase[chat_uuid] = copy.deepcopy(self._agent_phase_assignments[chat_uuid][phase])
 
     def get_agents_for_next_phase(self, chat_uuid: str) -> Optional[List]:
         """
@@ -581,9 +806,9 @@ class WiseAgentContext():
         """
         current_phase = self.get_current_phase(chat_uuid)
         next_phase = current_phase + 1
-        if next_phase < len(self._agent_phase_assignments[chat_uuid]):
+        if next_phase < len(self.get_agent_phase_assignments(chat_uuid)):
             self.set_current_phase(chat_uuid, next_phase)
-            return self._agent_phase_assignments[chat_uuid][next_phase]
+            return self.get_agent_phase_assignments(chat_uuid)[next_phase]
         return None
 
     def get_required_agents_for_current_phase(self, chat_uuid: str) -> List[str]:
@@ -598,9 +823,16 @@ class WiseAgentContext():
             List[str]: the list of agent names that still need to be executed for the current phase or an empty list
             if there are no remaining agents that need to be executed for the current phase
         """
-        if chat_uuid in self._required_agents_for_current_phase:
-            return self._required_agents_for_current_phase.get(chat_uuid)
-        return []
+        if (self._use_redis == True):
+            req_agent = self._redis_db.hget("required_agents_for_current_phase", key=chat_uuid)
+            if (req_agent is not None):
+                return pickle.loads(req_agent)
+            else:
+                return []
+        else:
+            if chat_uuid in self._required_agents_for_current_phase:
+                return self._required_agents_for_current_phase.get(chat_uuid)
+            return []
 
     def remove_required_agent_for_current_phase(self, chat_uuid: str, agent_name: str):
         """
@@ -611,8 +843,30 @@ class WiseAgentContext():
             chat_uuid (str): the chat uuid
             agent_name (str): the name of the agent to remove
         """
-        if chat_uuid in self._required_agents_for_current_phase:
-            self._required_agents_for_current_phase.get(chat_uuid).remove(agent_name)
+        if (self._use_redis == True):
+            while True:
+                try:
+                    pipe = self._redis_db.pipeline(transaction=True)
+                    pipe.watch("required_agents_for_current_phase")
+                    if (pipe.hexists("required_agents_for_current_phase", key=chat_uuid) == False):
+                        pipe.unwatch()
+                        return
+                    redis_stored_agents = pipe.hget("required_agents_for_current_phase", key=chat_uuid)
+                    stored_agents : List[str] = pickle.loads(redis_stored_agents)
+                    stored_agents.remove(agent_name)
+                    pipe.multi()
+                    if len(stored_agents) == 0:
+                        pipe.hdel("required_agents_for_current_phase", chat_uuid)
+                    else:
+                        pipe.hset("required_agents_for_current_phase", key=chat_uuid, value=pickle.dumps(stored_agents))
+                    pipe.execute()
+                    break
+                except redis.WatchError:
+                    logging.warning("WatchError: Retrying to remove agent")
+                    continue
+        else:
+            if chat_uuid in self._required_agents_for_current_phase:
+                self._required_agents_for_current_phase.get(chat_uuid).remove(agent_name)
 
     def get_current_query(self, chat_uuid: str) -> Optional[str]:
         """
@@ -624,12 +878,20 @@ class WiseAgentContext():
         Returns:
             Optional[str]: the current query or None if there is no current query
         """
-        if chat_uuid in self._queries:
-            if self._queries.get(chat_uuid):
-                # return the last query
-                return self._queries.get(chat_uuid)[-1]
+        if (self._use_redis == True):
+            queries = self._redis_db.hget("queries", key=chat_uuid)
+            if (queries is not None):
+                return_list : List[str] = pickle.loads(queries)
+                return return_list[-1]
+            else:
+                return None
         else:
-            return None
+            if chat_uuid in self._queries:
+                if self._queries.get(chat_uuid):
+                    # return the last query
+                    return self._queries.get(chat_uuid)[-1]
+            else:
+                return None
 
     def add_query(self, chat_uuid: str, query: str):
         """
@@ -639,9 +901,28 @@ class WiseAgentContext():
             chat_uuid (str): the chat uuid
             query (str): the current query
         """
-        if chat_uuid not in self._queries:
-            self._queries[chat_uuid] = []
-        self._queries[chat_uuid].append(query)
+        if (self._use_redis == True):
+            while True:
+                try:
+                    pipe = self._redis_db.pipeline(transaction=True)
+                    pipe.watch("queries")
+                    if (pipe.hexists("queries", key=chat_uuid) == False):
+                        pipe.hset("queries", key=chat_uuid, value=pickle.dumps([query]))
+                    else :
+                        redis_stored_queries = pipe.hget("queries", key=chat_uuid)
+                        stored_queries : List[str] = pickle.loads(redis_stored_queries)
+                        stored_queries.append(query)
+                        pipe.multi()
+                        pipe.hset("queries", key=chat_uuid, value=pickle.dumps(stored_queries))
+                    pipe.execute()
+                    break
+                except redis.WatchError:
+                    logging.warning("WatchError: Retrying to add query")
+                    continue
+        else:
+            if chat_uuid not in self._queries:
+                self._queries[chat_uuid] = []
+            self._queries[chat_uuid].append(query)
 
     def get_queries(self, chat_uuid: str) -> List[str]:
         """
@@ -650,6 +931,12 @@ class WiseAgentContext():
         Returns:
             List[str]: the queries attempted for the given chat uuid for this context
         """
+        if (self._use_redis == True):
+            query = self._redis_db.hget("queries", key=chat_uuid)
+            if (query is not None):
+                return pickle.loads(query)
+            else:
+                return []
         if chat_uuid in self._queries:
             return self._queries.get(chat_uuid)
         else:
@@ -665,45 +952,133 @@ class WiseAgentRegistry:
     contexts : dict[str, WiseAgentContext] = {}
     tools: dict[str, WiseAgentTool] = {}
     
+    config: dict[str, Any] = {}
+    
+    redis_db : redis.Redis = None
+    
+    @classmethod
+    def find_file(cls, file_name, config_directory=".wise-agents") -> str:
+        """
+        Find the file in the current directory or the home directory.
+        """
+        # Step 1: Check the current directory
+        local_path= os.path.join(os.getcwd(), config_directory, file_name)
+        if os.path.isfile(local_path):
+            return local_path
+        
+        # Step 2: Check the home directory
+        home_dir = os.path.expanduser("~")
+        home_path = os.path.join(home_dir, config_directory,file_name)
+        if os.path.isfile(home_path):
+            return home_path
+        
+        # If the file is not found in any of these locations, throw an exception
+        raise FileNotFoundError(f"File '{file_name}' not found in current directory, home directory, as '{config_directory}'/{file_name}.")
+    
+    @classmethod
+    def get_config(cls) -> dict[str, Any]:
+        """
+        Get the configuration and initialize the redis database
+        for more information see 
+        https://wise-agents.github.io/wise_agents_architecture/#distributed-architecture
+        """
+        try: 
+            if cls.config is None or cls.config == {}:
+                file_name = cls.find_file(file_name="registry_config.yaml", config_directory=".wise-agents")
+                cls.config : Dict[str, Any] = yaml.load(open(file_name), Loader=yaml.FullLoader)
+            if cls.config.get("use_redis") == True and cls.redis_db is None:
+                if (cls.config.get("redis_ssl") is True):
+                    cls.redis_db = redis.Redis(
+                    host=cls.config["redis_host"], port=cls.config["redis_port"],
+                    username=cls.config["redis_username"], # use your Redis user. More info https://redis.io/docs/latest/operate/oss_and_stack/management/security/acl/
+                    password=cls.config["redis_password"], # use your Redis password
+                    ssl=True,
+                    ssl_certfile=cls.config["redis_ssl_certfile"],
+                    ssl_keyfile=cls.config["redis_ssl_keyfile"],
+                    ssl_ca_certs=cls.config["redis_ssl_ca_certs"])
+
+                else:
+                    cls.redis_db = redis.Redis(host=cls.config["redis_host"], port=cls.config["redis_port"])
+            return cls.config
+        except Exception as e:
+            logging.error(e)
+            exit(1)
+    
     @classmethod
     def register_agent(cls,agent : WiseAgent):
         """
         Register an agent with the registry
         """
-        cls.agents[agent.name] = agent
+        if (cls.get_config().get("use_redis") == True):
+            cls.redis_db.hset("agents", key=agent.name, value=pickle.dumps(agent))
+        else:
+            cls.agents[agent.name] = agent
     @classmethod    
     def register_context(cls, context : WiseAgentContext):
         """
         Register a context with the registry
         """
-        cls.contexts[context.name] = context
+        if (cls.get_config().get("use_redis") == True):
+            cls.redis_db.hset("contexts", key=context.name, value=pickle.dumps(context))
+        else:
+            cls.contexts[context.name] = context
     @classmethod    
     def get_agents(cls) -> dict [str, WiseAgent]:
         """
         Get the list of agents
         """
-        return cls.agents
+        if (cls.get_config().get("use_redis") == True):
+            dictionary = cls.redis_db.hgetall("agents")
+            return_dictionary : Dict[str, WiseAgent]= {}
+            for key in dictionary:
+                return_dictionary[key.decode("utf-8")] = pickle.loads(dictionary.get(key))
+            return return_dictionary   
+        else:
+            return cls.agents
     
     @classmethod
     def get_contexts(cls) -> dict [str, WiseAgentContext]:
         """
         Get the list of contexts
         """
-        return cls.contexts
+        if (cls.get_config().get("use_redis") == True):
+            dictionary = cls.redis_db.hgetall("contexts")
+            return_dictionary : Dict[str, WiseAgentContext]= {}
+            for key in dictionary:
+                 return_dictionary[key] = pickle.loads(dictionary.get(key))
+            return return_dictionary
+        else:
+            return cls.contexts
     
     @classmethod
     def get_agent(cls, agent_name: str) -> WiseAgent:
         """
         Get the agent with the given name
         """
-        return cls.agents.get(agent_name) 
+        if (cls.get_config().get("use_redis") == True):
+            agent = cls.redis_db.hget("agents", key=agent_name)
+            if agent is not None:
+                return pickle.loads(agent)
+            else:
+                return None
+        else:
+            return cls.agents.get(agent_name) 
     
     @classmethod
     def get_or_create_context(cls, context_name: str) -> WiseAgentContext:
         """ Get the context with the given name """
-        context = cls.contexts.get(context_name)
+        context : WiseAgentContext = None
+        if (cls.get_config().get("use_redis") == True):
+            ctx = cls.redis_db.hget("contexts", key=context_name)
+            if ctx is not None:
+                context : WiseAgentContext = pickle.loads(ctx)
+            else:
+                context = None
+        else:
+            context = cls.contexts.get(context_name)
         if context is None:
-            return WiseAgentContext(context_name)
+            # context creation will also register the context in the registry
+            return WiseAgentContext(context_name, cls.config)
         else:
             return context
         
@@ -712,59 +1087,92 @@ class WiseAgentRegistry:
         """
         Get the context with the given name
         """
-        if  cls.contexts.get(context_name) is None:
-            return False
+        if (cls.get_config().get("use_redis") == True):
+            return cls.redis_db.hexists("contexts", key=context_name)
         else:
-            return True
+            if  cls.contexts.get(context_name) is None:
+                return False
+            else:
+                return True
     
     @classmethod
     def remove_agent(cls, agent_name: str):
         """
         Remove the agent from the registry
         """
-        cls.agents.pop(agent_name)
+        if (cls.get_config().get("use_redis") == True):
+            cls.redis_db.hdel("agents", agent_name)
+        else:
+            cls.agents.pop(agent_name)
         
     @classmethod
     def remove_context(cls, context_name: str):
         """
         Remove the context from the registry
         """
-        cls.contexts.pop(context_name)
+        if (cls.get_config().get("use_redis") == True):
+            cls.redis_db.hdel("contexts", context_name)
+        else:
+            cls.contexts.pop(context_name)
     
     @classmethod
     def clear_agents(cls):
         """
         Clear all agents from the registry
         """
-        cls.agents.clear()
+        if (cls.get_config().get("use_redis") == True):
+            cls.redis_db.delete("agents")
+        else:
+            cls.agents.clear()
     
     @classmethod
     def clear_contexts(cls):
         """
         Clear all contexts from the registry
         """
-        cls.contexts.clear()
+        if (cls.get_config().get("use_redis") == True):
+            cls.redis_db.delete("contexts")
+        else:
+            cls.contexts.clear()
         
     @classmethod
     def register_tool(cls, tool : WiseAgentTool):
         """
         Register a tool with the registry
         """
-        cls.tools[tool.name] = tool
+        if (cls.get_config().get("use_redis") == True):
+            cls.redis_db.hset("tools", key=tool.name, value=pickle.dumps(tool))
+        else:
+            cls.tools[tool.name] = tool
     
     @classmethod
     def get_tools(cls) -> dict[str, WiseAgentTool]:
         """
         Get the list of tools
         """
-        return cls.tools
+        if (cls.get_config().get("use_redis") == True):
+            dictionary = cls.redis_db.hgetall("tools")
+            return_dictionary : Dict[str, WiseAgentTool]= {}
+            for key in dictionary:
+                 return_dictionary[key] = pickle.loads(dictionary.get(key))
+            return return_dictionary
+        else:
+            return cls.tools
     
     @classmethod
     def get_tool(cls, tool_name: str) -> WiseAgentTool:
         """
         Get the tool with the given name
         """
-        return cls.tools.get(tool_name)
+        if (cls.get_config().get("use_redis") == True):
+            pipe = cls.redis_db.pipeline(transaction=True)
+            piped_res= pipe.hexists("tools", key=tool_name).hget("tools", key=tool_name).execute()
+            if piped_res[0]:
+                return pickle.loads(piped_res[1])
+            else:
+                return None
+        else:
+            return cls.tools.get(tool_name)
 
     @classmethod
     def get_agent_names_and_descriptions(cls) -> List[str]:
@@ -775,7 +1183,7 @@ class WiseAgentRegistry:
             List[str]: the list of agent descriptions
         """
         agent_descriptions = []
-        for agent_name, agent in cls.agents.items():
+        for agent_name, agent in cls.get_agents().items():
             agent_descriptions.append("Agent Name: " + agent_name + " Agent Description: " + agent.description)
 
         return agent_descriptions

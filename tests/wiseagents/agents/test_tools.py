@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import threading
 import pytest
 
@@ -11,7 +12,11 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 
 
     
-
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    yield
+    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_contexts()
 
 
 cond = threading.Condition()
@@ -99,9 +104,11 @@ def test_agent_tool():
                     }
     WiseAgentTool(name="WeatherAgent", description="Get the current weather in a given location", agent_tool=True,
                  parameters_json_schema=json_schema, call_back=None) 
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    
     llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                         model_name="llama3.1",
-                                         remote_address="http://localhost:11434/v1")      
+                                         model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
+                                         api_key=groq_api_key)      
     
     weather_agent = WiseAgentWeather(name="WeatherAgent", description="Get the current weather in a given location")
     weather_agent.startAgent()
@@ -146,9 +153,11 @@ def test_tool():
                     }
     WiseAgentTool(name="get_current_weather", description="Get the current weather in a given location", agent_tool=False,
                  parameters_json_schema=json_schema, call_back=get_current_weather) 
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    
     llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                         model_name="llama3.1",
-                                         remote_address="http://localhost:11434/v1")      
+                                         model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
+                                         api_key=groq_api_key)      
     agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
                                  description="This is a test agent",
                                  llm=llm,

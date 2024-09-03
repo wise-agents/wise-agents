@@ -24,6 +24,7 @@ dependencies = [
     "mkdocs-literate-nav",
     "mkdocs-section-index",
     "mkdocs-include-markdown-plugin",
+    "redis",
 ]
 
 [project.optional-dependencies]
@@ -35,10 +36,6 @@ test = [
 pythonpath = "src"
 
 [tool.pytest.ini_options]
-log_cli = true
-log_cli_level = "INFO"
-log_cli_format = "%(asctime)s [%(levelname)] %(message)s"
-log_cli_date_format = "%Y-%m-%d %H:%M:%S"
 addopts = [
     "--import-mode=importlib",
 ]

@@ -5,6 +5,12 @@ from time import sleep
 from  wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
 from wiseagents.transports import StompWiseAgentTransport
 
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    yield
+    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_contexts()
+
 class WiseAgentDoingNothing(WiseAgent):
      
     request_received : WiseAgentMessage = None

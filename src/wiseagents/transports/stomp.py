@@ -1,5 +1,6 @@
 import logging
 import os
+import traceback
 
 import stomp.utils
 from wiseagents import WiseAgentMessage,WiseAgentTransport
@@ -56,8 +57,8 @@ class StompWiseAgentTransport(WiseAgentTransport):
     '''A transport for sending messages between agents using the STOMP protocol.'''
     
     yaml_tag = u'!wiseagents.transport.StompWiseAgentTransport'
-    conn : stomp.Connection = None
-    conn2 : stomp.Connection = None
+    request_conn : stomp.Connection = None
+    response_conn : stomp.Connection = None
     def __init__(self, host: str, port: int, agent_name: str):
         '''Initialize the transport.
 
@@ -80,6 +81,8 @@ class StompWiseAgentTransport(WiseAgentTransport):
         del state['_response_receiver']
         del state['_event_receiver']
         del state['_error_receiver']
+        del state['request_conn']
+        del state['response_conn']
         return state 
 
 
@@ -87,18 +90,20 @@ class StompWiseAgentTransport(WiseAgentTransport):
         '''
         Start the transport.
         require the environment variables STOMP_USER and STOMP_PASSWORD to be set'''
+        if (self.request_conn is not None and self.request_conn.is_connected()) or (self.response_conn is not None and self.response_conn.is_connected()):
+            return
         hosts = [(self.host, self.port)] 
-        self.conn = stomp.Connection(host_and_ports=hosts, heartbeats=(60000, 60000))
-        self.conn.set_listener('WiseAgentRequestTopicListener', WiseAgentRequestQueueListener(self))
-        self.conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
-        self.conn.subscribe(destination=self.request_queue, id=id(self), ack='auto')
+        self.request_conn = stomp.Connection(host_and_ports=hosts, heartbeats=(60000, 60000))
+        self.request_conn.set_listener('WiseAgentRequestTopicListener', WiseAgentRequestQueueListener(self))
+        self.request_conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
+        self.request_conn.subscribe(destination=self.request_queue, id=id(self), ack='auto')
         
-        self.conn2 = stomp.Connection(host_and_ports=hosts, heartbeats=(60000, 60000))
+        self.response_conn = stomp.Connection(host_and_ports=hosts, heartbeats=(60000, 60000))
         
-        self.conn2.set_listener('WiseAgentResponseQueueListener', WiseAgentResponseQueueListener(self))
-        self.conn2.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
+        self.response_conn.set_listener('WiseAgentResponseQueueListener', WiseAgentResponseQueueListener(self))
+        self.response_conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
         
-        self.conn2.subscribe(destination=self.response_queue, id=id(self) + 1 , ack='auto')
+        self.response_conn.subscribe(destination=self.response_queue, id=id(self) + 1 , ack='auto')
 
 
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
@@ -108,15 +113,15 @@ class StompWiseAgentTransport(WiseAgentTransport):
             message (WiseAgentMessage): the message to send
             dest_agent_name (str): the destination agent name'''
         # Send the message using the STOMP protocol
-        if self.conn is None or self.conn2 is None:
+        if self.request_conn is None or self.response_conn is None:
             self.start()
-        if self.conn.is_connected() == False:
-            self.conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
-        if self.conn2.is_connected() == False:
-            self.conn2.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
+        if self.request_conn.is_connected() == False:
+            self.request_conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
+        if self.response_conn.is_connected() == False:
+            self.response_conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
         request_destination = '/queue/request/' + dest_agent_name
         logging.debug(f"Sending request {message} to {request_destination}")    
-        self.conn.send(body=yaml.dump(message), destination=request_destination)
+        self.request_conn.send(body=yaml.dump(message), destination=request_destination)
         
     def send_response(self, message: WiseAgentMessage, dest_agent_name: str):
         '''Send a response message to an agent.
@@ -125,21 +130,21 @@ class StompWiseAgentTransport(WiseAgentTransport):
             message (WiseAgentMessage): the message to send
             dest_agent_name (str): the destination agent name'''
         # Send the message using the STOMP protocol
-        if self.conn is None or self.conn2 is None:
+        if self.request_conn is None or self.response_conn is None:
             self.start()
         response_destination = '/queue/response/' + dest_agent_name    
-        self.conn2.send(body=yaml.dump(message), destination=response_destination)
+        self.response_conn.send(body=yaml.dump(message), destination=response_destination)
 
     def stop(self):
         '''Stop the transport.'''
-        if self.conn is not None:
+        if self.request_conn is not None:
             #unsubscribe from the request topic
-            self.conn.unsubscribe(destination=self.request_queue, id=id(self))
+            self.request_conn.unsubscribe(destination=self.request_queue, id=id(self))
             #unsubscribe from the response queue
-            self.conn2.unsubscribe(destination=self.response_queue, id=id(self) + 1)
+            self.response_conn.unsubscribe(destination=self.response_queue, id=id(self) + 1)
             # Disconnect from the STOMP server
-            self.conn.disconnect()
-            self.conn2.disconnect()
+            self.request_conn.disconnect()
+            self.response_conn.disconnect()
             
         
     @property

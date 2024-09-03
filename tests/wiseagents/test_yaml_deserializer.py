@@ -1,11 +1,16 @@
 import pytest
 
-from wiseagents import WiseAgent
+from wiseagents import WiseAgent, WiseAgentRegistry
 from wiseagents.llm import WiseAgentRemoteLLM
 from wiseagents.graphdb import LangChainWiseAgentGraphDB, Neo4jLangChainWiseAgentGraphDB
 import yaml
 import logging, pathlib
 
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    yield
+    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_contexts()
 
 @pytest.mark.needsllm
 def test_using_deserialized_agent():

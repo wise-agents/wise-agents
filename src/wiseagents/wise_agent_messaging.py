@@ -95,6 +95,7 @@ class WiseAgentMessage(YAMLObject):
         return self._route_response_to
 
 class WiseAgentTransport(YAMLObject):
+    
     ''' A transport for sending messages between agents. '''    
     def set_call_backs(self, request_receiver: Optional[Callable[[], WiseAgentMessage]] = None,
                  event_receiver: Optional[Callable[[], WiseAgentEvent]] = None,
@@ -112,7 +113,7 @@ class WiseAgentTransport(YAMLObject):
         self._event_receiver = event_receiver
         self._error_receiver = error_receiver
         self._response_receiver = response_receiver
-        
+       
     @abstractmethod
     def start(self):
         """

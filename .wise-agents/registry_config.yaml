@@ -1,0 +1,12 @@
+use_redis: true
+redis_ssl : false
+redis_host: localhost
+redis_port: 6379
+redis_db: wise-agents
+redis_username: default
+redis_password: secret
+redis_ssl_certfile: "./redis_user.crt"
+redis_ssl_keyfile: "./redis_user_private.key"
+redis_ssl_ca_certs: "./redis_ca.pem"
+
+

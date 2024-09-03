@@ -1,5 +1,8 @@
+import logging
 import os
 import threading
+
+import pytest
 
 from wiseagents import WiseAgentMessage, WiseAgentRegistry
 from wiseagents.agents import LLMOnlyWiseAgent, PassThroughClientAgent, SequentialCoordinatorWiseAgent
@@ -8,14 +11,26 @@ from wiseagents.transports import StompWiseAgentTransport
 
 cond = threading.Condition()
 
+assertError : AssertionError = None
+
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    yield
+    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_contexts()
 
 def response_delivered(message: WiseAgentMessage):
+    global assertError
     with cond:
         response = message.message
-        assert "Farah" in response
-        assert "Agent1" in response
-        assert "Agent2" in response
-        print(f"C Response delivered: {response}")
+            
+        try:
+            assert "Farah" in response
+            assert "Agent1" in response
+            assert "Agent2" in response
+        except AssertionError:
+            logging.info(f"assertion failed")
+            assertError = AssertionError
         cond.notify()
 
 
@@ -23,7 +38,9 @@ def test_sequential_coordinator():
     """
     Requires STOMP_USER and STOMP_PASSWORD.
     """
+    global assertError
     groq_api_key = os.getenv("GROQ_API_KEY")
+    
     llm1 = OpenaiAPIWiseAgentLLM(system_message="Your name is Agent1. Answer my greeting saying Hello and my name and tell me your name.",
                                  model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
                                  api_key=groq_api_key)
@@ -48,7 +65,9 @@ def test_sequential_coordinator():
         client_agent1.send_request(WiseAgentMessage("My name is Farah", "PassThroughClientAgent1"),
                                    "SequentialCoordinator")
         cond.wait()
-
+        if assertError is not None:
+            logging.info(f"assertion failed")
+            raise assertError
         for agent in WiseAgentRegistry.get_agents():
             print(f"Agent: {agent}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:

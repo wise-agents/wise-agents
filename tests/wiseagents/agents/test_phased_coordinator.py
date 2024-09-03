@@ -1,6 +1,8 @@
 import os
 import threading
 
+import pytest
+
 from wiseagents import WiseAgentMessage, WiseAgentRegistry
 from wiseagents.agents import CollaboratorWiseAgent, PassThroughClientAgent, PhasedCoordinatorWiseAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
@@ -8,6 +10,12 @@ from wiseagents.transports import StompWiseAgentTransport
 
 cond = threading.Condition()
 
+
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    yield
+    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_contexts()
 
 def final_response_delivered(message: WiseAgentMessage):
     with cond:
