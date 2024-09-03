@@ -62,7 +62,7 @@ To setup your development environment you need to:
 For more information about virtual environment see [here](https://docs.python.org/3/library/venv.html)
 
     ```
-    python -m venv ./venv
+    python -m venv .venv
     ```
 
     OR just using our Makefile
