@@ -6,6 +6,8 @@
 
 # Optionally, you can define __all__ to specify the public interface of the package
 # __all__ = ['module1', 'module2', 'subpackage']
+from .collaboration_wise_agents import CollaboratorWiseAgent, PhasedCoordinatorWiseAgent, SequentialCoordinatorWiseAgent
 from .rag_wise_agents import CoVeChallengerRAGWiseAgent, GraphRAGWiseAgent, RAGWiseAgent
 
-__all__ = ['RAGWiseAgent', 'GraphRAGWiseAgent', 'CoVeChallengerRAGWiseAgent']
+__all__ = ['CollaboratorWiseAgent', 'PhasedCoordinatorWiseAgent', 'SequentialCoordinatorWiseAgent', 'RAGWiseAgent',
+           'GraphRAGWiseAgent', 'CoVeChallengerRAGWiseAgent']

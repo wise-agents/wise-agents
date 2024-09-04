@@ -2,9 +2,10 @@ import os
 import threading
 
 from wiseagents import WiseAgentMessage, WiseAgentRegistry
+from wiseagents.agents import CollaboratorWiseAgent, PhasedCoordinatorWiseAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
-from wiseagents.wise_agent_impl import CollaboratorWiseAgent, PassThroughClientAgent, PhasedCoordinatorWiseAgent
+from wiseagents.wise_agent_impl import PassThroughClientAgent
 
 cond = threading.Condition()
 
