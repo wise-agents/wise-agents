@@ -8,10 +8,20 @@ from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgent
 from wiseagents.llm import WiseAgentLLM
 
 class PassThroughClientAgent(WiseAgent):
-    """This agent is used mainly for test purposes. It just passes the request to another agent and sends back the response to the client."""
-    """Use Stomp protocol"""
+    """
+    This utility agent simply passes a request that it receives to another agent and sends the
+    response back to the client.
+    """
     yaml_tag = u'!wiseagents.agents.PassThroughClientAgent'
-    def __init__(self, name, description , transport):
+    
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the optional instance variables."""
+        obj = super().__new__(cls)
+        obj._destination_agent_name = "WiseIntelligentAgent"
+        return obj
+
+    def __init__(self, name: str, description: str , transport: WiseAgentTransport,
+                 destination_agent_name: Optional[str] = "WiseIntelligentAgent"):
         """
         Initialize the agent.
 
@@ -19,17 +29,20 @@ class PassThroughClientAgent(WiseAgent):
             name (str): the name of the agent
             description (str): a description of the agent
             transport (WiseAgentTransport): the transport to use for communication
+            destination_agent_name (str): the name of the agent to send requests to
         """
         self._name = name
+        self._destination_agent_name = destination_agent_name
         super().__init__(name=name, description=description, transport=transport, llm=None)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return f"{self.__class__.__name__}(name={self.name}, description={self.description})"
+        return (f"{self.__class__.__name__}(name={self.name}, description={self.description},"
+                f"destination_agent_name={self.destination_agent_name})")
 
     def process_request(self, request):
-        """Process a request message just passing it to the another agent."""
-        self.send_request(WiseAgentMessage(request, self.name), 'WiseIntelligentAgent' )
+        """Process a request message by just passing it to another agent."""
+        self.send_request(WiseAgentMessage(request, self.name), self.destination_agent_name)
         return True
 
     def process_response(self, response):
@@ -59,6 +72,11 @@ class PassThroughClientAgent(WiseAgent):
         return self._name
 
     @property
+    def destination_agent_name(self) -> str:
+        """Get the name of the agent to send requests to."""
+        return self._destination_agent_name
+
+    @property
     def response_delivery(self) -> Optional[Callable[[], WiseAgentMessage]]:
         """Get the function to deliver the response to the client.
         return (Callable[[], WiseAgentMessage]): the function to deliver the response to the client"""
@@ -74,11 +92,13 @@ class PassThroughClientAgent(WiseAgent):
         self._response_delivery = response_delivery
 
 class LLMOnlyWiseAgent(WiseAgent):
-    """This agent implementation is used to test the LLM only agent."""
-    """Use Stomp protocol""" 
+    """
+    This utility agent simply passes a request that it receives to an LLM for processing and returns the
+    response received from the LLM.
+    """
     yaml_tag = u'!wiseagents.agents.LLMOnlyWiseAgent'
 
-    def __init__(self, name: str, description: str, llm : WiseAgentLLM, trasport: WiseAgentTransport):
+    def __init__(self, name: str, description: str, llm : WiseAgentLLM, transport: WiseAgentTransport):
         """
         Initialize the agent.
 
@@ -90,7 +110,7 @@ class LLMOnlyWiseAgent(WiseAgent):
         """
         self._name = name
         self._description = description
-        self._transport = trasport
+        self._transport = transport
         llm_agent = llm
         super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent)
 
@@ -141,8 +161,10 @@ class LLMOnlyWiseAgent(WiseAgent):
 
 
 class LLMWiseAgentWithTools(WiseAgent):
-    """This agent implementation is used to test the LLM agent providing a simple tool."""
-    """Use Stomp protocol"""
+    """
+    This utility agent makes use of an LLM along with tools to process a request and determine the response
+    to send back to the client.
+    """
     yaml_tag = u'!wiseagents.agents.LLMWiseAgentWithTools'
     def __init__(self, name: str, description: str, llm : WiseAgentLLM, transport: WiseAgentTransport, tools: List[str]):
         '''Initialize the agent.
