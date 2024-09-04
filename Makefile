@@ -9,7 +9,7 @@ ifeq ($(OS), Windows_NT)
     PY=python
 endif
 
-.PHONY: venv clean install test artemis graphdb model
+.PHONY: venv clean install test artemis graphdb vectordb model
 
 ## help: Show help
 help: Makefile
@@ -50,3 +50,7 @@ graphdb:
 ## model: Serve model (this is a requirement to run the tests, see model-serving/README.MD)
 model:
 	model-serving/model_inference.sh
+
+## graphdb: Start VectorDB (this is a requirement to run the tests, see vectordb/README.MD)
+vectordb:
+	vectordb/run_vectordb.sh

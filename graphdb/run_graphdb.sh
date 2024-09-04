@@ -2,11 +2,10 @@
 # This script is used to run the graph database
 
 # It reads the username, password, and database name from the environment variables.
-# Define these variables before running the script:
-#export NEO4J_USERNAME=USERNAME_TO_CONNECT_TO_NEO4J
-#export NEO4J_PASSWORD=PASSWORD_TO_CONNECT_TO_NEO4J
-#export NEO4J_DATABASE=DATABASE_NAME_TO_CONNECT_TO
-#export POD_CONTAINER=podman | docker
+export POD_CONTAINER="${POD_CONTAINER:-docker}"
+export NEO4J_USERNAME="${NEO4J_USERNAME:-neo4j}"
+export NEO4J_PASSWORD="${NEO4J_PASSWORD:-password}"
+export NEO4J_DATABASE="${NEO4J_DATABASE:-wise}"
 
 # If a .env file is present, it will read the environment variables from there
 # The .env file should be in the same directory as the script
