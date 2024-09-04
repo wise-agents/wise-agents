@@ -51,6 +51,6 @@ graphdb:
 model:
 	model-serving/model_inference.sh
 
-## graphdb: Start VectorDB (this is a requirement to run the tests, see vectordb/README.MD)
+## vectordb: Start VectorDB (this is a requirement to run the tests, see vectordb/README.MD)
 vectordb:
 	vectordb/run_vectordb.sh
