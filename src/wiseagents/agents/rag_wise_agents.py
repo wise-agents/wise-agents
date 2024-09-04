@@ -27,7 +27,7 @@ class RAGWiseAgent(WiseAgent):
     """
     This agent makes use of retrieval augmented generation (RAG) to answer questions.
     """
-    yaml_tag = u'!wiseagents.RAGWiseAgent'
+    yaml_tag = u'!wiseagents.agents.RAGWiseAgent'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the optional instance variables."""
@@ -124,7 +124,7 @@ class GraphRAGWiseAgent(WiseAgent):
     """
     This agent implementation makes use of Graph Retrieval Augmented Generation (Graph RAG) to answer questions.
     """
-    yaml_tag = u'!wiseagents.GraphRAGWiseAgent'
+    yaml_tag = u'!wiseagents.agents.GraphRAGWiseAgent'
     
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the optional instance variables."""
@@ -233,7 +233,7 @@ class CoVeChallengerRAGWiseAgent(WiseAgent):
     hallucinations.
     Uses the Stomp protocol.
     """
-    yaml_tag = u'!wiseagents.CoVeChallengerRAGWiseAgent'
+    yaml_tag = u'!wiseagents.agents.CoVeChallengerRAGWiseAgent'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the optional instance variables."""

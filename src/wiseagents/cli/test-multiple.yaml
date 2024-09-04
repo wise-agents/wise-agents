@@ -1,5 +1,5 @@
 ---
-!wiseagents.PassThroughClientAgent
+!wiseagents.agents.PassThroughClientAgent
 _description: This is a test agent
 _name: PassThroughClientAgent1
 _transport:  !wiseagents.transport.StompWiseAgentTransport
@@ -7,7 +7,7 @@ _transport:  !wiseagents.transport.StompWiseAgentTransport
     _port: 61616
     _agent_name: PassThroughClientAgent1
 ---
-!wiseagents.LLMOnlyWiseAgent
+!wiseagents.agents.LLMOnlyWiseAgent
 _description: This is another test agent
 _llm: !OpenaiAPIWiseAgentLLM
   _model_name: Phi-3-mini-4k-instruct-q4.gguf
@@ -19,7 +19,7 @@ _transport:  !wiseagents.transport.StompWiseAgentTransport
     _port: 61616
     _agent_name: LLMOnlyWiseAgent2
 ---
-!wiseagents.RAGWiseAgent
+!wiseagents.agents.RAGWiseAgent
 _description: This is an agent that uses RAG
 _llm: !OpenaiAPIWiseAgentLLM
   _model_name: Phi-3-mini-4k-instruct-q4.gguf
@@ -35,7 +35,7 @@ _transport:  !wiseagents.transport.StompWiseAgentTransport
     _port: 61616
     _agent_name: RAGWiseAgent1
 ---
-!wiseagents.GraphRAGWiseAgent
+!wiseagents.agents.GraphRAGWiseAgent
 _description: This is an agent that uses RAG with a knowledge graph
 _llm: !OpenaiAPIWiseAgentLLM
   _model_name: Phi-3-mini-4k-instruct-q4.gguf

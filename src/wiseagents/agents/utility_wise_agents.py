@@ -10,7 +10,7 @@ from wiseagents.llm import WiseAgentLLM
 class PassThroughClientAgent(WiseAgent):
     """This agent is used mainly for test purposes. It just passes the request to another agent and sends back the response to the client."""
     """Use Stomp protocol"""
-    yaml_tag = u'!wiseagents.PassThroughClientAgent'
+    yaml_tag = u'!wiseagents.agents.PassThroughClientAgent'
     def __init__(self, name, description , transport):
         """
         Initialize the agent.
@@ -76,7 +76,7 @@ class PassThroughClientAgent(WiseAgent):
 class LLMOnlyWiseAgent(WiseAgent):
     """This agent implementation is used to test the LLM only agent."""
     """Use Stomp protocol""" 
-    yaml_tag = u'!wiseagents.LLMOnlyWiseAgent'
+    yaml_tag = u'!wiseagents.agents.LLMOnlyWiseAgent'
 
     def __init__(self, name: str, description: str, llm : WiseAgentLLM, trasport: WiseAgentTransport):
         """
@@ -143,7 +143,7 @@ class LLMOnlyWiseAgent(WiseAgent):
 class LLMWiseAgentWithTools(WiseAgent):
     """This agent implementation is used to test the LLM agent providing a simple tool."""
     """Use Stomp protocol"""
-    yaml_tag = u'!wiseagents.LLMWiseAgentWithTools'
+    yaml_tag = u'!wiseagents.agents.LLMWiseAgentWithTools'
     def __init__(self, name: str, description: str, llm : WiseAgentLLM, transport: WiseAgentTransport, tools: List[str]):
         '''Initialize the agent.
 

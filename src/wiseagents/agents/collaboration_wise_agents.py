@@ -14,7 +14,7 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
     This agent will coordinate the execution of a sequence of agents.
     Use Stomp protocol.
     """
-    yaml_tag = u'!wiseagents.SequentialCoordinatorWiseAgent'
+    yaml_tag = u'!wiseagents.agents.SequentialCoordinatorWiseAgent'
 
     def __init__(self, name: str, description: str, transport: WiseAgentTransport, agents: List[str]):
         """
@@ -126,7 +126,7 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
     in parallel. After the phases have completed, the coordinator may choose to repeat the phases
     until it is satisfied with the final response or determines it's not possible to answer the query.
     """
-    yaml_tag = u'!wiseagents.PhasedCoordinatorWiseAgent'
+    yaml_tag = u'!wiseagents.agents.PhasedCoordinatorWiseAgent'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
@@ -361,7 +361,7 @@ class CollaboratorWiseAgent(WiseAgent):
     the coordinator agent a message to let the coordinator know that it has finished executing
     its work.
     """
-    yaml_tag = u'!wiseagents.CollaboratorWiseAgent'
+    yaml_tag = u'!wiseagents.agents.CollaboratorWiseAgent'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
