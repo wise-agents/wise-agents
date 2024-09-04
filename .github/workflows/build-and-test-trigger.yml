@@ -53,3 +53,4 @@ jobs:
       with:
         name: .job-env
         path: .job-env
+        include-hidden-files: true
