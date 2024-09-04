@@ -8,6 +8,8 @@
 # __all__ = ['module1', 'module2', 'subpackage']
 from .collaboration_wise_agents import CollaboratorWiseAgent, PhasedCoordinatorWiseAgent, SequentialCoordinatorWiseAgent
 from .rag_wise_agents import CoVeChallengerRAGWiseAgent, GraphRAGWiseAgent, RAGWiseAgent
+from .utility_wise_agents import PassThroughClientAgent, LLMOnlyWiseAgent, LLMWiseAgentWithTools
 
 __all__ = ['CollaboratorWiseAgent', 'PhasedCoordinatorWiseAgent', 'SequentialCoordinatorWiseAgent', 'RAGWiseAgent',
-           'GraphRAGWiseAgent', 'CoVeChallengerRAGWiseAgent']
+           'GraphRAGWiseAgent', 'CoVeChallengerRAGWiseAgent', 'PassThroughClientAgent', 'LLMOnlyWiseAgent',
+           'LLMWiseAgentWithTools']

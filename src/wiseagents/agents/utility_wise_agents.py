@@ -8,69 +8,86 @@ from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgent
 from wiseagents.llm import WiseAgentLLM
 
 class PassThroughClientAgent(WiseAgent):
-    '''This agent is used mainly for test purposes. It just passes the request to another agent and sends back the response to the client.'''
-    '''Use Stomp protocol'''
+    """This agent is used mainly for test purposes. It just passes the request to another agent and sends back the response to the client."""
+    """Use Stomp protocol"""
     yaml_tag = u'!wiseagents.PassThroughClientAgent'
     def __init__(self, name, description , transport):
-        '''Initialize the agent.
-        
+        """
+        Initialize the agent.
+
         Args:
             name (str): the name of the agent
             description (str): a description of the agent
-            transport (WiseAgentTransport): the transport to use for communication'''
-        
+            transport (WiseAgentTransport): the transport to use for communication
+        """
         self._name = name
         super().__init__(name=name, description=description, transport=transport, llm=None)
+
     def __repr__(self):
-        '''Return a string representation of the agent.'''
+        """Return a string representation of the agent."""
         return f"{self.__class__.__name__}(name={self.name}, description={self.description})"
+
     def process_request(self, request):
-        '''Process a request message just passing it to the another agent.'''
+        """Process a request message just passing it to the another agent."""
         self.send_request(WiseAgentMessage(request, self.name), 'WiseIntelligentAgent' )
         return True
+
     def process_response(self, response):
-        '''Process a response message just sending it back to the client.'''
+        """Process a response message just sending it back to the client."""
         self.response_delivery(response)
         return True
+
     def process_event(self, event):
-        '''Do nothing'''
+        """Do nothing"""
         return True
+
     def process_error(self, error):
-        '''Do nothing'''
+        """Do nothing"""
         return True
+
     def get_recipient_agent_name(self, message):
-        '''Return the name of the agent to send the message to.'''
+        """Return the name of the agent to send the message to."""
         return self.name
+
     def stop(self):
-        '''Do nothing'''
+        """Do nothing"""
         pass
+
     @property
     def name(self) -> str:
         """Get the name of the agent."""
         return self._name
+
     @property
     def response_delivery(self) -> Optional[Callable[[], WiseAgentMessage]]:
-        '''Get the function to deliver the response to the client.
-        return (Callable[[], WiseAgentMessage]): the function to deliver the response to the client'''
+        """Get the function to deliver the response to the client.
+        return (Callable[[], WiseAgentMessage]): the function to deliver the response to the client"""
         return self._response_delivery
+
     def set_response_delivery(self, response_delivery: Callable[[], WiseAgentMessage]):
-        '''Set the function to deliver the response to the client.
-        
+        """
+        Set the function to deliver the response to the client.
+
         Args:
-            response_delivery (Callable[[], WiseAgentMessage]): the function to deliver the response to the client'''
+            response_delivery (Callable[[], WiseAgentMessage]): the function to deliver the response to the client
+        """
         self._response_delivery = response_delivery
+
 class LLMOnlyWiseAgent(WiseAgent):
-    '''This agent implementation is used to test the LLM only agent.'''
-    '''Use Stomp protocol''' 
+    """This agent implementation is used to test the LLM only agent."""
+    """Use Stomp protocol""" 
     yaml_tag = u'!wiseagents.LLMOnlyWiseAgent'
+
     def __init__(self, name: str, description: str, llm : WiseAgentLLM, trasport: WiseAgentTransport):
-        '''Initialize the agent.
+        """
+        Initialize the agent.
 
         Args:
             name (str): the name of the agent
             description (str): a description of the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
-            transport (WiseAgentTransport): the transport to use for communication'''
+            transport (WiseAgentTransport): the transport to use for communication
+        """
         self._name = name
         self._description = description
         self._transport = trasport
@@ -78,47 +95,54 @@ class LLMOnlyWiseAgent(WiseAgent):
         super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent)
 
     def __repr__(self):
-        '''Return a string representation of the agent.'''
+        """Return a string representation of the agent."""
         return f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm}, transport={self.transport})"
         
     def process_event(self, event):
-        '''Do nothing'''
+        """Do nothing"""
         return True
+
     def process_error(self, error):
-        '''Log the error and return True.'''
+        """Log the error and return True."""
         logging.error(error)
         return True
+
     def process_request(self, request: WiseAgentMessage):
-        '''Process a request message by passing it to the LLM agent and sending the response back to the client.
+        """
+        Process a request message by passing it to the LLM agent and sending the response back to the client.
 
         Args:
-            request (WiseAgentMessage): the request message to process'''
+            request (WiseAgentMessage): the request message to process
+        """
         llm_response = self.llm.process_single_prompt(request.message)
         self.send_response(WiseAgentMessage(message=llm_response.content, sender=self.name, context_name=request.context_name, chat_id=request.chat_id), request.sender )
         return True
+
     def process_response(self, response : WiseAgentMessage):
-        '''Do nothing'''
+        """Do nothing"""
         return True
+
     def get_recipient_agent_name(self, message):
-        '''Return the name of the agent to send the message to.
+        """
+        Return the name of the agent to send the message to.
 
         Args:
-            message (WiseAgentMessage): the message to process'''
+            message (WiseAgentMessage): the message to process
+        """
         return self.name
+
     def stop(self):
-        pass    
+        pass
+
     @property
     def name(self) -> str:
         """Get the name of the agent."""
         return self._name
 
 
-    
-    
-
 class LLMWiseAgentWithTools(WiseAgent):
-    '''This agent implementation is used to test the LLM agent providing a simple tool.'''
-    '''Use Stomp protocol''' 
+    """This agent implementation is used to test the LLM agent providing a simple tool."""
+    """Use Stomp protocol"""
     yaml_tag = u'!wiseagents.LLMWiseAgentWithTools'
     def __init__(self, name: str, description: str, llm : WiseAgentLLM, transport: WiseAgentTransport, tools: List[str]):
         '''Initialize the agent.
@@ -136,22 +160,26 @@ class LLMWiseAgentWithTools(WiseAgent):
         super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent)
 
     def __repr__(self):
-        '''Return a string representation of the agent.'''
+        """Return a string representation of the agent."""
         return f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm}, transport={self.transport})"
-        
+
     def process_event(self, event):
-        '''Do nothing'''
+        """Do nothing"""
         return True
+
     def process_error(self, error):
-        '''Log the error and return True.'''
+        """Log the error and return True."""
         logging.error(error)
         return True
+
     def process_request(self, request: WiseAgentMessage):
-        '''Process a request message by passing it to the LLM agent and sending the response back to the client.
+        """
+        Process a request message by passing it to the LLM agent and sending the response back to the client.
         It invoke also the tool if required. Tool could be a callback function or another agent.
 
         Args:
-            request (WiseAgentMessage): the request message to process'''
+            request (WiseAgentMessage): the request message to process
+        """
         logging.debug(f"IA Request received: {request}")
         chat_id= str(uuid.uuid4())
         ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
@@ -213,13 +241,15 @@ class LLMWiseAgentWithTools(WiseAgent):
             self.send_response(WiseAgentMessage(response_message.content, self.name), request.sender )
             ctx.llm_chat_completion.pop(chat_id)
             return True
+
     def process_response(self, response : WiseAgentMessage):
-        '''Process a response message and sending the response back to the client.
+        """
+        Process a response message and sending the response back to the client.
         It invoke also the tool if required. Tool could be a callback function or another agent.
 
         Args:
             response (WiseAgentMessage): the response message to process
-            '''
+        """
         print(f"Response received: {response}")
         chat_id = response.chat_id
         ctx = WiseAgentRegistry.get_or_create_context(response.context_name)
@@ -241,15 +271,20 @@ class LLMWiseAgentWithTools(WiseAgent):
             self.send_response(WiseAgentMessage(response_message.content, self.name), response.route_response_to )
             ctx.llm_chat_completion.pop(chat_id)
             return True
+
     def get_recipient_agent_name(self, message):
-        '''Return the name of the agent to send the message to.
+        """
+        Return the name of the agent to send the message to.
 
         Args:
-            message (WiseAgentMessage): the message to process'''
+            message (WiseAgentMessage): the message to process
+        """
         return self.name
+
     def stop(self):
-        '''Do nothing'''
-        pass    
+        """Do nothing"""
+        pass
+
     @property
     def name(self) -> str:
         """Get the name of the agent."""

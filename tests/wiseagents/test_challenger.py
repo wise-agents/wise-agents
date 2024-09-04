@@ -3,11 +3,10 @@ import threading
 
 import pytest
 from wiseagents import WiseAgentMessage, WiseAgentRegistry
-from wiseagents.agents import CoVeChallengerRAGWiseAgent
+from wiseagents.agents import CoVeChallengerRAGWiseAgent, PassThroughClientAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
-from wiseagents.wise_agent_impl import PassThroughClientAgent
 
 
 
