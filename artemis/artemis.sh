@@ -3,6 +3,7 @@
 
 # define these variables before running the script
 #export POD_CONTAINER = podman | docker
+export POD_CONTAINER="${POD_CONTAINER:-docker}"
 
 # If a .env file is present, it will read the environment variables from there
 # The .env file should be in the same directory as the script

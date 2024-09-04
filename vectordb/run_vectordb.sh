@@ -2,7 +2,10 @@
 # This script is used to run pgvector in a container
 
 # define these variables before running the script
-#export POD_CONTAINER = podman | docker
+export POD_CONTAINER="${POD_CONTAINER:-docker}"
+export POSTGRES_USER="${POSTGRES_USER:-postgres}"
+export POSTGRES_PASSWORD="${POSTGRES_PASSWORD:-password}"
+export POSTGRES_DB="${POSTGRES_DB:-wise}"
 
 # If a .env file is present, it will read the environment variables from there
 # The .env file should be in the same directory as the script
