@@ -15,4 +15,4 @@ fi
 
 echo "Pod container: $POD_CONTAINER"
 
-$POD_CONTAINER run --rm --name mycontainer -p 61616:61616 -p 8161:8161 --rm apache/activemq-artemis:latest-alpine
+$POD_CONTAINER run --rm --name artemis -p 61616:61616 -p 8161:8161 --rm apache/activemq-artemis:latest-alpine
