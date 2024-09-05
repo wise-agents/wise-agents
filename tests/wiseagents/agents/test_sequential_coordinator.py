@@ -2,9 +2,9 @@ import os
 import threading
 
 from wiseagents import WiseAgentMessage, WiseAgentRegistry
+from wiseagents.agents import LLMOnlyWiseAgent, PassThroughClientAgent, SequentialCoordinatorWiseAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
-from wiseagents.wise_agent_impl import LLMOnlyWiseAgent, PassThroughClientAgent, SequentialCoordinatorWiseAgent
 
 cond = threading.Condition()
 
@@ -28,13 +28,13 @@ def test_sequential_coordinator():
                                  model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
                                  api_key=groq_api_key)
     agent1 = LLMOnlyWiseAgent(name="Agent1", description="This is a test agent", llm=llm1,
-                              trasport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Agent1"))
+                              transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Agent1"))
 
     llm2 = OpenaiAPIWiseAgentLLM(system_message="Your name is Agent2. Answer my greeting saying Hello and include all names from the given message and tell me your name.",
                                  model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
                                  api_key=groq_api_key)
     agent2 = LLMOnlyWiseAgent(name="Agent2", description="This is a test agent", llm=llm2,
-                              trasport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Agent2"))
+                              transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Agent2"))
 
     coordinator = SequentialCoordinatorWiseAgent(name="SequentialCoordinator", description="This is a coordinator agent",
                                                  transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="SequentialCoordinator"),

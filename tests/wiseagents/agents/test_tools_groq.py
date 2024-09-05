@@ -6,9 +6,9 @@ import threading
 import pytest
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTool
+from wiseagents.agents import LLMWiseAgentWithTools, PassThroughClientAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
-from wiseagents.wise_agent_impl import LLMWiseAgentWithTools, PassThroughClientAgent
 
 
 
