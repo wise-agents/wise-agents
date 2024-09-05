@@ -131,11 +131,13 @@ class GraphRAGWiseAgent(WiseAgent):
         obj = super().__new__(cls)
         obj._k = DEFAULT_NUM_DOCUMENTS
         obj._include_sources = DEFAULT_INCLUDE_SOURCES
+        obj._retrieval_query = ""
         return obj
 
     def __init__(self, name: str, description: str, llm: WiseAgentLLM, graph_db: WiseAgentGraphDB,
                  transport: WiseAgentTransport, k: Optional[int] = DEFAULT_NUM_DOCUMENTS,
-                 include_sources: Optional[bool] = DEFAULT_INCLUDE_SOURCES):
+                 include_sources: Optional[bool] = DEFAULT_INCLUDE_SOURCES,
+                 retrieval_query: Optional[str] = ""):
         """
         Initialize the agent.
 
@@ -148,6 +150,8 @@ class GraphRAGWiseAgent(WiseAgent):
             k Optional(int): the number of documents to retrieve for each query, defaults to 4
             include_sources Optional(bool): whether to include the sources of the documents that were consulted to
             produce the response, defaults to False
+            retrieval_query Optional(str): the optional retrieval query to use to obtain sub-graphs connected to nodes
+            retrieved from a similarity search
         """
         self._name = name
         self._description = description
@@ -155,6 +159,7 @@ class GraphRAGWiseAgent(WiseAgent):
         self._graph_db = graph_db
         self._k = k
         self._include_sources = include_sources
+        self._retrieval_query = retrieval_query
         super().__init__(name=name, description=description, transport=self.transport, llm=llm,
                          graph_db=graph_db)
 
@@ -162,7 +167,7 @@ class GraphRAGWiseAgent(WiseAgent):
         """Return a string representation of the agent."""
         return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
                 f"graph_db={self.graph_db}, transport={self.transport}, k={self.k},"
-                f"include_sources={self.include_sources})")
+                f"include_sources={self.include_sources}), retrieval_query={self.retrieval_query}")
 
     def process_event(self, event):
         """Do nothing"""
@@ -180,7 +185,7 @@ class GraphRAGWiseAgent(WiseAgent):
         Args:
             request (WiseAgentMessage): the request message to process
         """
-        retrieved_documents = self.graph_db.query_with_embeddings(query=request.message, k=self.k, retrieval_query=self._get_retrieval_query())
+        retrieved_documents = self.graph_db.query_with_embeddings(query=request.message, k=self.k, retrieval_query=self.retrieval_query)
         llm_response_with_sources = _create_and_process_rag_prompt(retrieved_documents, request.message, self.llm, self.include_sources)
         self.send_response(WiseAgentMessage(llm_response_with_sources, self.name), request.sender)
         return True
@@ -212,18 +217,11 @@ class GraphRAGWiseAgent(WiseAgent):
         """Get whether to include the sources of the documents that were consulted to produce the response."""
         return self._include_sources
 
-    def _get_retrieval_query(self) -> str:
-        """Return the retrieval query to use for retrieving documents from the graph database."""
-        # this is specific to the test
-        return """
-          WITH node AS landmark, score AS similarity
-          CALL  {
-            WITH landmark
-            MATCH (landmark)--(city)--(province)--(country)
-            RETURN country.name AS Country
-          }
-          RETURN landmark.name + ' is located in ' + Country AS text, similarity as score, {} AS metadata
-        """
+    @property
+    def retrieval_query(self) -> str:
+        """Get the Cypher query to use to obtain sub-graphs connected to nodes retrieved from a similarity search."""
+        return self._retrieval_query
+
 
 
 class CoVeChallengerRAGWiseAgent(WiseAgent):
