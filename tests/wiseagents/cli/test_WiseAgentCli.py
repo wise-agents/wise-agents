@@ -43,7 +43,6 @@ def run_after_all_tests():
                                                                label="is in the country of")],
                                    source=Source(content=page_content))
     graph_db.insert_graph_documents([graph_document])
-    graph_db.create_vector_db_from_graph_db()
     graph_db.refresh_schema()
     yield
 

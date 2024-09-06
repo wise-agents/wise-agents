@@ -75,7 +75,6 @@ def test_insert_graph_documents_and_query(monkeypatch):
                                 "RETURN country.name AS Country")
         assert result == [{'Country': 'Canada'}]
 
-        graph_db.create_vector_db_from_graph_db()
         documents = graph_db.query_with_embeddings("tall building", 1)
         assert "CN Tower" in documents[0].content
 
@@ -134,7 +133,6 @@ def test_insert_relationship_and_query(monkeypatch):
                                 "RETURN country.name AS Country")
         assert result == [{'Country': 'Canada'}]
 
-        graph_db.create_vector_db_from_graph_db()
         documents = graph_db.query_with_embeddings("capital", 1)
         assert "Ottawa" in documents[0].content
     finally:

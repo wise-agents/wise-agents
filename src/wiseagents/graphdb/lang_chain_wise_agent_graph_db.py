@@ -234,36 +234,10 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
             List[Document]: the list of documents retrieved from the vector database
         """
         if self._neo4j_vector_db is None:
-            # this assumes that the vector DB has already been created prior to attempting to query it
-            # and we are simply retrieving the existing index here
-            self.get_vector_db_from_existing_index(embedding_node_property="embedding", retrieval_query=retrieval_query)
+            self.create_vector_db_from_graph_db(retrieval_query=retrieval_query)
         return [Document(content=doc.page_content, metadata=doc.metadata)
                 for doc in self._neo4j_vector_db.similarity_search(query=query, k=k, params=params if params else {},
                                                                    filter=metadata_filter if metadata_filter else {})]
-
-    def get_vector_db_from_existing_index(self, embedding_node_property: str,
-                                          retrieval_query: str = ""):
-        # Neo4jVector.from_existing_graph doesn't currently work when using HuggingFaceEmbeddings
-        # and trying to retrieve an existing graph (see https://github.com/langchain-ai/langchain/issues/24401).
-        # We'll work around this using Neo4jVector.from_existing_index instead.
-        self.connect()
-        if not retrieval_query:
-            retrieval_query = (
-                    f"RETURN reduce(str='', k IN {self.properties} |"
-                    " str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text, "
-                    "node {.*, `"
-                    + embedding_node_property
-                    + "`: Null, id: Null, "
-                    + ", ".join([f"`{prop}`: Null" for prop in self.properties])
-                    + "} AS metadata, score"
-            )
-        self._neo4j_vector_db = Neo4jVector.from_existing_index(embedding=self._embedding_function,
-                                                                node_label=self.entity_label,
-                                                                embedding_node_property="embedding",
-                                                                url=self.url,
-                                                                index_name=self.collection_name,
-                                                                retrieval_query=retrieval_query,
-                                                                keyword_index_name="keyword")
 
     def delete_vector_db(self):
         """
