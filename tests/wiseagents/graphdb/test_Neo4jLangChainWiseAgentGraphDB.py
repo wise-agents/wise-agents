@@ -79,6 +79,14 @@ def test_insert_graph_documents_and_query(monkeypatch):
         documents = graph_db.query_with_embeddings("tall building", 1)
         assert "CN Tower" in documents[0].content
 
+        documents = graph_db.query_with_embeddings(query="tall building", k=1, params={"extra": "ParamInfo"},
+                                                   metadata_filter={"type": "landmark"})
+        assert "CN Tower" in documents[0].content
+
+        documents = graph_db.query_with_embeddings(query="tall building", k=1, params={"extra": "ParamInfo"},
+                                                   metadata_filter={"type": "country"})
+        assert "CN Tower" not in documents[0].content
+
         documents = graph_db.query_with_embeddings("province", 1)
         assert "Ontario" in documents[0].content
     finally:
