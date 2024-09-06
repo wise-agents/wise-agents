@@ -11,8 +11,13 @@ export NEO4J_DATABASE="${NEO4J_DATABASE:-neo4j}"
 # The .env file should be in the same directory as the script
 # Rename the .env.example file to .env and set the environment variables
 WORKING_DIR="$(dirname "${BASH_SOURCE[0]}")"
+if [ -f $WORKING_DIR/../.env ]; then
+	echo "Executing " $WORKING_DIR/../.env
+	. $WORKING_DIR/../.env
+fi
 if [ -f $WORKING_DIR/.env ]; then
-       . $WORKING_DIR/.env
+	echo "Executing " $WORKING_DIR/.env
+	. $WORKING_DIR/.env
 fi
 
 echo "Neo4j Username: $NEO4J_USERNAME"
@@ -20,4 +25,4 @@ echo "Neo4j Password: $NEO4J_PASSWORD"
 echo "Neo4j Database: $NEO4J_DATABASE"
 echo "Pod container: $POD_CONTAINER"
 
-$POD_CONTAINER run --name neo4j --restart always --publish=7474:7474 --publish=7687:7687 --env NEO4J_AUTH=$NEO4J_USERNAME/$NEO4J_PASSWORD -e NEO4J_PLUGINS=\[\"apoc\"\] neo4j:5.21.0
+$POD_CONTAINER run --rm ${EXTRA_CONTAINER_OPTION} --name neo4j --publish=7474:7474 --publish=7687:7687 -e NEO4J_AUTH=$NEO4J_USERNAME/$NEO4J_PASSWORD -e NEO4J_PLUGINS=\[\"apoc\"\] neo4j:5.21.0

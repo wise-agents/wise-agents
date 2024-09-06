@@ -14,9 +14,13 @@ export MODEL_PATH="${MODEL_PATH:-./granite-7b-lab-GGUF}"
 # The .env file should be in the same directory as the script
 # Rename the .env.example file to .env and set the environment variables
 WORKING_DIR="$(dirname "${BASH_SOURCE[0]}")"
+if [ -f $WORKING_DIR/../.env ]; then
+	echo "Executing " $WORKING_DIR/../.env
+	. $WORKING_DIR/../.env
+fi
 if [ -f $WORKING_DIR/.env ]; then
-       echo "Executing .env file"
-       . $WORKING_DIR/.env
+	echo "Executing " $WORKING_DIR/.env
+	. $WORKING_DIR/.env
 fi
 
 $POD_CONTAINER volume ls | grep $MODEL_VOLUME
@@ -39,4 +43,4 @@ $POD_CONTAINER container create --name dummy -v $VOLUME_PATH:/root hello-world
 $POD_CONTAINER cp  $MODEL_PATH/$MODEL_NAME dummy:/root/$MODEL_NAME
 $POD_CONTAINER rm dummy
 
-$POD_CONTAINER run --rm -it -p 8001:8001 -v $MODEL_VOLUME:/locallm/models:ro -e MODEL=/locallm/models/$MODEL_NAME -e HOST=$LLM_BIND_ADDRESS -e PORT=8001 -e MODEL_CHAT_FORMAT=openchat ghcr.io/abetlen/llama-cpp-python:latest
+$POD_CONTAINER run --rm ${EXTRA_CONTAINER_OPTION} --name llama-cpp -it -p 8001:8001 -v $MODEL_VOLUME:/locallm/models:ro -e MODEL=/locallm/models/$MODEL_NAME -e HOST=$LLM_BIND_ADDRESS -e PORT=8001 -e MODEL_CHAT_FORMAT=openchat ghcr.io/abetlen/llama-cpp-python:latest
