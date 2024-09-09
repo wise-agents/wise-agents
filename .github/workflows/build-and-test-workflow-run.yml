@@ -20,6 +20,7 @@ env:
   TEST_NAME: Build and Test Workflow Run
   # Common for the tests
   POD_CONTAINER: docker
+  EXTRA_CONTAINER_OPTION: "--detach" 
   # Env vars to configure Stomp
   STOMP_USER: artemis
   STOMP_PASSWORD: artemis
