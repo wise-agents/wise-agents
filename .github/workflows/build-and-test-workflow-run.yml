@@ -96,7 +96,7 @@ jobs:
     - name: Start PGVector vector db
       working-directory: vectordb
       run: |
-        ./run_vectordb.sh
+        ./run_vectordb.sh &
     - name: Start Artemis
       working-directory: artemis
       run: |
