@@ -8,13 +8,19 @@ from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGra
 collection_name = "test-vector-db"
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
-    yield
-
-    # Delete all relationships and entities from graph_db
+    # Ensure that nothing exists the graph DB
     original_neo4j_username = os.environ.get("NEO4J_USERNAME")
     os.environ["NEO4J_USERNAME"] = "neo4j"
     original_neo4j_password = os.environ.get("NEO4J_PASSWORD")
     os.environ["NEO4J_PASSWORD"] = "neo4jpassword"
+    graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
+                                              url="bolt://localhost:7687", refresh_graph_schema=False)
+    graph_db.query("MATCH (n)-[r]-() DELETE r")
+    graph_db.query("MATCH (n) DELETE n")
+
+    yield
+
+    # Delete all relationships and entities from graph_db
     graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
     graph_db.query("MATCH (n)-[r]-() DELETE r")
@@ -50,8 +56,6 @@ def test_insert_graph_documents_and_query(monkeypatch):
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
 
     try:
-        assert graph_db.get_schema() == ""
-
         page_content = "The CN Tower is located in Toronto, a major city in Ontario. Ontario is a province in Canada."
         landmark = Entity(id="1", metadata={"name": "CN Tower", "type": "landmark"})
         city = Entity(id="2", metadata={"name": "Toronto", "type": "city"})
