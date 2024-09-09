@@ -9,10 +9,16 @@ export POD_CONTAINER="${POD_CONTAINER:-docker}"
 # The .env file should be in the same directory as the script
 # Rename the .env.example file to .env and set the environment variables
 WORKING_DIR="$(dirname "${BASH_SOURCE[0]}")"
+if [ -f $WORKING_DIR/../.env ]; then
+	echo "Executing " $WORKING_DIR/../.env
+	. $WORKING_DIR/../.env
+fi
 if [ -f $WORKING_DIR/.env ]; then
+	echo "Executing " $WORKING_DIR/.env
 	. $WORKING_DIR/.env
 fi
 
+
 echo "Pod container: $POD_CONTAINER"
 
-$POD_CONTAINER run --rm --name artemis -p 61616:61616 -p 8161:8161 --rm apache/activemq-artemis:latest-alpine
+$POD_CONTAINER run --rm ${EXTRA_CONTAINER_OPTION} --name artemis -p 61616:61616 -p 8161:8161 apache/activemq-artemis:latest-alpine
