@@ -23,9 +23,9 @@ def response_delivered(message: WiseAgentMessage):
     global assertError
     with cond:
         response = message.message
-            
+
         try:
-            assert "Farah" in response
+            assert "Agent0" in response
             assert "Agent1" in response
             assert "Agent2" in response
         except AssertionError:
@@ -47,7 +47,7 @@ def test_sequential_coordinator():
     agent1 = LLMOnlyWiseAgent(name="Agent1", description="This is a test agent", llm=llm1,
                               transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="Agent1"))
 
-    llm2 = OpenaiAPIWiseAgentLLM(system_message="Your name is Agent2. Answer my greeting saying Hello and include all names from the given message and tell me your name.",
+    llm2 = OpenaiAPIWiseAgentLLM(system_message="Your name is Agent2. Answer my greeting saying Hello and include all agent names from the given message and tell me your name.",
                                  model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
                                  api_key=groq_api_key)
     agent2 = LLMOnlyWiseAgent(name="Agent2", description="This is a test agent", llm=llm2,
@@ -62,7 +62,7 @@ def test_sequential_coordinator():
                                                transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
                                                )
         client_agent1.set_response_delivery(response_delivered)
-        client_agent1.send_request(WiseAgentMessage("My name is Farah", "PassThroughClientAgent1"),
+        client_agent1.send_request(WiseAgentMessage("My name is Agent0", "PassThroughClientAgent1"),
                                    "SequentialCoordinator")
         cond.wait()
         if assertError is not None:
