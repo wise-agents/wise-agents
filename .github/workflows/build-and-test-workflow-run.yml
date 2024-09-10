@@ -102,6 +102,10 @@ jobs:
       working-directory: artemis
       run: |
         ./artemis.sh &
+    - name: Start Redis
+      working-directory: redis
+      run: |
+        ./run_redis.sh &
     - name: Install wise-agents dependencies
       run: |
         pip install .
