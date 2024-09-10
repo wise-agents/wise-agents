@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Callable, Optional, List
+from typing import Any, Callable, Dict, Optional, List
 
 from langchain_community.graphs import Neo4jGraph
 from langchain_community.graphs.graph_document import (GraphDocument as LangChainGraphDocument,
@@ -215,7 +215,9 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
                                                                 index_name=self.collection_name,
                                                                 retrieval_query=retrieval_query)
 
-    def query_with_embeddings(self, query: str, k: int, retrieval_query: str = "") -> List[Document]:
+    def query_with_embeddings(self, query: str, k: int, retrieval_query: str = "",
+                              params: Optional[Dict[str, Any]] = None,
+                              metadata_filter: Optional[Dict[str, Any]] = None) -> List[Document]:
         """
         Query the vector database that corresponds to this graph database using the given query and
         retrieve the top k documents.
@@ -225,40 +227,17 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
             query (str): the query to execute
             k (int): the number of documents to retrieve
             retrieval_query (str): the retrieval query to use for the vector database
+            params (Optional[Dict[str, Any]]): the optional parameters for the query
+            metadata_filter (Optional[Dict[str, Any]]): the optional metadata filter to use with similarity search
 
         Returns:
             List[Document]: the list of documents retrieved from the vector database
         """
         if self._neo4j_vector_db is None:
-            # this assumes that the vector DB has already been created prior to attempting to query it
-            # and we are simply retrieving the existing index here
-            self.get_vector_db_from_existing_index(embedding_node_property="embedding", retrieval_query=retrieval_query)
+            self.create_vector_db_from_graph_db(retrieval_query=retrieval_query)
         return [Document(content=doc.page_content, metadata=doc.metadata)
-                for doc in self._neo4j_vector_db.similarity_search(query, k)]
-
-    def get_vector_db_from_existing_index(self, embedding_node_property: str,
-                                          retrieval_query: str = ""):
-        # Neo4jVector.from_existing_graph doesn't currently work when using HuggingFaceEmbeddings
-        # and trying to retrieve an existing graph (see https://github.com/langchain-ai/langchain/issues/24401).
-        # We'll work around this using Neo4jVector.from_existing_index instead.
-        self.connect()
-        if not retrieval_query:
-            retrieval_query = (
-                    f"RETURN reduce(str='', k IN {self.properties} |"
-                    " str + '\\n' + k + ': ' + coalesce(node[k], '')) AS text, "
-                    "node {.*, `"
-                    + embedding_node_property
-                    + "`: Null, id: Null, "
-                    + ", ".join([f"`{prop}`: Null" for prop in self.properties])
-                    + "} AS metadata, score"
-            )
-        self._neo4j_vector_db = Neo4jVector.from_existing_index(embedding=self._embedding_function,
-                                                                node_label=self.entity_label,
-                                                                embedding_node_property="embedding",
-                                                                url=self.url,
-                                                                index_name=self.collection_name,
-                                                                retrieval_query=retrieval_query,
-                                                                keyword_index_name="keyword")
+                for doc in self._neo4j_vector_db.similarity_search(query=query, k=k, params=params if params else {},
+                                                                   filter=metadata_filter if metadata_filter else {})]
 
     def delete_vector_db(self):
         """

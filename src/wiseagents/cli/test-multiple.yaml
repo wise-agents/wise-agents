@@ -51,4 +51,12 @@ _name: GraphRAGWiseAgent1
 _transport:  !wiseagents.transport.StompWiseAgentTransport
     _host: localhost
     _port: 61616
-    _agent_name: GraphRAGWiseAgent1    
+    _agent_name: GraphRAGWiseAgent1
+_retrieval_query: |
+  WITH node AS landmark, score AS similarity
+  CALL  {
+    WITH landmark
+    MATCH (landmark)--(city)--(province)--(country)
+    RETURN country.name AS Country
+  }
+  RETURN landmark.name + ' is located in ' + Country AS text, similarity as score, {} AS metadata
