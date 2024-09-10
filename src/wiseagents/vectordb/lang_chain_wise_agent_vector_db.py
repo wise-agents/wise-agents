@@ -14,6 +14,13 @@ class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
     An abstract class that makes use of a LangChain vector database.
     """
 
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the instance variables."""
+        obj = super().__new__(cls)
+        obj._embedding_model_name = DEFAULT_EMBEDDING_MODEL_NAME
+        obj._embedding_function = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL_NAME)
+        return obj
+
     def __init__(self, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
         """
         Initialize a new instance of LangChainWiseAgentVectorDB.
@@ -29,13 +36,6 @@ class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
     def embedding_model_name(self):
         """Get the name of the embedding model."""
         return self._embedding_model_name
-
-    def get_embedding_function(self):
-        """Get the embedding function."""
-        if not hasattr(self, "_embedding_function"):
-            # instances populated from PyYAML won't have this set initially
-            self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
-        return self._embedding_function
 
     def convert_from_lang_chain_documents(self, documents: List[LangChainDocument]) -> List[Document]:
         return [Document(content=document.page_content, metadata=document.metadata) for document in documents]
@@ -71,6 +71,12 @@ class PGVectorLangChainWiseAgentVectorDB(LangChainWiseAgentVectorDB):
     """
 
     yaml_tag = u'!PGVectorLangChainWiseAgentVectorDB'
+
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the instance variables."""
+        obj = super().__new__(cls)
+        obj._vector_dbs = {}
+        return obj
 
     def __init__(self, connection_string: str, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
         """
@@ -108,7 +114,7 @@ class PGVectorLangChainWiseAgentVectorDB(LangChainWiseAgentVectorDB):
             # instances populated from PyYAML won't have this set initially
             self._vector_dbs = {}
         if collection_name not in self._vector_dbs:
-            self._vector_dbs[collection_name] = PGVector(embeddings=self.get_embedding_function(),
+            self._vector_dbs[collection_name] = PGVector(embeddings=self._embedding_function,
                                                          collection_name=collection_name,
                                                          connection=self._connection_string)
 

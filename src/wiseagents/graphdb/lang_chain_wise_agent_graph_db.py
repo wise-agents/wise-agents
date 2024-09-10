@@ -18,6 +18,13 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
     An abstract class that makes use of a LangChain graph database.
     """
 
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the instance variables."""
+        obj = super().__new__(cls)
+        obj._embedding_model_name = DEFAULT_EMBEDDING_MODEL_NAME
+        obj._embedding_function = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL_NAME)
+        return obj
+
     def __init__(self, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
         """
         Initialize a new instance of LangChainWiseAgentGraphDB.
@@ -89,6 +96,16 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     """
     yaml_tag = u'!Neo4jLangChainWiseAgentGraphDB'
 
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the instance variables."""
+        obj = super().__new__(cls)
+        obj._url = None
+        obj._refresh_graph_schema = True
+        obj._entity_label = "entity"
+        obj._neo4j_graph_db = None
+        obj._neo4j_vector_db = None
+        return obj
+
     def __init__(self, properties: List[str], collection_name: str, url: Optional[str] = None,
                  refresh_graph_schema: Optional[bool] = True,
                  embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME,
@@ -128,17 +145,6 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         del state['_neo4j_vector_db']
         del state['_embedding_function']
         return state
-
-    @classmethod
-    def from_yaml(cls, loader, node):
-        data = loader.construct_mapping(node, deep=True)
-        url = data.get('_url', None)
-        refresh_graph_schema = data.get('_refresh_graph_schema', True)
-        embedding_model_name = data.get('_embedding_model_name', DEFAULT_EMBEDDING_MODEL_NAME)
-        entity_label = data.get('_entity_label', "entity")
-        return cls(properties=data.get('_properties'), collection_name=data.get('_collection_name'),
-                   url=url, refresh_graph_schema=refresh_graph_schema, embedding_model_name=embedding_model_name,
-                   entity_label=entity_label)
 
     @property
     def properties(self):
