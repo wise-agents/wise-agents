@@ -81,7 +81,6 @@ def test_phased_coordinator():
                                    "Coordinator")
         cond.wait()
 
-        for agent in WiseAgentRegistry.get_agents():
-            print(f"Agent: {agent}")
+        print(f"registered agents= {WiseAgentRegistry.get_agents()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             print(f'{message.sender} : {message.message} ')

@@ -13,7 +13,7 @@ class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
     """
     An abstract class that makes use of a LangChain vector database.
     """
-
+    
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
         obj = super().__new__(cls)

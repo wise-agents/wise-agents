@@ -27,9 +27,6 @@ class WiseAgentRequestQueueListener(stomp.ConnectionListener):
 
     def on_message(self, message: stomp.utils.Frame):
         '''Handle a message.'''
-        logging.debug(f"{self}: Received message: {message}")
-        logging.debug(f"Received message type: {message.__class__}")
-        logging.debug(f"Calling the callback function: {self.transport.request_receiver}")
         self.transport.request_receiver(yaml.load(message.body, yaml.Loader))
 
 class WiseAgentResponseQueueListener(stomp.ConnectionListener):
@@ -47,9 +44,6 @@ class WiseAgentResponseQueueListener(stomp.ConnectionListener):
 
     def on_message(self, message: stomp.utils.Frame):
         '''Handle a message.'''
-        logging.debug(f"Received message: {message}")
-        logging.debug(f"Received message type: {message.__class__}")
-        
         self.transport.response_receiver(yaml.load(message.body, yaml.Loader))
 
 
@@ -72,7 +66,7 @@ class StompWiseAgentTransport(WiseAgentTransport):
         
 
     def __repr__(self) -> str:
-        return super().__repr__() + f"host={self._host}, port={self._port}, agent_name={self._agent_name}"
+        return f"host={self._host}, port={self._port}, agent_name={self._agent_name}"
 
     def __getstate__(self) -> object:
         '''Return the state of the transport. Removing the instance variable chain to avoid it is serialized/deserialized by pyyaml.'''
@@ -90,7 +84,7 @@ class StompWiseAgentTransport(WiseAgentTransport):
         '''
         Start the transport.
         require the environment variables STOMP_USER and STOMP_PASSWORD to be set'''
-        if (self.request_conn is not None and self.request_conn.is_connected()) or (self.response_conn is not None and self.response_conn.is_connected()):
+        if (self.request_conn is not None and self.request_conn.is_connected()) and (self.response_conn is not None and self.response_conn.is_connected()):
             return
         hosts = [(self.host, self.port)] 
         self.request_conn = stomp.Connection(host_and_ports=hosts, heartbeats=(60000, 60000))

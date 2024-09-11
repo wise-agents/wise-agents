@@ -29,7 +29,7 @@ def test_register_agents():
     assert 1 == WiseAgentRegistry.get_agents().__len__()
     logging.info(f'Agent ={agent}')
     logging.info(f'Agent in the registry={WiseAgentRegistry.get_agent(agent.name)}')
-    assert agent == WiseAgentRegistry.get_agent(agent.name)
+    assert agent.description == WiseAgentRegistry.get_agent(agent.name)
 
 def test_remove_agent():
     agent_name = "Agent1"
@@ -43,7 +43,7 @@ def test_get_agents():
               WiseAgent(name="Agent3", description="This is yet another test agent", transport=DummyTransport())]
     
     for agent in agents:
-        assert agent == WiseAgentRegistry.get_agent(agent.name)
+        assert agent.description == WiseAgentRegistry.get_agent(agent.name)
 
 def test_get_contexts():
     WiseAgentRegistry.clear_contexts()

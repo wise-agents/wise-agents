@@ -30,7 +30,9 @@ def get_current_weather(location, unit="fahrenheit"):
             {"location": "San Francisco", "temperature": "72", "unit": "fahrenheit"}
         )
     elif "paris" in location.lower():
-        return json.dumps({"location": "Paris", "temperature": "22", "unit": "celsius"})
+        return json.dumps({"location": "Paris", "temperature": "25", "unit": "celsius"})
+    elif "milan" in location.lower():
+        return json.dumps({"location": "Milan", "temperature": "27", "unit": "celsius"})
     else:
         return json.dumps({"location": location, "temperature": "unknown"})
     
@@ -73,7 +75,7 @@ class WiseAgentWeather(WiseAgent):
                                             chat_id=request.chat_id, tool_id=request.tool_id, 
                                             context_name=request.context_name, 
                                             route_response_to=request.route_response_to)
-        logging.info(f"Sending response: {response_message}")
+        logging.info(f"Sending response: {response_message} to {request.sender}")
         self.send_response(response_message, request.sender )
         return True
     def process_response(self, response : WiseAgentMessage):
@@ -132,11 +134,12 @@ def test_agent_tool():
         cond.wait()
         
 
-    for agent in WiseAgentRegistry.get_agents():
-        logging.info(f"Agent: {agent}")
+    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
-
+    client_agent1.stopAgent()
+    agent.stopAgent()
+    weather_agent.stopAgent()
 
 @pytest.mark.needsllm
 def test_tool():
@@ -176,8 +179,9 @@ def test_tool():
         cond.wait()
         
 
-    for agent in WiseAgentRegistry.get_agents():
-        logging.info(f"Agent: {agent}")
+    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
+    client_agent1.stopAgent()
+    agent.stopAgent()
     

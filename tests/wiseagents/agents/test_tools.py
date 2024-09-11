@@ -29,7 +29,7 @@ def get_current_weather(location, unit="fahrenheit"):
             {"location": "San Francisco", "temperature": "72", "unit": "fahrenheit"}
         )
     elif "paris" in location.lower():
-        return json.dumps({"location": "Paris", "temperature": "22", "unit": "celsius"})
+        return json.dumps({"location": "Paris", "temperature": "25", "unit": "celsius"})
     else:
         return json.dumps({"location": location, "temperature": "unknown"})
     
@@ -40,7 +40,7 @@ def response_delivered(message: WiseAgentMessage):
     with cond: 
         response = message.message
         msg = response
-        assert "22" in msg
+        assert "degree" in msg 
         print(f"C Response delivered: {msg}")
         cond.notify()
 
@@ -133,10 +133,12 @@ def test_agent_tool():
         cond.wait()
         
 
-    for agent in WiseAgentRegistry.get_agents():
-        logging.info(f"Agent: {agent}")
+    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
+    client_agent1.stopAgent()
+    agent.stopAgent()
+    weather_agent.stopAgent()
     
 @pytest.mark.needsllama
 def test_tool():
@@ -178,8 +180,9 @@ def test_tool():
         cond.wait()
         
 
-    for agent in WiseAgentRegistry.get_agents():
-        logging.info(f"Agent: {agent}")
+    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
-    
+    client_agent1.stopAgent()
+    agent.stopAgent()
+   

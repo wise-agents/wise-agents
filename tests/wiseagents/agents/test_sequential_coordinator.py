@@ -68,7 +68,6 @@ def test_sequential_coordinator():
         if assertError is not None:
             logging.info(f"assertion failed")
             raise assertError
-        for agent in WiseAgentRegistry.get_agents():
-            print(f"Agent: {agent}")
+        print(f"registered agents= {WiseAgentRegistry.get_agents()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             print(f'{message.sender} : {message.message} ')

@@ -67,7 +67,8 @@ class WiseAgent(yaml.YAMLObject):
         ''' Start the agent by setting the call backs and starting the transport.'''
         self.transport.set_call_backs(self.process_request, self.process_event, self.process_error, self.process_response)
         self.transport.start()
-        WiseAgentRegistry.register_agent(self) 
+        WiseAgentRegistry.register_agent(self.name, self.description) 
+    
     def stopAgent(self):
         ''' Stop the agent by stopping the transport and removing the agent from the registry.'''
         self.transport.stop()
@@ -81,7 +82,7 @@ class WiseAgent(yaml.YAMLObject):
     
     def __eq__(self, value: object) -> bool:
         return isinstance(value, WiseAgent) and self.__repr__() == value.__repr__()
-    
+
     @property
     def name(self) -> str:
         """Get the name of the agent."""
@@ -130,7 +131,7 @@ class WiseAgent(yaml.YAMLObject):
             dest_agent_name (str): the name of the destination agent'''
         message.sender = self.name
         context = WiseAgentRegistry.get_or_create_context(message.context_name)
-        context.add_participant(self)
+        context.add_participant(self.name)
         self.transport.send_request(message, dest_agent_name)
         context.message_trace.append(message)
     
@@ -142,7 +143,7 @@ class WiseAgent(yaml.YAMLObject):
             dest_agent_name (str): the name of the destination agent'''
         message.sender = self.name
         context = WiseAgentRegistry.get_or_create_context(message.context_name)
-        context.add_participant(self)
+        context.add_participant(self.name)
         self.transport.send_response(message, dest_agent_name)
         context.message_trace.append(message)  
     
@@ -303,7 +304,7 @@ class WiseAgentContext():
     '''
     
     _message_trace : List[WiseAgentMessage] = []
-    _participants : List[WiseAgent] = []
+    _participants : List[str] = []
     
     # Maps a chat uuid to a list of chat completion messages
     _llm_chat_completion : Dict[str, List[ChatCompletionMessageParam]] = {}
@@ -399,14 +400,10 @@ class WiseAgentContext():
         
         
     @property
-    def participants(self) -> List[WiseAgent]:
+    def participants(self) -> List[str]:
         """Get the participants of the context."""
         if (self._use_redis == True):
-            return_list : List[WiseAgent] = []
-            redis_list = self._redis_db.lrange("participants", 0, -1)
-            for message in redis_list:
-                return_list.append(pickle.loads(message))
-            return return_list
+            return self._redis_db.lrange("participants", 0, -1)
         else:
             return self._participants
     
@@ -422,16 +419,38 @@ class WiseAgentContext():
         else:
             return self._llm_chat_completion
     
-    def add_participant(self, agent: WiseAgent):
+    def add_participant(self, agent_name: str):
         '''Add a participant to the context.
 
         Args:
             agent (WiseAgent): the agent to add'''
-        if agent not in self.participants:    
-            if (self._use_redis == True):
-                self._redis_db.rpush("participants", pickle.dumps(agent))
-            else:
-                self._participants.append(agent)
+        
+        if (self._use_redis == True):
+            pipe = self._redis_db.pipeline(transaction=True)
+            while True:
+                pipe.watch("participants")
+                try:
+                    if(pipe.exists("participants") == False):
+                        pipe.multi()
+                        pipe.rpush("participants", agent_name)
+                        pipe.execute()
+                        return
+                    else:
+                        if agent_name not in pipe.lrange("participants", 0, -1):
+                            pipe.multi()
+                            pipe.rpush("participants", agent_name)
+                            pipe.execute()
+                            return
+                        else:
+                            pipe.unwatch()
+                            return
+                except redis.WatchError:
+                    logging.debug("WatchError in add_participant")
+                    continue
+        
+        else:
+            if agent_name not in self.participants:    
+                self._participants.append(agent_name)
     
     def append_chat_completion(self, chat_uuid: str, messages: Iterable[ChatCompletionMessageParam]):
         '''Append chat completion to the context.
@@ -442,25 +461,25 @@ class WiseAgentContext():
             
         if (self._use_redis == True):
             pipe = self._redis_db.pipeline(transaction=True)
-            if(self._redis_db.hexists("llm_chat_completion", key=chat_uuid) == False):
-                self._redis_db.hset("llm_chat_completion", key=chat_uuid, value=pickle.dumps([messages]))
-                pipe.execute()
-            else:
-                while True:
-                    try:
-                        lock = f"llm_chat_completion_{chat_uuid}_lock"
-                        pipe.watch("llm_chat_completion")
+            while True:
+                pipe.watch("llm_chat_completion")
+                try:
+                    if(pipe.hexists("llm_chat_completion", key=chat_uuid) == False):
+                        pipe.multi()
+                        pipe.hset("llm_chat_completion", key=chat_uuid, value=pickle.dumps([messages]))
+                        pipe.execute()
+                        return
+                    else:
                         redis_stored_messages = pipe.hget("llm_chat_completion", key=chat_uuid)
                         stored_messages : List[ChatCompletionMessageParam] = pickle.loads(redis_stored_messages)
                         stored_messages.append(messages)
                         pipe.multi()
                         pipe.hset("llm_chat_completion", key=chat_uuid, value=pickle.dumps(stored_messages))
                         pipe.execute()
-                        break
-                    except redis.WatchError:
-                        raise redis.WatchError
-                        logging.warning("WatchError in append_chat_completion")
-                        continue
+                        return
+                except redis.WatchError:
+                    logging.debug("WatchError in append_chat_completion")
+                    continue
         else:
             if chat_uuid not in self._llm_chat_completion:
                 self._llm_chat_completion[chat_uuid] = []
@@ -948,7 +967,7 @@ class WiseAgentRegistry:
     """
     A Registry to get available agents and running contexts
     """
-    agents : dict[str, WiseAgent] = {}
+    agents : dict[str, str] = {}
     contexts : dict[str, WiseAgentContext] = {}
     tools: dict[str, WiseAgentTool] = {}
     
@@ -1005,14 +1024,14 @@ class WiseAgentRegistry:
             exit(1)
     
     @classmethod
-    def register_agent(cls,agent : WiseAgent):
+    def register_agent(cls, agent_name : str, agent_description :str):
         """
         Register an agent with the registry
         """
         if (cls.get_config().get("use_redis") == True):
-            cls.redis_db.hset("agents", key=agent.name, value=pickle.dumps(agent))
+            cls.redis_db.hset("agents", key=agent_name, value=agent_description)
         else:
-            cls.agents[agent.name] = agent
+            cls.agents[agent_name] = agent_description
     @classmethod    
     def register_context(cls, context : WiseAgentContext):
         """
@@ -1023,16 +1042,12 @@ class WiseAgentRegistry:
         else:
             cls.contexts[context.name] = context
     @classmethod    
-    def get_agents(cls) -> dict [str, WiseAgent]:
+    def get_agents(cls) -> dict [str, str]:
         """
         Get the list of agents
         """
         if (cls.get_config().get("use_redis") == True):
-            dictionary = cls.redis_db.hgetall("agents")
-            return_dictionary : Dict[str, WiseAgent]= {}
-            for key in dictionary:
-                return_dictionary[key.decode("utf-8")] = pickle.loads(dictionary.get(key))
-            return return_dictionary   
+            return cls.redis_db.hgetall("agents")
         else:
             return cls.agents
     
@@ -1051,15 +1066,15 @@ class WiseAgentRegistry:
             return cls.contexts
     
     @classmethod
-    def get_agent(cls, agent_name: str) -> WiseAgent:
+    def get_agent(cls, agent_name: str) -> str:
         """
         Get the agent with the given name
         """
         if (cls.get_config().get("use_redis") == True):
-            agent = cls.redis_db.hget("agents", key=agent_name)
-            if agent is not None:
-                return pickle.loads(agent)
-            else:
+            return_byte = cls.redis_db.hget("agents", key=agent_name)
+            if return_byte is not None:
+                return return_byte.decode('utf-8')
+            else:  
                 return None
         else:
             return cls.agents.get(agent_name) 
@@ -1183,8 +1198,8 @@ class WiseAgentRegistry:
             List[str]: the list of agent descriptions
         """
         agent_descriptions = []
-        for agent_name, agent in cls.get_agents().items():
-            agent_descriptions.append("Agent Name: " + agent_name + " Agent Description: " + agent.description)
+        for agent_name, agent_description in cls.get_agents().items():
+            agent_descriptions.append(f"Agent Name: {agent_name} Agent Description: {agent_description}")
 
         return agent_descriptions
 

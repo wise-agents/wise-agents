@@ -130,8 +130,7 @@ def test_tool():
         cond.wait()
         
 
-   for agent in WiseAgentRegistry.get_agents():
-       logging.info(f"Agent: {agent}")
+   logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
    for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
        logging.info(f'{message.sender} : {message.message} ')
    
