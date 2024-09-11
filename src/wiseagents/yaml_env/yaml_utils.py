@@ -7,7 +7,9 @@ _env_pattern = re.compile(r".*?\${(.*?)}.*?")
 
 def _env_constructor(loader, node):
     value = loader.construct_scalar(node)
-    for group in _env_pattern.findall(value):
+    groups = _env_pattern.findall(value)
+
+    for group in groups:
         env_var = group
         default = None
         if ":" in group:
@@ -25,8 +27,23 @@ def _env_constructor(loader, node):
             raise Exception(f"No environment variable called '{env_var}', and no default value was specified for '{value}'")
 
         value = value.replace(f"${{{group}}}", env_value)
-    return value
 
+    if value.lower() == "true":
+        return True
+    elif value.lower() == "false":
+        return False
+
+    try:
+        return int(value)
+    except:
+        pass
+
+    try:
+        return float(value)
+    except:
+        pass
+
+    return value
 
 def setup():
     """
