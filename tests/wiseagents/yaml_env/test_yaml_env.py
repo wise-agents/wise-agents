@@ -3,7 +3,7 @@ import yaml
 # This appears to be unused but actually does something!
 import wiseagents.yaml_env
 
-wiseagents.yaml_env.setup()
+wiseagents.yaml_env.setup_yaml_for_env_vars()
 
 
 def test_yaml_env_var_not_set():

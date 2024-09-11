@@ -45,7 +45,7 @@ def _env_constructor(loader, node):
 
     return value
 
-def setup():
+def setup_yaml_for_env_vars():
     """
     Configures the YAML Loader to do replacement of environment variables.
     It will replace YAML value strings such as '${HOST}' and '${PORT:80}' with environment
