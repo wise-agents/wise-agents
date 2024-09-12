@@ -6,11 +6,17 @@
 # The .env file should be in the same directory as the script
 # Rename the .env.example file to .env and set the environment variables
 WORKING_DIR="$(dirname "${BASH_SOURCE[0]}")"
-if [ -f $WORKING_DIR/.env ]; then
-       . $WORKING_DIR/.env
+if [ -f $WORKING_DIR/../.env ]; then
+	echo "Executing " $WORKING_DIR/../.env
+	. $WORKING_DIR/../.env
 fi
+if [ -f $WORKING_DIR/.env ]; then
+	echo "Executing " $WORKING_DIR/.env
+	. $WORKING_DIR/.env
+fi
+
 
 # Check if the environment variables are set
 echo "Pod container: $POD_CONTAINER"
 
-$POD_CONTAINER  run --restart always  -p 6379:6379 -p 8002:8001 redis/redis-stack:latest
+$POD_CONTAINER  run --rm ${EXTRA_CONTAINER_OPTION} --name redis  -p 6379:6379 -p 8002:8001 redis/redis-stack:latest
