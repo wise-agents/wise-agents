@@ -1,4 +1,4 @@
-# How to start a graph database
+# How to start a Redis database
 
 There is a script named run_redis.sh in the same directory of this document.
 The script starts a redis database.

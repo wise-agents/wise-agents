@@ -54,3 +54,7 @@ model:
 ## vectordb: Start VectorDB (this is a requirement to run the tests, see vectordb/README.MD)
 vectordb:
 	vectordb/run_vectordb.sh
+
+## redis: Start Redis (this is a requirement to run the tests, see redis/README.MD)
+redis:
+	redis/run_redis.sh

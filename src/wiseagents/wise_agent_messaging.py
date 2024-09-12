@@ -50,7 +50,7 @@ class WiseAgentMessage(YAMLObject):
             self._context_name = 'default'
 
     def __repr__(self) -> str:
-        return f"{self.__class__.__name__}(message={self.message}, sender={self.sender}, message_type={self.message_type}, id={self.chat_id})"
+        return f"{self.__class__.__name__}(message={self.message}, sender={self.sender}, message_type={self.message_type}, id={self.chat_id}, tool_id={self.tool_id}, context_name={self.context_name}, route_response_to={self.route_response_to}, route_response_to={self.route_response_to})"
 
     @property
     def context_name(self) -> str:
@@ -95,6 +95,7 @@ class WiseAgentMessage(YAMLObject):
         return self._route_response_to
 
 class WiseAgentTransport(YAMLObject):
+    
     ''' A transport for sending messages between agents. '''    
     def set_call_backs(self, request_receiver: Optional[Callable[[], WiseAgentMessage]] = None,
                  event_receiver: Optional[Callable[[], WiseAgentEvent]] = None,
@@ -112,7 +113,7 @@ class WiseAgentTransport(YAMLObject):
         self._event_receiver = event_receiver
         self._error_receiver = error_receiver
         self._response_receiver = response_receiver
-        
+       
     @abstractmethod
     def start(self):
         """

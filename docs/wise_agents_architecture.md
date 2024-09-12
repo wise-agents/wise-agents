@@ -40,3 +40,25 @@ The following image provides a high-level overview of the architecture and flow:
 ## LLM Integration
 
 As mentioned earlier, LLM integration is achieved through a client-side implementation of the OpenAI API. The responsibility for tracking messages exchanged with the LLM lies with the agent, not the LLM integration layer. This design choice makes the WiseAgent framework agnostic to the specific LLM model used, as long as the model and inference system support the OpenAI API. This approach allows different agents to potentially use different models while sharing a unified memory. For more information, see [RAG Architecture](./rag_architecture.md).
+
+## Distributed architecture
+
+As said above, wise-agents has been designed as a fully distributable cloud-ready architecture. For this reason, each agent can ideally run in a different pod and communicate with others through asynchronous communication based on STOMP protocol.
+All agents use a shared memory to access the **Agent's Registry** and **Agent's Context**. This is done by a shared Redis server, which can be configured with a file named `registry_config.yaml` from the current directory. If not found in current directory it is loaded from `~/.wise-agents/registry_config.yaml`. The file looks like:
+
+```yaml
+use_redis: true #if falseredis not used and all agents need to be in the same process
+redis_host: localhost
+redis_port: 6379
+redis_db: wise-agents
+redis_ssl : false #ssl connection. if it's true you need to set also all the following parameters
+redis_username: default
+redis_password: secret
+redis_ssl_certfile: "./redis_user.crt"
+redis_ssl_keyfile: "./redis_user_private.key"
+redis_ssl_ca_certs: "./redis_ca.pem"
+```
+
+**Note:** To configure SSL you need Redis enterprise
+
+For more information about redis connection please refer to [official redis documentation](https://redis.io/learn/howtos/security) 

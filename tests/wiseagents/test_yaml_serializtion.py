@@ -1,6 +1,6 @@
 from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 import yaml
@@ -9,7 +9,11 @@ import pytest
 
 from wiseagents.transports import StompWiseAgentTransport
 
-
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    yield
+    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_contexts()
 class DummyTransport(WiseAgentTransport):
     def __init__(self):
         pass

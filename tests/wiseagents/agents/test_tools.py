@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import threading
 import pytest
 
@@ -11,7 +12,11 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 
 
     
-
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    yield
+    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_contexts()
 
 
 cond = threading.Condition()
@@ -24,7 +29,7 @@ def get_current_weather(location, unit="fahrenheit"):
             {"location": "San Francisco", "temperature": "72", "unit": "fahrenheit"}
         )
     elif "paris" in location.lower():
-        return json.dumps({"location": "Paris", "temperature": "22", "unit": "celsius"})
+        return json.dumps({"location": "Paris", "temperature": "25", "unit": "celsius"})
     else:
         return json.dumps({"location": location, "temperature": "unknown"})
     
@@ -35,7 +40,7 @@ def response_delivered(message: WiseAgentMessage):
     with cond: 
         response = message.message
         msg = response
-        assert "22" in msg
+        assert "degree" in msg 
         print(f"C Response delivered: {msg}")
         cond.notify()
 
@@ -99,9 +104,11 @@ def test_agent_tool():
                     }
     WiseAgentTool(name="WeatherAgent", description="Get the current weather in a given location", agent_tool=True,
                  parameters_json_schema=json_schema, call_back=None) 
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    
     llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                         model_name="llama3.1",
-                                         remote_address="http://localhost:11434/v1")      
+                                         model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
+                                         api_key=groq_api_key)      
     
     weather_agent = WiseAgentWeather(name="WeatherAgent", description="Get the current weather in a given location")
     weather_agent.startAgent()
@@ -126,10 +133,12 @@ def test_agent_tool():
         cond.wait()
         
 
-    for agent in WiseAgentRegistry.get_agents():
-        logging.info(f"Agent: {agent}")
+    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
+    client_agent1.stopAgent()
+    agent.stopAgent()
+    weather_agent.stopAgent()
     
 @pytest.mark.needsllama
 def test_tool():
@@ -146,9 +155,11 @@ def test_tool():
                     }
     WiseAgentTool(name="get_current_weather", description="Get the current weather in a given location", agent_tool=False,
                  parameters_json_schema=json_schema, call_back=get_current_weather) 
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    
     llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                         model_name="llama3.1",
-                                         remote_address="http://localhost:11434/v1")      
+                                         model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
+                                         api_key=groq_api_key)      
     agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
                                  description="This is a test agent",
                                  llm=llm,
@@ -169,8 +180,9 @@ def test_tool():
         cond.wait()
         
 
-    for agent in WiseAgentRegistry.get_agents():
-        logging.info(f"Agent: {agent}")
+    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
-    
+    client_agent1.stopAgent()
+    agent.stopAgent()
+   

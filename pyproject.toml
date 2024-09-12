@@ -24,6 +24,7 @@ dependencies = [
     "mkdocs-literate-nav",
     "mkdocs-section-index",
     "mkdocs-include-markdown-plugin",
+    "redis",
 ]
 
 [project.optional-dependencies]

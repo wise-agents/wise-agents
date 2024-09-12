@@ -14,10 +14,12 @@ class PassThroughClientAgent(WiseAgent):
     """
     yaml_tag = u'!wiseagents.agents.PassThroughClientAgent'
     
+    _response_delivery = None
+    _destination_agent_name = None
+    
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the optional instance variables."""
         obj = super().__new__(cls)
-        obj._destination_agent_name = "WiseIntelligentAgent"
         return obj
 
     def __init__(self, name: str, description: str , transport: WiseAgentTransport,
@@ -37,9 +39,11 @@ class PassThroughClientAgent(WiseAgent):
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description},"
-                f"destination_agent_name={self.destination_agent_name})")
-
+        return f"{self.__class__.__name__}(name={self.name}, \
+            description={self.description}, transport={self.transport}, \
+            destination_agent_name={self.destination_agent_name},\
+            response_delivery={self.response_delivery}"
+     
     def process_request(self, request):
         """Process a request message by just passing it to another agent."""
         self.send_request(WiseAgentMessage(request, self.name), self.destination_agent_name)
@@ -47,7 +51,10 @@ class PassThroughClientAgent(WiseAgent):
 
     def process_response(self, response):
         """Process a response message just sending it back to the client."""
-        self.response_delivery(response)
+        if self.response_delivery is not None:
+            self.response_delivery(response)
+        else:
+            logging.debug(f"############################### Not sending response {response}")
         return True
 
     def process_event(self, event):

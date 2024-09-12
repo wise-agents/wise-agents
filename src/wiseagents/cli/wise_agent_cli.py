@@ -8,6 +8,7 @@ from wiseagents.transports import StompWiseAgentTransport
 
 cond = threading.Condition()
 
+global _passThroughClientAgent1
 
 def response_delivered(message: WiseAgentMessage):
     with cond: 
@@ -28,8 +29,7 @@ def main():
             print('/(h)elp: Show the available commands')
             print('(a)gents: Show the registered agents')
             print('(s)end: Send a message to an agent')
-            print('(k)ill: Kill an agent (stopAgent')
-            PassThroughClientAgent
+            
         if (user_input == '/trace' or user_input == '/t'):
             for msg in WiseAgentRegistry.get_or_create_context('default').message_trace:
                 print(msg)
@@ -44,6 +44,9 @@ def main():
                     for agent in yaml.load_all(stream, Loader=yaml.Loader):
                         agent : WiseAgent
                         print(f'Loaded agent: {agent.name}')
+                        if agent.name == "PassThroughClientAgent1":
+                            _passThroughClientAgent1 = agent
+                            _passThroughClientAgent1.set_response_delivery(response_delivered)
                         agent.startAgent()
                 except yaml.YAMLError as exc:
                     print(exc)
@@ -54,9 +57,7 @@ def main():
                 if  (user_input == '/back'):
                     break
                 with cond:
-                    client_agent1 : PassThroughClientAgent = WiseAgentRegistry.get_agent("PassThroughClientAgent1")
-                    client_agent1.set_response_delivery(response_delivered)
-                    client_agent1.send_request(WiseAgentMessage(user_input, "PassThroughClientAgent1"), "LLMOnlyWiseAgent2")
+                    _passThroughClientAgent1.send_request(WiseAgentMessage(user_input, "PassThroughClientAgent1"), "LLMOnlyWiseAgent2")
                     cond.wait()
         if (user_input == '/agents' or user_input == '/a'):
             print(f"registered agents= {WiseAgentRegistry.get_agents()}")
@@ -67,19 +68,11 @@ def main():
             agent : WiseAgent = WiseAgentRegistry.get_agent(agent_name)
             if agent:
                 with cond:
-                    client_agent1 : PassThroughClientAgent = WiseAgentRegistry.get_agent("PassThroughClientAgent1")
-                    client_agent1.set_response_delivery(response_delivered)
-                    client_agent1.send_request(WiseAgentMessage(message, "PassThroughClientAgent1"), agent_name)
+                    _passThroughClientAgent1.send_request(WiseAgentMessage(message, "PassThroughClientAgent1"), agent_name)
                     cond.wait()
             else:
                 print(f"Agent {agent_name} not found")
-        if (user_input == '/kill' or user_input == '/k'):
-            agent_name = input("Enter the agent name: ")
-            agent : WiseAgent = WiseAgentRegistry.get_agent(agent_name)
-            if agent:
-                agent.stopAgent()
-            else:
-                print(f"Agent {agent_name} not found")
+    
 
 
 if __name__ == "__main__":
