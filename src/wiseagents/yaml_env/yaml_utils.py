@@ -55,6 +55,6 @@ def setup_yaml_for_env_vars():
     In the second example, '${PORT:80}', we are doing the same but looking up `os.getenv("PORT"). In this case,
     if the 'PORT' environment variable is not set, it will use the default value shows, which in this case is '80'.
     """
-    yaml.add_implicit_resolver("!pathex", _env_pattern)
-    yaml.add_constructor("!pathex", _env_constructor)
+    yaml.add_implicit_resolver("!env_var", _env_pattern)
+    yaml.add_constructor("!env_var", _env_constructor)
 
