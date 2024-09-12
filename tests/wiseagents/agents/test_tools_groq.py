@@ -62,7 +62,7 @@ class WiseAgentWeather(WiseAgent):
     def process_error(self, error):
         logging.error(error)
         return True
-    def process_request(self, request: WiseAgentMessage):
+    def handle_request(self, request: WiseAgentMessage):
         self.request_received = request
         logging.info(f"Received request: {request.message}")
         function_args = json.loads(request.message)
