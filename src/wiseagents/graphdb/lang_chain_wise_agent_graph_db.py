@@ -104,6 +104,8 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
         obj._entity_label = "entity"
         obj._neo4j_graph_db = None
         obj._neo4j_vector_db = None
+        obj._properties = None
+        obj._collection_name = None
         return obj
 
     def __init__(self, properties: List[str], collection_name: str, url: Optional[str] = None,
