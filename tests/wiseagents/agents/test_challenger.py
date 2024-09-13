@@ -46,7 +46,7 @@ def run_after_all_tests():
     reset_env_variable("STOMP_USER", original_stomp_user)
     reset_env_variable("STOMP_PASSWORD", original_stomp_password)
     
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     WiseAgentRegistry.clear_contexts()
 
 
@@ -105,6 +105,6 @@ def test_cove_challenger():
         cond.wait()
         if assertError is not None:
             raise assertError
-        print(f"registered agents= {WiseAgentRegistry.get_agents()}")
+        print(f"registered agents= {WiseAgentRegistry.get_agents_descptions_dict()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             print(f'{message.sender} : {message.message} ')

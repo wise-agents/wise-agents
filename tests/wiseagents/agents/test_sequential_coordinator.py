@@ -16,7 +16,7 @@ assertError : AssertionError = None
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     WiseAgentRegistry.clear_contexts()
 
 def response_delivered(message: WiseAgentMessage):
@@ -68,6 +68,6 @@ def test_sequential_coordinator():
         if assertError is not None:
             logging.info(f"assertion failed")
             raise assertError
-        print(f"registered agents= {WiseAgentRegistry.get_agents()}")
+        print(f"registered agents= {WiseAgentRegistry.get_agents_descptions_dict()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             print(f'{message.sender} : {message.message} ')

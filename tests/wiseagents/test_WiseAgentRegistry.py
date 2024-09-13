@@ -9,7 +9,7 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     WiseAgentRegistry.clear_contexts()
 class DummyTransport(WiseAgentTransport):
     
@@ -24,28 +24,28 @@ class DummyTransport(WiseAgentTransport):
         pass
    
 def test_register_agents():
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     agent = WiseAgent(name="Agent1", description="This is a test agent", 
                       transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
                                  )
-    assert 1 == WiseAgentRegistry.get_agents().__len__()
+    assert 1 == WiseAgentRegistry.get_agents_descptions_dict().__len__()
     logging.info(f'Agent ={agent}')
-    logging.info(f'Agent in the registry={WiseAgentRegistry.get_agent(agent.name)}')
-    assert agent.description == WiseAgentRegistry.get_agent(agent.name)
+    logging.info(f'Agent in the registry={WiseAgentRegistry.get_agent_description(agent.name)}')
+    assert agent.description == WiseAgentRegistry.get_agent_description(agent.name)
 
 def test_remove_agent():
     agent_name = "Agent1"
-    WiseAgentRegistry.remove_agent(agent_name)
-    assert None == WiseAgentRegistry.get_agent(agent_name)
+    WiseAgentRegistry.unregister_agent(agent_name)
+    assert None == WiseAgentRegistry.get_agent_description(agent_name)
 
 def test_get_agents():
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     agents = [WiseAgent(name="Agent1", description="This is a test agent", transport=DummyTransport()), 
               WiseAgent(name="Agent2", description="This is another test agent", transport=DummyTransport()), 
               WiseAgent(name="Agent3", description="This is yet another test agent", transport=DummyTransport())]
     
     for agent in agents:
-        assert agent.description == WiseAgentRegistry.get_agent(agent.name)
+        assert agent.description == WiseAgentRegistry.get_agent_description(agent.name)
 
 def test_get_contexts():
     WiseAgentRegistry.clear_contexts()

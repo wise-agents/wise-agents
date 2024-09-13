@@ -14,7 +14,7 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     WiseAgentRegistry.clear_contexts()
 
 cond = threading.Condition()
@@ -131,7 +131,7 @@ def test_agent_tool():
         cond.wait()
         
 
-    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
+    logging.info(f"registered agents= {WiseAgentRegistry.get_agents_descptions_dict()}")
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
     client_agent1.stopAgent()
@@ -176,7 +176,7 @@ def test_tool():
         cond.wait()
         
 
-    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
+    logging.info(f"registered agents= {WiseAgentRegistry.get_agents_descptions_dict()}")
     for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
         logging.info(f'{message.sender} : {message.message} ')
     client_agent1.stopAgent()

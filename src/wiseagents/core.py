@@ -68,7 +68,7 @@ class WiseAgent(yaml.YAMLObject):
     def stopAgent(self):
         ''' Stop the agent by stopping the transport and removing the agent from the registry.'''
         self.transport.stop()
-        WiseAgentRegistry.remove_agent(self.name)
+        WiseAgentRegistry.unregister_agent(self.name)
     
     def __repr__(self):
         '''Return a string representation of the agent.'''
@@ -963,7 +963,7 @@ class WiseAgentRegistry:
     """
     A Registry to get available agents and running contexts
     """
-    agents : dict[str, str] = {}
+    agents_descriptions_dict : dict[str, str] = {}
     contexts : dict[str, WiseAgentContext] = {}
     tools: dict[str, WiseAgentTool] = {}
     
@@ -1027,7 +1027,7 @@ class WiseAgentRegistry:
         if (cls.get_config().get("use_redis") == True):
             cls.redis_db.hset("agents", key=agent_name, value=agent_description)
         else:
-            cls.agents[agent_name] = agent_description
+            cls.agents_descriptions_dict[agent_name] = agent_description
     @classmethod    
     def register_context(cls, context : WiseAgentContext):
         """
@@ -1038,14 +1038,14 @@ class WiseAgentRegistry:
         else:
             cls.contexts[context.name] = context
     @classmethod    
-    def get_agents(cls) -> dict [str, str]:
+    def get_agents_descptions_dict(cls) -> dict [str, str]:
         """
-        Get the list of agents
+        Get the dict with the agent names as keys and descriptions as values
         """
         if (cls.get_config().get("use_redis") == True):
             return cls.redis_db.hgetall("agents")
         else:
-            return cls.agents
+            return cls.agents_descriptions_dict
     
     @classmethod
     def get_contexts(cls) -> dict [str, WiseAgentContext]:
@@ -1062,9 +1062,9 @@ class WiseAgentRegistry:
             return cls.contexts
     
     @classmethod
-    def get_agent(cls, agent_name: str) -> str:
+    def get_agent_description(cls, agent_name: str) -> str:
         """
-        Get the agent with the given name
+        Get the agent description for the agent with the given name
         """
         if (cls.get_config().get("use_redis") == True):
             return_byte = cls.redis_db.hget("agents", key=agent_name)
@@ -1073,7 +1073,7 @@ class WiseAgentRegistry:
             else:  
                 return None
         else:
-            return cls.agents.get(agent_name) 
+            return cls.agents_descriptions_dict.get(agent_name) 
     
     @classmethod
     def get_or_create_context(cls, context_name: str) -> WiseAgentContext:
@@ -1107,14 +1107,14 @@ class WiseAgentRegistry:
                 return True
     
     @classmethod
-    def remove_agent(cls, agent_name: str):
+    def unregister_agent(cls, agent_name: str):
         """
-        Remove the agent from the registry
+        Unregister the agent from the registry
         """
         if (cls.get_config().get("use_redis") == True):
             cls.redis_db.hdel("agents", agent_name)
         else:
-            cls.agents.pop(agent_name)
+            cls.agents_descriptions_dict.pop(agent_name)
         
     @classmethod
     def remove_context(cls, context_name: str):
@@ -1127,14 +1127,14 @@ class WiseAgentRegistry:
             cls.contexts.pop(context_name)
     
     @classmethod
-    def clear_agents(cls):
+    def clear_agents_descriptions_dict(cls):
         """
         Clear all agents from the registry
         """
         if (cls.get_config().get("use_redis") == True):
             cls.redis_db.delete("agents")
         else:
-            cls.agents.clear()
+            cls.agents_descriptions_dict.clear()
     
     @classmethod
     def clear_contexts(cls):
@@ -1194,7 +1194,7 @@ class WiseAgentRegistry:
             List[str]: the list of agent descriptions
         """
         agent_descriptions = []
-        for agent_name, agent_description in cls.get_agents().items():
+        for agent_name, agent_description in cls.get_agents_descptions_dict().items():
             agent_descriptions.append(f"Agent Name: {agent_name} Agent Description: {agent_description}")
 
         return agent_descriptions

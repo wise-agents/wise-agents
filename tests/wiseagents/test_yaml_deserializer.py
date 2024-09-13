@@ -10,7 +10,7 @@ from wiseagents import WiseAgent, WiseAgentRegistry
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     WiseAgentRegistry.clear_contexts()
 
 @pytest.mark.needsllm

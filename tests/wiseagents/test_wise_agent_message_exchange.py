@@ -11,7 +11,7 @@ from wiseagents.transports import StompWiseAgentTransport
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     WiseAgentRegistry.clear_contexts()
 
 class WiseAgentDoingNothing(WiseAgent):
@@ -49,7 +49,7 @@ class WiseAgentDoingNothing(WiseAgent):
 def test_send_message_to_agent_and_get_response():
     os.environ['STOMP_USER'] = 'artemis'
     os.environ['STOMP_PASSWORD'] = 'artemis'
-    WiseAgentRegistry.clear_agents()
+    WiseAgentRegistry.clear_agents_descriptions_dict()
     WiseAgentRegistry.clear_contexts()
     agent1 = WiseAgentDoingNothing('Agent1', 'Agent1')
     agent2 = WiseAgentDoingNothing('Agent2', 'Agent2')
