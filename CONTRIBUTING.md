@@ -77,11 +77,8 @@ For more information about virtual environment see [here](https://docs.python.or
     source .venv/bin/activate
     ```
     
-    OR just using our Makefile
-    
-    ```
-    make activate_venv
-    ```
+    Notice that the Makefile requires the venv to be activated in order to build the project or run the tests.
+
 
 4. Add a remote ref to upstream, for pulling future updates.
 For example:
