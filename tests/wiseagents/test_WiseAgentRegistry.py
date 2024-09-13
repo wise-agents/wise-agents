@@ -1,8 +1,10 @@
 import logging
 
 import pytest
+
 from wiseagents import WiseAgent, WiseAgentContext, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.transports.stomp import StompWiseAgentTransport
+
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():

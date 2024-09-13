@@ -1,7 +1,6 @@
 from abc import *
-from typing import Callable, Optional
-
 from enum import Enum, auto
+from typing import Callable, Optional
 
 from yaml import YAMLObject
 

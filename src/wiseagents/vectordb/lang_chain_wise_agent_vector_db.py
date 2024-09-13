@@ -1,9 +1,10 @@
 from abc import abstractmethod
-from typing import Optional, List, Callable
+from typing import Optional, List
 
 from langchain_core.documents import Document as LangChainDocument
 from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_postgres import PGVector
+
 from .wise_agent_vector_db import Document
 from .wise_agent_vector_db import WiseAgentVectorDB
 from ..constants import DEFAULT_EMBEDDING_MODEL_NAME

@@ -1,6 +1,6 @@
 import logging
-from typing import Callable, List, Optional
 import uuid
+from typing import Callable, List, Optional
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMessageType, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.llm import WiseAgentLLM

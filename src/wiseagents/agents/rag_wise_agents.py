@@ -2,12 +2,10 @@ import json
 import logging
 from typing import Any, Dict, List, Optional
 
-from wiseagents.graphdb import WiseAgentGraphDB
-
-from wiseagents.vectordb import Document, WiseAgentVectorDB
-
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentTransport
+from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm import WiseAgentLLM
+from wiseagents.vectordb import Document, WiseAgentVectorDB
 
 """The default number of documents to retrieve during retrieval augmented generation (RAG)."""
 DEFAULT_NUM_DOCUMENTS = 4

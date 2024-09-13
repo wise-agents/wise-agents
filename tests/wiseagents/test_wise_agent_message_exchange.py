@@ -1,9 +1,12 @@
 import logging
 import os
-import pytest
 from time import sleep
-from  wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
+
+import pytest
+
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
 from wiseagents.transports import StompWiseAgentTransport
+
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():

@@ -2,13 +2,12 @@ import os
 import threading
 
 import pytest
+
 from wiseagents import WiseAgentMessage, WiseAgentRegistry
 from wiseagents.agents import CoVeChallengerRAGWiseAgent, PassThroughClientAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
-
-
 
 cond = threading.Condition()
 assertError : AssertionError = None

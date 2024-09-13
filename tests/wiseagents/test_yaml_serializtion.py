@@ -1,13 +1,13 @@
-from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
+import logging
+
+import pytest
+import yaml
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
-import yaml
-import logging
-import pytest
+from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
 
-from wiseagents.transports import StompWiseAgentTransport
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():

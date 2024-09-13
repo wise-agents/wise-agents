@@ -1,10 +1,9 @@
-import logging
 import sys
 import threading
+
 import yaml
+
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
-from wiseagents.agents import PassThroughClientAgent, LLMOnlyWiseAgent
-from wiseagents.transports import StompWiseAgentTransport
 
 cond = threading.Condition()
 

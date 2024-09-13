@@ -2,8 +2,8 @@ import uuid
 from abc import abstractmethod
 from typing import Optional, Any, List
 
-from pydantic import BaseModel, Field
 import yaml
+from pydantic import BaseModel, Field
 
 
 class Entity(BaseModel):

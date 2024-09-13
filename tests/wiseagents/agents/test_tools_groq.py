@@ -11,9 +11,6 @@ from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
 
 
-
-    
-
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield

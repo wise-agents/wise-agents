@@ -4,15 +4,12 @@ import threading
 from typing import Iterable
 
 import pytest
-
-from wiseagents.agents import LLMWiseAgentWithTools, PassThroughClientAgent
-from wiseagents.llm import WiseAgentRemoteLLM
-from wiseagents import WiseAgentMessage, WiseAgentRegistry, WiseAgentTool
-from wiseagents.llm import OpenaiAPIWiseAgentLLM
-from wiseagents.transports.stomp import StompWiseAgentTransport
-
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
 
+from wiseagents import WiseAgentMessage, WiseAgentRegistry, WiseAgentTool
+from wiseagents.agents import LLMWiseAgentWithTools, PassThroughClientAgent
+from wiseagents.llm import WiseAgentRemoteLLM
+from wiseagents.transports.stomp import StompWiseAgentTransport
 
 
 @pytest.fixture(scope="session", autouse=True)
