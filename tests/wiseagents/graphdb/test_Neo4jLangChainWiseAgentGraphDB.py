@@ -93,6 +93,7 @@ def test_insert_graph_documents_and_query(monkeypatch):
         assert "Ontario" in documents[0].content
     finally:
         graph_db.close()
+        
 
 
 def test_insert_entity_and_query(monkeypatch):
