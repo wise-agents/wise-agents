@@ -1,5 +1,6 @@
 import sys
 import threading
+from typing import List
 
 import yaml
 
@@ -18,6 +19,7 @@ def response_delivered(message: WiseAgentMessage):
 
 
 def main():
+    agent_list : List[WiseAgent]= []
     while True:
         user_input = input("wise-agents (/help for available command): ")
         if  (user_input == '/help' or user_input == '/h'):
@@ -33,6 +35,9 @@ def main():
             for msg in WiseAgentRegistry.get_or_create_context('default').message_trace:
                 print(msg)
         if  (user_input == '/exit' or user_input == '/x'):
+            #stop all agents
+            for agent in agent_list:
+                agent.stopAgent()
             sys.exit(0)
         if (user_input == '/load-agents' or user_input == '/l'):
             file_path = input("Enter the file path (ENTER for default src/wiseagents/cli/test-multiple.yaml): ")
@@ -47,6 +52,7 @@ def main():
                             _passThroughClientAgent1 = agent
                             _passThroughClientAgent1.set_response_delivery(response_delivered)
                         agent.startAgent()
+                        agent_list.append(agent)
                 except yaml.YAMLError as exc:
                     print(exc)
                 print(f"registered agents= {WiseAgentRegistry.get_agents()}")

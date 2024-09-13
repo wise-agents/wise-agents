@@ -15,8 +15,8 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 class FakeOpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     
     client = None
@@ -113,7 +113,6 @@ def test_tool():
                                  tools = ["get_current_weather"],
                                  transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
                                  )
-   agent.startAgent() 
    
    logging.info(f"tool: {WiseAgentRegistry.get_tool('get_current_weather').get_tool_OpenAI_format()}")
    with cond:    

@@ -1025,9 +1025,25 @@ class WiseAgentRegistry:
         Register an agent with the registry
         """
         if (cls.get_config().get("use_redis") == True):
-            cls.redis_db.hset("agents", key=agent_name, value=agent_description)
+            pipe = cls.redis_db.pipeline(transaction=True)
+            while True:
+                pipe.watch("participants")
+                try:
+                    if(pipe.hexists("agents", agent_name) == True):
+                        pipe.unwatch()
+                        raise NameError(f"Agent with name {agent_name} already exists")
+                    else:
+                        pipe.multi()
+                        pipe.hset("agents", key=agent_name, value=agent_description)
+                        pipe.execute()
+                    return
+                except redis.WatchError:
+                    logging.debug("WatchError in register_agent")
+                    continue
         else:
-            cls.agents[agent_name] = agent_description
+            if cls.agents.get(agent_name) is not None:
+                raise NameError(f"Agent with name {agent_name} already exists")
+        cls.agents[agent_name] = agent_description
     @classmethod    
     def register_context(cls, context : WiseAgentContext):
         """
@@ -1109,7 +1125,7 @@ class WiseAgentRegistry:
     @classmethod
     def remove_agent(cls, agent_name: str):
         """
-        Remove the agent from the registry
+        Remove the agent from the registry this should be used only on agents which already stopped STOMP connection
         """
         if (cls.get_config().get("use_redis") == True):
             cls.redis_db.hdel("agents", agent_name)
@@ -1125,26 +1141,6 @@ class WiseAgentRegistry:
             cls.redis_db.hdel("contexts", context_name)
         else:
             cls.contexts.pop(context_name)
-    
-    @classmethod
-    def clear_agents(cls):
-        """
-        Clear all agents from the registry
-        """
-        if (cls.get_config().get("use_redis") == True):
-            cls.redis_db.delete("agents")
-        else:
-            cls.agents.clear()
-    
-    @classmethod
-    def clear_contexts(cls):
-        """
-        Clear all contexts from the registry
-        """
-        if (cls.get_config().get("use_redis") == True):
-            cls.redis_db.delete("contexts")
-        else:
-            cls.contexts.clear()
         
     @classmethod
     def register_tool(cls, tool : WiseAgentTool):

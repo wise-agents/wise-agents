@@ -14,8 +14,8 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 
 cond = threading.Condition()
 def get_current_weather(location, unit="fahrenheit"):
@@ -110,15 +110,12 @@ def test_agent_tool():
                                          api_key=groq_api_key)      
     
     weather_agent = WiseAgentWeather(name="WeatherAgent", description="Get the current weather in a given location")
-    weather_agent.startAgent()
     agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
                                  description="This is a test agent",
                                  llm=llm,
                                  tools = ["WeatherAgent"],
                                  transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
                                  )
-    agent.startAgent() 
-   
     logging.info(f"tool: {WiseAgentRegistry.get_tool('WeatherAgent').get_tool_OpenAI_format()}")
     with cond:    
 
@@ -162,8 +159,7 @@ def test_tool():
                                  tools = ["get_current_weather"],
                                  transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
                                  )
-    agent.startAgent() 
-   
+    
     logging.info(f"tool: {WiseAgentRegistry.get_tool('get_current_weather').get_tool_OpenAI_format()}")
     with cond:    
 

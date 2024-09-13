@@ -16,8 +16,8 @@ assertError : AssertionError = None
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 
 def response_delivered(message: WiseAgentMessage):
     global assertError
@@ -71,3 +71,10 @@ def test_sequential_coordinator():
         print(f"registered agents= {WiseAgentRegistry.get_agents()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             print(f'{message.sender} : {message.message} ')
+
+    #stop all agents
+    client_agent1.stopAgent()
+    agent1.stopAgent()
+    agent2.stopAgent()
+    coordinator.stopAgent()
+

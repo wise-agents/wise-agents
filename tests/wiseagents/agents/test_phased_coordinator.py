@@ -14,8 +14,8 @@ cond = threading.Condition()
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 
 def final_response_delivered(message: WiseAgentMessage):
     with cond:
@@ -84,3 +84,11 @@ def test_phased_coordinator():
         print(f"registered agents= {WiseAgentRegistry.get_agents()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             print(f'{message.sender} : {message.message} ')
+
+    #stop agents
+    client_agent1.stopAgent()
+    agent1.stopAgent()
+    agent2.stopAgent()
+    agent3.stopAgent()
+    agent4.stopAgent()
+    agent5.stopAgent()

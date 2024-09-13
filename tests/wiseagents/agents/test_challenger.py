@@ -46,8 +46,8 @@ def run_after_all_tests():
     reset_env_variable("STOMP_USER", original_stomp_user)
     reset_env_variable("STOMP_PASSWORD", original_stomp_password)
     
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 
 
 def set_env_variable(env_variable: str, value: str) -> str:
@@ -108,3 +108,7 @@ def test_cove_challenger():
         print(f"registered agents= {WiseAgentRegistry.get_agents()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             print(f'{message.sender} : {message.message} ')
+    
+    #stopping the agents
+    client_agent1.stopAgent()
+    agent.stopAgent()

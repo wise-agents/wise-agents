@@ -10,8 +10,8 @@ from wiseagents import WiseAgent, WiseAgentRegistry
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 
 @pytest.mark.needsllm
 def test_using_deserialized_agent():
@@ -39,6 +39,9 @@ def test_using_deserialized_agent():
     assert deserialized_agent.graph_db.properties == ["name", "type"]
     assert deserialized_agent.vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
     assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
+
+    #stop the agent
+    deserialized_agent.stopAgent()
 
 
 @pytest.mark.skip(reason="does not pass CI/CD")
@@ -80,3 +83,7 @@ def test_using_multiple_deserialized_agents():
     assert deserialized_agent[1].graph_db.url == "bolt://localhost:7687"
     assert not deserialized_agent[1].graph_db.refresh_graph_schema
     assert deserialized_agent[1].vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
+
+    #stop all agents
+    for agent in deserialized_agent:
+        agent.stopAgent()

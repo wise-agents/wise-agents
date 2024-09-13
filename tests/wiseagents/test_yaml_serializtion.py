@@ -12,8 +12,8 @@ from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 class DummyTransport(WiseAgentTransport):
     def __init__(self):
         pass
@@ -47,7 +47,7 @@ def test_serialize_wise_agent(monkeypatch):
 
     # Serialize the WiseAgent object to YAML
     serialized_agent = yaml.dump(agent)
-
+    agent.stopAgent()
     # Assert that the serialized agent is not empty
     assert serialized_agent is not None
 
@@ -72,6 +72,10 @@ def test_serialize_wise_agent(monkeypatch):
     assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
     logging.debug(deserialized_agent)
 
+    deserialized_agent.stopAgent()
+
+    
+
 
 @pytest.mark.needsllm
 def test_using_deserialized_agent(monkeypatch):
@@ -90,7 +94,7 @@ def test_using_deserialized_agent(monkeypatch):
 
     # Serialize the WiseAgent object to YAML
     serialized_agent = yaml.dump(agent)
-
+    agent.stopAgent()
     # Assert that the serialized agent is not empty
     assert serialized_agent is not None
 
@@ -116,3 +120,5 @@ def test_using_deserialized_agent(monkeypatch):
     assert response.content.__len__() > 0
     assert deserialized_agent.vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
     assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
+
+    deserialized_agent.stopAgent()

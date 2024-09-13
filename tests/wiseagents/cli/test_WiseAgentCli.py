@@ -68,8 +68,8 @@ def run_after_all_tests():
     reset_env_variable("NEO4J_USERNAME", original_neo4j_username)
     reset_env_variable("NEO4J_PASSWORD", original_neo4j_password)
     
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 
 def set_env_variable(env_variable: str, value: str) -> str:
     original_value = os.environ.get(env_variable)
