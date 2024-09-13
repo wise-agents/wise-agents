@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Any, Callable, Dict, Optional, List
+from typing import Any, Dict, Optional, List
 
 from langchain_community.graphs import Neo4jGraph
 from langchain_community.graphs.graph_document import (GraphDocument as LangChainGraphDocument,
@@ -7,8 +7,8 @@ from langchain_community.graphs.graph_document import (GraphDocument as LangChai
 from langchain_community.vectorstores import Neo4jVector
 from langchain_core.documents import Document as LangChainDocument
 from langchain_huggingface import HuggingFaceEmbeddings
-from wiseagents.vectordb import Document
 
+from wiseagents.vectordb import Document
 from .wise_agent_graph_db import Entity, Source, GraphDocument, Relationship, WiseAgentGraphDB
 from ..constants import DEFAULT_EMBEDDING_MODEL_NAME
 

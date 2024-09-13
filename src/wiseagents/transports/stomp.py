@@ -1,11 +1,12 @@
 import logging
 import os
-import traceback
 
-import stomp.utils
-from wiseagents import WiseAgentMessage,WiseAgentTransport
 import stomp
+import stomp.utils
 import yaml
+
+from wiseagents import WiseAgentMessage, WiseAgentTransport
+
 
 class WiseAgentRequestQueueListener(stomp.ConnectionListener):
     '''A listener for the request queue.'''

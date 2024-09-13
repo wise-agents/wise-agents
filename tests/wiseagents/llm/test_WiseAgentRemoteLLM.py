@@ -1,6 +1,7 @@
+import pytest
+
 from wiseagents import WiseAgentRegistry
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
-import pytest
 
 
 @pytest.fixture(scope="session", autouse=True)

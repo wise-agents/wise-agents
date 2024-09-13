@@ -1,6 +1,7 @@
-import yaml
-import re
 import os
+import re
+
+import yaml
 
 _env_pattern = re.compile(r".*?\${(.*?)}.*?")
 

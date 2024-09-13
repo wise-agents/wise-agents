@@ -1,7 +1,9 @@
 from abc import abstractmethod
 from typing import Iterable
+
 import yaml
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+
 
 class WiseAgentLLM(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentLLM."""

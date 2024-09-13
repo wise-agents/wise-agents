@@ -1,11 +1,12 @@
 import os
 
 import pytest
-from wiseagents import WiseAgentRegistry
-from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
 
-from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
+from wiseagents import WiseAgentRegistry
 from wiseagents.cli.wise_agent_cli import main
+from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
+from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
+
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():

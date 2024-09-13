@@ -2,14 +2,14 @@
 
 # Import any modules or subpackages here
 
-from wiseagents.core import WiseAgentContext
 from wiseagents.core import WiseAgent
+from wiseagents.core import WiseAgentContext
 from wiseagents.core import WiseAgentRegistry
 from wiseagents.core import WiseAgentTool
+from wiseagents.wise_agent_messaging import WiseAgentEvent
 from wiseagents.wise_agent_messaging import WiseAgentMessage
 from wiseagents.wise_agent_messaging import WiseAgentMessageType
 from wiseagents.wise_agent_messaging import WiseAgentTransport
-from wiseagents.wise_agent_messaging import WiseAgentEvent
 
 # Define any necessary initialization code here
 

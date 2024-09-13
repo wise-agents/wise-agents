@@ -1,9 +1,9 @@
 import uuid
-from abc import ABC, abstractmethod
-from typing import Callable, Optional, List
+from abc import abstractmethod
+from typing import Optional, List
 
-from pydantic import BaseModel, Field
 import yaml
+from pydantic import BaseModel, Field
 
 
 class Document(BaseModel):

@@ -1,11 +1,12 @@
 import json
 import logging
-from typing import Callable, List, Optional
 import uuid
+from typing import Callable, List, Optional
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport, \
     WiseAgentTool
 from wiseagents.llm import WiseAgentLLM
+
 
 class PassThroughClientAgent(WiseAgent):
     """

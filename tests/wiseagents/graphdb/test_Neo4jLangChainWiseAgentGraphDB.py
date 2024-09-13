@@ -4,7 +4,6 @@ import pytest
 
 from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
 
-
 collection_name = "test-vector-db"
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():

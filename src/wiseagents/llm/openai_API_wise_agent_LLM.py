@@ -1,8 +1,9 @@
 from typing import Iterable, Optional
-from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
-import requests
+
 import openai
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+
+from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 
 
 class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
