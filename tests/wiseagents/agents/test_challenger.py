@@ -79,7 +79,6 @@ def response_delivered(message: WiseAgentMessage):
         cond.notify()
 
 
-@pytest.mark.needsllama
 def test_cove_challenger():
     global assertError
     groq_api_key = os.getenv("GROQ_API_KEY")
