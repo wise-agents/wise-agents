@@ -35,6 +35,8 @@ def test_using_deserialized_agent():
     assert deserialized_agent.graph_db.url == "bolt://localhost:7687"
     assert not deserialized_agent.graph_db.refresh_graph_schema
     assert deserialized_agent.graph_db.embedding_model_name == "all-MiniLM-L6-v2"
+    assert deserialized_agent.graph_db.collection_name == "test-cli-vector-db"
+    assert deserialized_agent.graph_db.properties == ["name", "type"]
     assert deserialized_agent.vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
     assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
 
