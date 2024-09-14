@@ -42,7 +42,7 @@ def test_using_deserialized_agent():
         assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
     finally:
         #stop the agent
-        deserialized_agent.stopAgent()
+        deserialized_agent.stop_agent()
 
 
 @pytest.mark.skip(reason="does not pass CI/CD")

@@ -74,8 +74,8 @@ def test_sequential_coordinator():
                 print(f'{message.sender} : {message.message} ')
     finally:
         #stop all agents
-        client_agent1.stopAgent()
-        agent1.stopAgent()
-        agent2.stopAgent()
-        coordinator.stopAgent()
+        client_agent1.stop_agent()
+        agent1.stop_agent()
+        agent2.stop_agent()
+        coordinator.stop_agent()
 

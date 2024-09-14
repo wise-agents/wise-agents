@@ -34,7 +34,7 @@ def test_register_agents():
         logging.info(f'Agent in the registry={WiseAgentRegistry.get_agent_description(agent.name)}')
         assert agent.description == WiseAgentRegistry.get_agent_description(agent.name)
     finally:    
-        agent.stopAgent()
+        agent.stop_agent()
 
 def test_get_agents():
     try:
@@ -47,7 +47,7 @@ def test_get_agents():
         #stop the agents
     finally:
         for agent in agents:
-            agent.stopAgent()
+            agent.stop_agent()
 
 def test_get_contexts():
     

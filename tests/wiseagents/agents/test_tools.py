@@ -39,7 +39,7 @@ def response_delivered(message: WiseAgentMessage):
     with cond: 
         response = message.message
         msg = response
-        assert "degree" in msg 
+        assert "22" in msg 
         print(f"C Response delivered: {msg}")
         cond.notify()
 
@@ -132,10 +132,10 @@ def test_agent_tool():
         logging.info(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             logging.info(f'{message.sender} : {message.message} ')
-        client_agent1.stopAgent()
-    finally:    
-        agent.stopAgent()
-        weather_agent.stopAgent()
+    finally:
+        client_agent1.stop_agent()    
+        agent.stop_agent()
+        weather_agent.stop_agent()
     
 @pytest.mark.needsllm
 def test_tool():
@@ -179,5 +179,5 @@ def test_tool():
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             logging.info(f'{message.sender} : {message.message} ')
     finally:
-        client_agent1.stopAgent()
-        agent.stopAgent()
+        client_agent1.stop_agent()
+        agent.stop_agent()

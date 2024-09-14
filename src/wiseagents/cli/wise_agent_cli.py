@@ -37,7 +37,7 @@ def main():
         if  (user_input == '/exit' or user_input == '/x'):
             #stop all agents
             for agent in agent_list:
-                agent.stopAgent()
+                agent.stop_agent()
             sys.exit(0)
         if (user_input == '/load-agents' or user_input == '/l'):
             file_path = input("Enter the file path (ENTER for default src/wiseagents/cli/test-multiple.yaml): ")
@@ -51,7 +51,7 @@ def main():
                         if agent.name == "PassThroughClientAgent1":
                             _passThroughClientAgent1 = agent
                             _passThroughClientAgent1.set_response_delivery(response_delivered)
-                        agent.startAgent()
+                        agent.start_agent()
                         agent_list.append(agent)
                 except yaml.YAMLError as exc:
                     print(exc)

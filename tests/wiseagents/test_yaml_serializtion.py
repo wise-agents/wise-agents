@@ -49,7 +49,7 @@ def test_serialize_wise_agent(monkeypatch):
         # Serialize the WiseAgent object to YAML
         serialized_agent = yaml.dump(agent)
     finally:
-        agent.stopAgent()
+        agent.stop_agent()
     try:
         # Assert that the serialized agent is not empty
         assert serialized_agent is not None
@@ -75,7 +75,7 @@ def test_serialize_wise_agent(monkeypatch):
         assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
         logging.debug(deserialized_agent)
     finally:
-        deserialized_agent.stopAgent()
+        deserialized_agent.stop_agent()
 
     
 
@@ -99,7 +99,7 @@ def test_using_deserialized_agent(monkeypatch):
         # Serialize the WiseAgent object to YAML
         serialized_agent = yaml.dump(agent)
     finally:
-        agent.stopAgent()
+        agent.stop_agent()
     try:
         # Assert that the serialized agent is not empty
         assert serialized_agent is not None
@@ -127,4 +127,4 @@ def test_using_deserialized_agent(monkeypatch):
         assert deserialized_agent.vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
         assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
     finally:
-        deserialized_agent.stopAgent()
+        deserialized_agent.stop_agent()

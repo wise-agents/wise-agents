@@ -110,5 +110,5 @@ def test_cove_challenger():
                 print(f'{message.sender} : {message.message} ')
     finally:        
         #stopping the agents
-        client_agent1.stopAgent()
-        agent.stopAgent()
+        client_agent1.stop_agent()
+        agent.stop_agent()

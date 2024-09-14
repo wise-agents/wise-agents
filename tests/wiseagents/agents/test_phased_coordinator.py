@@ -87,9 +87,9 @@ def test_phased_coordinator():
                 print(f'{message.sender} : {message.message} ')
     finally:
         #stop agents
-        client_agent1.stopAgent()
-        agent1.stopAgent()
-        agent2.stopAgent()
-        agent3.stopAgent()
-        agent4.stopAgent()
-        agent5.stopAgent()
+        client_agent1.stop_agent()
+        agent1.stop_agent()
+        agent2.stop_agent()
+        agent3.stop_agent()
+        agent4.stop_agent()
+        agent5.stop_agent()

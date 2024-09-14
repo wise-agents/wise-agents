@@ -57,15 +57,15 @@ class WiseAgent(yaml.YAMLObject):
         self._graph_db = graph_db
         self._transport = transport
         self._system_message = system_message
-        self.startAgent()
+        self.start_agent()
         
-    def startAgent(self):
+    def start_agent(self):
         ''' Start the agent by setting the call backs and starting the transport.'''
         self.transport.set_call_backs(self.process_request, self.process_event, self.process_error, self.process_response)
         self.transport.start()
         WiseAgentRegistry.register_agent(self.name, self.description) 
     
-    def stopAgent(self):
+    def stop_agent(self):
         ''' Stop the agent by stopping the transport and removing the agent from the registry.'''
         self.transport.stop()
         WiseAgentRegistry.unregister_agent(self.name)
