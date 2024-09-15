@@ -14,3 +14,8 @@ _name: Agent1
 _vector_db: !PGVectorLangChainWiseAgentVectorDB
   _connection_string: postgresql+psycopg://langchain:langchain@localhost:6024/langchain
   _embedding_model_name: all-MiniLM-L6-v2
+_transport:  !wiseagents.transport.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: Agent1
+

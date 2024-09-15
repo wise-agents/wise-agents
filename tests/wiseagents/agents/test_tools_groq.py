@@ -14,8 +14,8 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    WiseAgentRegistry.clear_agents()
-    WiseAgentRegistry.clear_contexts()
+    
+    
 
 cond = threading.Condition()
 def get_current_weather(location, unit="fahrenheit"):
@@ -89,96 +89,99 @@ class WiseAgentWeather(WiseAgent):
 #You need to set the environment variable GROQ_API_KEY with the value of your OpenAI API key
 #get your GROQ API key from https://groq.com/ and set it in the environment variable GROQ_API_KEY
 def test_agent_tool():
-    json_schema = {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "The city and state, e.g. San Francisco, CA",
+    try:    
+        json_schema = {
+                        "type": "object",
+                        "properties": {
+                            "location": {
+                                "type": "string",
+                                "description": "The city and state, e.g. San Francisco, CA",
+                            },
+                            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
                         },
-                        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-                    },
-                    "required": ["location"],
-                    }
-    WiseAgentTool(name="WeatherAgent", description="Get the current weather in a given location", agent_tool=True,
-                 parameters_json_schema=json_schema, call_back=None) 
-    groq_api_key= os.getenv("GROQ_API_KEY")
-    assert groq_api_key is not None
-    llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                         model_name="llama-3.1-70b-versatile",
-                                         remote_address="https://api.groq.com/openai/v1",
-                                         api_key=groq_api_key)      
-    
-    weather_agent = WiseAgentWeather(name="WeatherAgent", description="Get the current weather in a given location")
-    weather_agent.startAgent()
-    agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
-                                 description="This is a test agent",
-                                 llm=llm,
-                                 tools = ["WeatherAgent"],
-                                 transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
-                                 )
-    agent.startAgent() 
-   
-    logging.info(f"tool: {WiseAgentRegistry.get_tool('WeatherAgent').get_tool_OpenAI_format()}")
-    with cond:    
-
-        client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",
-                                                transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
-                                                )
-        client_agent1.set_response_delivery(response_delivered)
-        client_agent1.send_request(WiseAgentMessage("What is the current weather in Tokyo?", "PassThroughClientAgent1"), 
-                                                    "WiseIntelligentAgent")
-        cond.wait()
+                        "required": ["location"],
+                        }
+        WiseAgentTool(name="WeatherAgent", description="Get the current weather in a given location", agent_tool=True,
+                    parameters_json_schema=json_schema, call_back=None) 
+        groq_api_key= os.getenv("GROQ_API_KEY")
+        assert groq_api_key is not None
+        llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
+                                            model_name="llama-3.1-70b-versatile",
+                                            remote_address="https://api.groq.com/openai/v1",
+                                            api_key=groq_api_key)      
         
+        weather_agent = WiseAgentWeather(name="WeatherAgent", description="Get the current weather in a given location")
+        agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
+                                    description="This is a test agent",
+                                    llm=llm,
+                                    tools = ["WeatherAgent"],
+                                    transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
+                                    )
+        logging.info(f"tool: {WiseAgentRegistry.get_tool('WeatherAgent').get_tool_OpenAI_format()}")
+        with cond:    
 
-    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
-    for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
-        logging.info(f'{message.sender} : {message.message} ')
-    client_agent1.stopAgent()
-    agent.stopAgent()
-    weather_agent.stopAgent()
+            client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",
+                                                    transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
+                                                    )
+            client_agent1.set_response_delivery(response_delivered)
+            client_agent1.send_request(WiseAgentMessage("What is the current weather in Tokyo?", "PassThroughClientAgent1"), 
+                                                        "WiseIntelligentAgent")
+            cond.wait()
+            
 
-@pytest.mark.needsllm
+        logging.info(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+        for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
+            logging.info(f'{message.sender} : {message.message} ')
+    finally:
+        client_agent1.stop_agent()
+        agent.stop_agent()
+        weather_agent.stop_agent()
+
+
 def test_tool():
-    json_schema = {
-                    "type": "object",
-                    "properties": {
-                        "location": {
-                            "type": "string",
-                            "description": "The city and state, e.g. San Francisco, CA",
+    try:
+        json_schema = {
+                        "type": "object",
+                        "properties": {
+                            "location": {
+                                "type": "string",
+                                "description": "The city and state, e.g. San Francisco, CA",
+                            },
+                            "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
                         },
-                        "unit": {"type": "string", "enum": ["celsius", "fahrenheit"]},
-                    },
-                    "required": ["location"],
-                    }
-    WiseAgentTool(name="get_current_weather", description="Get the current weather in a given location", agent_tool=False,
-                 parameters_json_schema=json_schema, call_back=get_current_weather) 
-    llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                         model_name="llama3.1",
-                                         remote_address="http://localhost:11434/v1")      
-    agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
-                                 description="This is a test agent",
-                                 llm=llm,
-                                 tools = ["get_current_weather"],
-                                 transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
-                                 )
-    agent.startAgent() 
-   
-    logging.info(f"tool: {WiseAgentRegistry.get_tool('get_current_weather').get_tool_OpenAI_format()}")
-    with cond:    
-
-        client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",
-                                                transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
-                                                )
-        client_agent1.set_response_delivery(response_delivered)
-        client_agent1.send_request(WiseAgentMessage("What is the current weather in Tokyo?", "PassThroughClientAgent1"), 
-                                                    "WiseIntelligentAgent")
-        cond.wait()
+                        "required": ["location"],
+                        }
+        WiseAgentTool(name="get_current_weather", description="Get the current weather in a given location", agent_tool=False,
+                    parameters_json_schema=json_schema, call_back=get_current_weather) 
+        groq_api_key = os.getenv("GROQ_API_KEY")
         
+        llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
+                                            model_name="llama-3.1-70b-versatile", remote_address="https://api.groq.com/openai/v1",
+                                            api_key=groq_api_key)      
+        agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
+                                    description="This is a test agent",
+                                    llm=llm,
+                                    tools = ["get_current_weather"],
+                                    transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
+                                    )
+        
+        logging.info(f"tool: {WiseAgentRegistry.get_tool('get_current_weather').get_tool_OpenAI_format()}")
+        with cond:    
 
-    logging.info(f"registered agents= {WiseAgentRegistry.get_agents()}")
-    for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
-        logging.info(f'{message.sender} : {message.message} ')
-    client_agent1.stopAgent()
-    agent.stopAgent()
+            client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",
+                                                    transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
+                                                    )
+            client_agent1.set_response_delivery(response_delivered)
+            client_agent1.send_request(WiseAgentMessage("What is the current weather in Tokyo?", "PassThroughClientAgent1"), 
+                                                        "WiseIntelligentAgent")
+            cond.wait()
+            
+
+        logging.info(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+        for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
+            logging.info(f'{message.sender} : {message.message} ')
+    finally:
+        client_agent1.stop_agent()
+        agent.stop_agent()
+   
     

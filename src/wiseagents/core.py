@@ -57,18 +57,18 @@ class WiseAgent(yaml.YAMLObject):
         self._graph_db = graph_db
         self._transport = transport
         self._system_message = system_message
-        self.startAgent()
+        self.start_agent()
         
-    def startAgent(self):
+    def start_agent(self):
         ''' Start the agent by setting the call backs and starting the transport.'''
         self.transport.set_call_backs(self.process_request, self.process_event, self.process_error, self.process_response)
         self.transport.start()
         WiseAgentRegistry.register_agent(self.name, self.description) 
     
-    def stopAgent(self):
+    def stop_agent(self):
         ''' Stop the agent by stopping the transport and removing the agent from the registry.'''
         self.transport.stop()
-        WiseAgentRegistry.remove_agent(self.name)
+        WiseAgentRegistry.unregister_agent(self.name)
     
     def __repr__(self):
         '''Return a string representation of the agent.'''
@@ -963,7 +963,7 @@ class WiseAgentRegistry:
     """
     A Registry to get available agents and running contexts
     """
-    agents : dict[str, str] = {}
+    agents_descriptions_dict : dict[str, str] = {}
     contexts : dict[str, WiseAgentContext] = {}
     tools: dict[str, WiseAgentTool] = {}
     
@@ -1025,9 +1025,25 @@ class WiseAgentRegistry:
         Register an agent with the registry
         """
         if (cls.get_config().get("use_redis") == True):
-            cls.redis_db.hset("agents", key=agent_name, value=agent_description)
+            pipe = cls.redis_db.pipeline(transaction=True)
+            while True:
+                pipe.watch("participants")
+                try:
+                    if(pipe.hexists("agents", agent_name) == True):
+                        pipe.unwatch()
+                        raise NameError(f"Agent with name {agent_name} already exists")
+                    else:
+                        pipe.multi()
+                        pipe.hset("agents", key=agent_name, value=agent_description)
+                        pipe.execute()
+                    return
+                except redis.WatchError:
+                    logging.debug("WatchError in register_agent")
+                    continue
         else:
-            cls.agents[agent_name] = agent_description
+            if cls.agents.get(agent_name) is not None:
+                raise NameError(f"Agent with name {agent_name} already exists")
+        cls.agents[agent_name] = agent_description
     @classmethod    
     def register_context(cls, context : WiseAgentContext):
         """
@@ -1038,14 +1054,14 @@ class WiseAgentRegistry:
         else:
             cls.contexts[context.name] = context
     @classmethod    
-    def get_agents(cls) -> dict [str, str]:
+    def fetch_agents_descriptions_dict(cls) -> dict [str, str]:
         """
-        Get the list of agents
+        Get the dict with the agent names as keys and descriptions as values
         """
         if (cls.get_config().get("use_redis") == True):
             return cls.redis_db.hgetall("agents")
         else:
-            return cls.agents
+            return cls.agents_descriptions_dict
     
     @classmethod
     def get_contexts(cls) -> dict [str, WiseAgentContext]:
@@ -1062,9 +1078,9 @@ class WiseAgentRegistry:
             return cls.contexts
     
     @classmethod
-    def get_agent(cls, agent_name: str) -> str:
+    def get_agent_description(cls, agent_name: str) -> str:
         """
-        Get the agent with the given name
+        Get the agent description for the agent with the given name
         """
         if (cls.get_config().get("use_redis") == True):
             return_byte = cls.redis_db.hget("agents", key=agent_name)
@@ -1073,7 +1089,7 @@ class WiseAgentRegistry:
             else:  
                 return None
         else:
-            return cls.agents.get(agent_name) 
+            return cls.agents_descriptions_dict.get(agent_name) 
     
     @classmethod
     def get_or_create_context(cls, context_name: str) -> WiseAgentContext:
@@ -1107,14 +1123,14 @@ class WiseAgentRegistry:
                 return True
     
     @classmethod
-    def remove_agent(cls, agent_name: str):
+    def unregister_agent(cls, agent_name: str):
         """
-        Remove the agent from the registry
+        Remove the agent from the registry this should be used only on agents which already stopped transport connection
         """
         if (cls.get_config().get("use_redis") == True):
             cls.redis_db.hdel("agents", agent_name)
         else:
-            cls.agents.pop(agent_name)
+            cls.agents_descriptions_dict.pop(agent_name)
         
     @classmethod
     def remove_context(cls, context_name: str):
@@ -1125,26 +1141,6 @@ class WiseAgentRegistry:
             cls.redis_db.hdel("contexts", context_name)
         else:
             cls.contexts.pop(context_name)
-    
-    @classmethod
-    def clear_agents(cls):
-        """
-        Clear all agents from the registry
-        """
-        if (cls.get_config().get("use_redis") == True):
-            cls.redis_db.delete("agents")
-        else:
-            cls.agents.clear()
-    
-    @classmethod
-    def clear_contexts(cls):
-        """
-        Clear all contexts from the registry
-        """
-        if (cls.get_config().get("use_redis") == True):
-            cls.redis_db.delete("contexts")
-        else:
-            cls.contexts.clear()
         
     @classmethod
     def register_tool(cls, tool : WiseAgentTool):
@@ -1194,7 +1190,7 @@ class WiseAgentRegistry:
             List[str]: the list of agent descriptions
         """
         agent_descriptions = []
-        for agent_name, agent_description in cls.get_agents().items():
+        for agent_name, agent_description in cls.fetch_agents_descriptions_dict().items():
             agent_descriptions.append(f"Agent Name: {agent_name} Agent Description: {agent_description}")
 
         return agent_descriptions
