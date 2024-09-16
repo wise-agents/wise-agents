@@ -129,9 +129,9 @@ def test_agent_tool():
             cond.wait()
             
 
-        logging.info(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+        logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
-            logging.info(f'{message.sender} : {message.message} ')
+            logging.debug(f'{message}')
     finally:
         client_agent1.stop_agent()    
         agent.stop_agent()
@@ -175,9 +175,9 @@ def test_tool():
             cond.wait()
             
 
-        logging.info(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+        logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
-            logging.info(f'{message.sender} : {message.message} ')
+            logging.debug(f'{message}')
     finally:
         client_agent1.stop_agent()
         agent.stop_agent()

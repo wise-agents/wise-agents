@@ -89,3 +89,13 @@ def test_using_multiple_deserialized_agents():
         #stop all agents
         for agent in deserialized_agent:
             agent.stopAgent()
+
+
+def test_assistant_desiralizer():
+
+    # Create a WiseAgent object
+    with open(pathlib.Path().resolve() / "tests/wiseagents/test-assistant.yaml") as stream:
+        try:
+            deserialized_agent = yaml.load(stream, Loader=yaml.Loader)
+        except yaml.YAMLError as exc:
+            print(exc)

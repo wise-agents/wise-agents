@@ -9,7 +9,8 @@
 from .collaboration_wise_agents import CollaboratorWiseAgent, PhasedCoordinatorWiseAgent, SequentialCoordinatorWiseAgent
 from .rag_wise_agents import CoVeChallengerRAGWiseAgent, GraphRAGWiseAgent, RAGWiseAgent
 from .utility_wise_agents import PassThroughClientAgent, LLMOnlyWiseAgent, LLMWiseAgentWithTools
+from .assistant import AssistantAgent
 
 __all__ = ['CollaboratorWiseAgent', 'PhasedCoordinatorWiseAgent', 'SequentialCoordinatorWiseAgent', 'RAGWiseAgent',
            'GraphRAGWiseAgent', 'CoVeChallengerRAGWiseAgent', 'PassThroughClientAgent', 'LLMOnlyWiseAgent',
-           'LLMWiseAgentWithTools']
+           'LLMWiseAgentWithTools', 'AssistantAgent']

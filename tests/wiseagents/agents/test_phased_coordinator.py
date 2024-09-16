@@ -1,3 +1,4 @@
+import logging
 import os
 import threading
 
@@ -82,9 +83,9 @@ def test_phased_coordinator():
                                     "Coordinator")
             cond.wait()
 
-            print(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+            logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
             for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
-                print(f'{message.sender} : {message.message} ')
+                logging.debug(f'{message}')
     finally:
         #stop agents
         client_agent1.stop_agent()

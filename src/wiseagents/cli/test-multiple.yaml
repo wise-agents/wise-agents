@@ -2,6 +2,7 @@
 !wiseagents.agents.PassThroughClientAgent
 _description: This is a test agent
 _name: PassThroughClientAgent1
+_destination_agent_name: WiseIntelligentAgent
 _transport:  !wiseagents.transport.StompWiseAgentTransport
     _host: localhost
     _port: 61616
