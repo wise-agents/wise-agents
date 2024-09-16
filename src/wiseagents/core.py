@@ -1039,12 +1039,19 @@ class WiseAgent(yaml.YAMLObject):
                                      context_name=context.name,
                                      chat_id=request.chat_id), request.sender)
             elif collaboration_type == WiseAgentCollaborationType.SEQUENTIAL:
-                # TODO: Could tweak this to just send the response to the next agent in the sequence or
-                # if there are no agents remaining, just send it back to the coordinator
-                # See https://github.com/wise-agents/wise-agents/issues/238
-                self.send_response(WiseAgentMessage(message=response_str, sender=self.name,
-                                                    context_name=context.name, chat_id=request.chat_id),
-                                   request.sender)
+                next_agent = context.get_next_agent_in_sequence(request.chat_id, self.name)
+                if next_agent is None:
+                    logging.debug(f"Sequential coordination complete - sending response from " + self.name + " to "
+                                  + context.get_route_response_to(request.chat_id))
+                    self.send_response(WiseAgentMessage(message=response_str, sender=self.name,
+                                                        context_name=context.name, chat_id=request.chat_id),
+                                       context.get_route_response_to(request.chat_id))
+                else:
+                    logging.debug(f"Sequential coordination continuing - sending response from " + self.name
+                                  + " to " + next_agent)
+                    self.send_request(
+                        WiseAgentMessage(message=response_str, sender=self.name, context_name=context.name,
+                                         chat_id=request.chat_id), next_agent)
             else:
                 self.send_response(WiseAgentMessage(message=response_str, sender=self.name,
                                                     context_name=context.name, chat_id=request.chat_id),

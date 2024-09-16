@@ -60,17 +60,8 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
         Args:
             response (WiseAgentMessage): the response message to process
         """
-        ctx = WiseAgentRegistry.get_or_create_context(response.context_name)
-        chat_id = response.chat_id
-        next_agent = ctx.get_next_agent_in_sequence(chat_id, response.sender)
-        if next_agent is None:
-            logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + ctx.get_route_response_to(chat_id))
-            self.send_response(WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name),
-                               ctx.get_route_response_to(chat_id))
-        else:
-            logging.debug(f"Sequential coordinator sending response from " + response.sender + " to " + next_agent)
-            self.send_request(WiseAgentMessage(message=response.message, sender=self.name, context_name=response.context_name,
-                                               chat_id=chat_id), next_agent)
+        if response.message:
+            raise ValueError(f"Unexpected response message: {response.message}")
         return True
 
     def process_event(self, event):
