@@ -1,4 +1,4 @@
-# This is the __init__.py file for the wiseagents.yaml_env package
+# This is the __init__.py file for the wiseagents.yaml package
 
 # Import any modules or subpackages here
 from .yaml_utils import setup_yaml_for_env_vars

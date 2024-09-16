@@ -1,9 +1,9 @@
 import yaml
 
 # This appears to be unused but actually does something!
-import wiseagents.yaml_env
+import wiseagents.yaml
 
-wiseagents.yaml_env.setup_yaml_for_env_vars()
+wiseagents.yaml.setup_yaml_for_env_vars()
 
 
 def test_yaml_env_var_not_set():
