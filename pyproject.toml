@@ -25,6 +25,7 @@ dependencies = [
     "mkdocs-section-index",
     "mkdocs-include-markdown-plugin",
     "redis",
+    "gradio",
 ]
 
 [project.optional-dependencies]

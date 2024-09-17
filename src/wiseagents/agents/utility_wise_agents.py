@@ -3,7 +3,7 @@ import logging
 import uuid
 from typing import Callable, List, Optional
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport, \
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMessageType, WiseAgentRegistry, WiseAgentTransport, \
     WiseAgentTool
 from wiseagents.llm import WiseAgentLLM
 
@@ -320,4 +320,103 @@ class LLMWiseAgentWithTools(WiseAgent):
         """Get the name of the agent."""
         return self._name
 
+class ChatWiseAgent(WiseAgent):
+    """
+    This agent implementation is meant to be used in conjunction with a Assistant.
+    A ChatWiseAgent agent will receive a request from a assiatnt agent and will process the
+    request, adding its response to the shared context. The chatAgent agent will then send
+    the assistant agent a message to let the assistant know that it has finished executing
+    its work.
+    """
+    yaml_tag = u'!wiseagents.agents.ChatWiseAgent'
+
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the instance variables."""
+        obj = super().__new__(cls)
+        obj._system_message = None
+        return obj
+
+    def __init__(self, name: str, description: str, llm: WiseAgentLLM, transport: WiseAgentTransport,
+                 system_message: Optional[str] = None):
+        """
+        Initialize the agent.
+
+        Args:
+            name (str): the name of the agent
+            description (str): a description of the agent
+            llm (WiseAgentLLM): the LLM agent to use for processing requests
+            transport (WiseAgentTransport): the transport to use for communication
+            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
+            chat completions using its LLM
+        """
+        self._name = name
+        self._description = description
+        self._transport = transport
+        self._llm = llm
+        self._system_message = system_message
+        super().__init__(name=name, description=description, transport=self.transport, llm=llm, system_message=system_message)
+
+    def __repr__(self):
+        """Return a string representation of the agent."""
+        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+                f"transport={self.transport}, system_message={self.system_message})")
+
+    def process_event(self, event):
+        """Do nothing"""
+        return True
+
+    def process_error(self, error):
+        """Log the error and return True."""
+        logging.error(error)
+        return True
+
+    def process_request(self, request: WiseAgentMessage):
+        """
+        Process a request message by passing it to the LLM and then send a response back to the sender
+        to let them know the request has been processed.
+
+        Args:
+            request (WiseAgentMessage): the request message to process
+        """
+        ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
+        chat_id = request.chat_id
+        if chat_id is not None and ctx.llm_chat_completion != {}:
+            # Get the chat messages so far
+            messages = ctx.llm_chat_completion[chat_id]
+        else:
+            messages = []
+
+        messages.append({"role": "system", "content": self.system_message or self.llm.system_message})
+        messages.append({"role": "user", "content": request.message})
+        llm_response = self.llm.process_chat_completion(messages, [])
+
+        # Add this agent's response to the shared context
+        ctx.append_chat_completion(chat_uuid=chat_id, messages=llm_response.choices[0].message)
+
+        # Let the sender know that this agent has finished processing the request
+        self.send_response(
+            WiseAgentMessage(message=llm_response.choices[0].message.content, message_type=WiseAgentMessageType.ACK, sender=self.name, context_name=request.context_name,
+                             chat_id=request.chat_id), request.sender)
+        return True
+
+    def process_response(self, response: WiseAgentMessage):
+        """Do nothing"""
+        return True
+
+    def get_recipient_agent_name(self, message):
+        """
+        Return the name of the agent to send the message to.
+
+        Args:
+            message (WiseAgentMessage): the message to process
+        """
+        return self.name
+
+    def stop(self):
+        pass
+
+    @property
+    def name(self) -> str:
+        """Get the name of the agent."""
+        return self._name
 

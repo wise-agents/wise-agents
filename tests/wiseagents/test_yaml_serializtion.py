@@ -4,6 +4,7 @@ import pytest
 import yaml
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport
+from wiseagents.agents import AssistantAgent
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
@@ -128,3 +129,12 @@ def test_using_deserialized_agent(monkeypatch):
         assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
     finally:
         deserialized_agent.stop_agent()
+
+def test_serialize_assistant():
+    try:
+        assistant = AssistantAgent(name="Assistant1", description="This is a test assistant", transport=DummyTransport(), destination_agent_name="")
+        serialized_assistant = yaml.dump(assistant)
+        logging.info(serialized_assistant)
+        deserialized_agent = yaml.load(serialized_assistant, Loader=yaml.Loader)
+    finally:
+        assistant.stop_agent()

@@ -129,7 +129,7 @@ class WiseAgent(yaml.YAMLObject):
         context = WiseAgentRegistry.get_or_create_context(message.context_name)
         context.add_participant(self.name)
         self.transport.send_request(message, dest_agent_name)
-        context.message_trace.append(message)
+        context.trace(message)
     
     def send_response(self, message: WiseAgentMessage, dest_agent_name):
         '''Send a response message to the destination agent with the given name.
@@ -141,7 +141,7 @@ class WiseAgent(yaml.YAMLObject):
         context = WiseAgentRegistry.get_or_create_context(message.context_name)
         context.add_participant(self.name)
         self.transport.send_response(message, dest_agent_name)
-        context.message_trace.append(message)  
+        context.trace(message)  
     
     @abstractmethod
     def process_request(self, message: WiseAgentMessage) -> bool:
@@ -299,7 +299,7 @@ class WiseAgentContext():
     ''' A WiseAgentContext is a class that represents a context in which agents can communicate with each other.
     '''
     
-    _message_trace : List[WiseAgentMessage] = []
+    _message_trace : List[str] = []
     _participants : List[str] = []
     
     # Maps a chat uuid to a list of chat completion messages
@@ -383,17 +383,20 @@ class WiseAgentContext():
         return self._name
     
     @property
-    def message_trace(self) -> List[WiseAgentMessage]:
+    def message_trace(self) -> List[str]:
         """Get the message trace of the context."""
         if (self._use_redis == True):
-            return_list : List[WiseAgentMessage] = []
-            redis_list = self._redis_db.lrange("message_trace", 0, -1)
-            for message in redis_list:
-                return_list.append(pickle.loads(message))
-            return return_list
+            return self._redis_db.lrange("message_trace", 0, -1)
         else:
             return self._message_trace
-        
+
+    def trace(self, message : WiseAgentMessage):
+        '''Trace the message.'''
+        if (self._use_redis == True):
+            self._redis_db.rpush("message_trace", message.__repr__())
+        else:
+            self._message_trace.append(message)   
+            
         
     @property
     def participants(self) -> List[str]:

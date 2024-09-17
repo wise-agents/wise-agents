@@ -51,7 +51,7 @@ class WiseAgentResponseQueueListener(stomp.ConnectionListener):
 class StompWiseAgentTransport(WiseAgentTransport):
     '''A transport for sending messages between agents using the STOMP protocol.'''
     
-    yaml_tag = u'!wiseagents.transport.StompWiseAgentTransport'
+    yaml_tag = u'!wiseagents.transports.StompWiseAgentTransport'
     request_conn : stomp.Connection = None
     response_conn : stomp.Connection = None
     def __init__(self, host: str, port: int, agent_name: str):
@@ -132,13 +132,15 @@ class StompWiseAgentTransport(WiseAgentTransport):
 
     def stop(self):
         '''Stop the transport.'''
-        if self.request_conn is not None:
+        if self.request_conn is not None and self.request_conn.is_connected():
             #unsubscribe from the request topic
             self.request_conn.unsubscribe(destination=self.request_queue, id=id(self))
+            # Disconnect request from the STOMP server
+            self.request_conn.disconnect()
+        if self.response_conn is not None and self.response_conn.is_connected():
             #unsubscribe from the response queue
             self.response_conn.unsubscribe(destination=self.response_queue, id=id(self) + 1)
-            # Disconnect from the STOMP server
-            self.request_conn.disconnect()
+            # Disconnect response from the STOMP server
             self.response_conn.disconnect()
             
         

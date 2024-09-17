@@ -1,5 +1,7 @@
+import importlib
 import sys
 import threading
+import traceback
 from typing import List
 
 import yaml
@@ -20,10 +22,17 @@ def response_delivered(message: WiseAgentMessage):
 
 def main():
     agent_list : List[WiseAgent]= []
+    user_input = "h"
+    file_path = None
+    default_file_path = "src/wiseagents/cli/test-multiple.yaml"
+
+    if (sys.argv.__len__() > 1):
+            user_input="/load-agents"
+            file_path=sys.argv[1]
     while True:
-        user_input = input("wise-agents (/help for available command): ")
         if  (user_input == '/help' or user_input == '/h'):
             print('/(l)oad-agents: Load agents from file')
+            print('/(r)eload agents: Reload agents from file')
             print('/(c)hat: Start a chat')
             print('/(t)race: Show the message trace')
             print('/e(x)it: Exit the application')
@@ -39,13 +48,35 @@ def main():
             for agent in agent_list:
                 agent.stop_agent()
             sys.exit(0)
+        if (user_input == '/reload-agents' or user_input == '/r'):
+            for agent in agent_list:
+                agent.stop_agent()
+                reload_path = input(f'Enter the file path (ENTER for default {file_path} ): ')
+                if reload_path:
+                    file_path = reload_path
+                user_input = '/load-agents'
         if (user_input == '/load-agents' or user_input == '/l'):
-            file_path = input("Enter the file path (ENTER for default src/wiseagents/cli/test-multiple.yaml): ")
             if not file_path:
-                file_path = "src/wiseagents/cli/test-multiple.yaml"
+                file_path = input(f'Enter the file path (ENTER for default {default_file_path} ): ')
+                if not file_path:
+                    file_path = default_file_path
             with open(file_path) as stream:
                 try:
-                    for agent in yaml.load_all(stream, Loader=yaml.Loader):
+                    for token in yaml.scan(stream):
+                        if type(token) is yaml.TagToken and token.value[0] == "!":
+                            package_name = ""
+                            for part in token.value[1].split(".")[:-1]:
+                                package_name += part + "."
+                            package_name = package_name[:-1]
+                            print(f'importing {package_name}')
+                            importlib.import_module(package_name)
+                    
+                except yaml.YAMLError as exc:
+                    traceback.print_exc()
+            with open(file_path) as stream:
+                try:  
+
+                    for agent in yaml.load_all(stream, Loader=yaml.FullLoader):
                         agent : WiseAgent
                         print(f'Loaded agent: {agent.name}')
                         if agent.name == "PassThroughClientAgent1":
@@ -54,7 +85,7 @@ def main():
                         agent.start_agent()
                         agent_list.append(agent)
                 except yaml.YAMLError as exc:
-                    print(exc)
+                    traceback.print_exc()
                 print(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
         if  (user_input == '/chat' or user_input == '/c'):
             while True:
@@ -77,6 +108,8 @@ def main():
                     cond.wait()
             else:
                 print(f"Agent {agent_name} not found")
+        user_input = input("wise-agents (/help for available commands): ")
+        
     
 
 

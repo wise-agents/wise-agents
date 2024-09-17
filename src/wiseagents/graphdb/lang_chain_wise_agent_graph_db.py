@@ -94,7 +94,7 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     A LangChainWiseAgentGraphDB implementation that makes use of a LangChain Neo4j graph database
     and a corresponding Neo4j vector database.
     """
-    yaml_tag = u'!Neo4jLangChainWiseAgentGraphDB'
+    yaml_tag = u'!wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""

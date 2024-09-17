@@ -1,4 +1,5 @@
 import os
+import sys
 
 import pytest
 
@@ -111,7 +112,8 @@ def test_cli_with_rag_agent(monkeypatch, pytestconfig, capsys):
             raise TimeoutError("No input provided in time or inputs list is empty")
 
     monkeypatch.setattr('builtins.input', mock_input)
-
+    #removing any arguments passed to the test (otherwise for example it fails with -k {test_name})
+    sys.argv = sys.argv[:1]
     with pytest.raises(SystemExit):
         main()
 

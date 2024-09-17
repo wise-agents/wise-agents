@@ -9,7 +9,7 @@ from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     '''A class to define a WiseAgentLLM that uses the OpenAI API.'''
     client = None
-    yaml_tag = u'!OpenaiAPIWiseAgentLLM'
+    yaml_tag = u'!wiseagents.llm.OpenaiAPIWiseAgentLLM'
 
 
     

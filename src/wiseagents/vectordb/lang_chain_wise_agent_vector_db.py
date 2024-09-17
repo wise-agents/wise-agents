@@ -71,7 +71,7 @@ class PGVectorLangChainWiseAgentVectorDB(LangChainWiseAgentVectorDB):
     A LangChainWiseAgentVectorDB implementation that makes use of a LangChain PGVector database.
     """
 
-    yaml_tag = u'!PGVectorLangChainWiseAgentVectorDB'
+    yaml_tag = u'!wiseagents.vectordb.PGVectorLangChainWiseAgentVectorDB'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""

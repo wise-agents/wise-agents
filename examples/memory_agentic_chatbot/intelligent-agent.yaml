@@ -1,0 +1,12 @@
+---
+!wiseagents.agents.ChatWiseAgent
+_description: This is another test agent
+_llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
+  _model_name: llama3.1
+  _remote_address: http://localhost:11434/v1
+  _system_message: Answer my greeting saying Hello and my name
+_name: WiseIntelligentAgent
+_transport:  !wiseagents.transports.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: WiseIntelligentAgent
