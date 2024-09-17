@@ -413,7 +413,7 @@ class CollaboratorWiseAgent(WiseAgent):
         """
         ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
         chat_id = request.chat_id
-        if chat_id is not None:
+        if chat_id is not None and chat_id in ctx.llm_chat_completion != {}:
             # Get the chat messages so far
             messages = ctx.llm_chat_completion[chat_id]
         else:
@@ -428,7 +428,7 @@ class CollaboratorWiseAgent(WiseAgent):
 
         # Let the sender know that this agent has finished processing the request
         self.send_response(
-            WiseAgentMessage(message="", message_type=WiseAgentMessageType.ACK, sender=self.name, context_name=request.context_name,
+            WiseAgentMessage(message=llm_response.choices[0].message.content, message_type=WiseAgentMessageType.ACK, sender=self.name, context_name=request.context_name,
                              chat_id=request.chat_id), request.sender)
         return True
 

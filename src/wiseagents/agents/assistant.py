@@ -4,21 +4,23 @@ from threading import Thread
 import threading
 import time
 from typing import Callable, Optional
+import uuid
 
-from wiseagents import WiseAgent, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.wise_agent_messaging import WiseAgentMessage
 import gradio
 
 class AssistantAgent(WiseAgent):
     """
-    This utility agent simply passes a request that it receives to another agent and sends the
-    response back to the client.
+    This utility agent start a web interface and pass the user input to another agent.
+    Rhe web interface will be running at http://127.0.0.1:7860
     """
     yaml_tag = u'!wiseagents.agents.AssistantAgent'
     
     _response_delivery = None
     _cond = threading.Condition()
     _response : WiseAgentMessage = None
+    _chat_id = None
     
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the optional instance variables."""
@@ -49,17 +51,19 @@ class AssistantAgent(WiseAgent):
     
     def start_agent(self):
         super().start_agent()
+        self._chat_id= str(uuid.uuid4())
         gradio.ChatInterface(self.slow_echo).launch(prevent_thread_lock=True)
 
     def slow_echo(self, message, history):
             with self._cond:
-                self.process_request(WiseAgentMessage(message, self.name))
+                self.process_request(WiseAgentMessage(message=message, sender=self.name, chat_id=self._chat_id))
                 self._cond.wait()
                 return self._response.message
 
     def process_request(self, request: WiseAgentMessage):
         """Process a request message by just passing it to another agent."""
         print(f"AssistantAgent: process_request: {request}")
+        WiseAgentRegistry.get_or_create_context("default").append_chat_completion(self._chat_id, {"role": "user", "content": request.message})
         self.send_request(request, self.destination_agent_name)
         return True
 

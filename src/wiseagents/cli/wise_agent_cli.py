@@ -24,6 +24,8 @@ def main():
     agent_list : List[WiseAgent]= []
     user_input = "h"
     file_path = None
+    default_file_path = "src/wiseagents/cli/test-multiple.yaml"
+
     if (sys.argv.__len__() > 1):
             user_input="/load-agents"
             file_path=sys.argv[1]
@@ -46,11 +48,18 @@ def main():
             for agent in agent_list:
                 agent.stop_agent()
             sys.exit(0)
+        if (user_input == '/reload-agents' or user_input == '/r'):
+            for agent in agent_list:
+                agent.stop_agent()
+                reload_path = input(f'Enter the file path (ENTER for default {file_path} ): ')
+                if reload_path:
+                    file_path = reload_path
+                user_input = '/load-agents'
         if (user_input == '/load-agents' or user_input == '/l'):
             if not file_path:
-                file_path = input("Enter the file path (ENTER for default src/wiseagents/cli/test-multiple.yaml): ")
+                file_path = input(f'Enter the file path (ENTER for default {default_file_path} ): ')
                 if not file_path:
-                    file_path = "src/wiseagents/cli/test-multiple.yaml"
+                    file_path = default_file_path
             with open(file_path) as stream:
                 try:
                     for token in yaml.scan(stream):
