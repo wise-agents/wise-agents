@@ -1,5 +1,5 @@
 ---
-!wiseagents.agents.CollaboratorWiseAgent
+!wiseagents.agents.ChatWiseAgent
 _description: This is another test agent
 _llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   _model_name: llama3.1

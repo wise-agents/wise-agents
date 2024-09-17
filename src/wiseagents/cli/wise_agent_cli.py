@@ -32,7 +32,7 @@ def main():
     while True:
         if  (user_input == '/help' or user_input == '/h'):
             print('/(l)oad-agents: Load agents from file')
-            print('/(r)load agents: Reload agents from file')
+            print('/(r)eload agents: Reload agents from file')
             print('/(c)hat: Start a chat')
             print('/(t)race: Show the message trace')
             print('/e(x)it: Exit the application')
@@ -108,7 +108,7 @@ def main():
                     cond.wait()
             else:
                 print(f"Agent {agent_name} not found")
-        user_input = input("wise-agents (/help for available command): ")
+        user_input = input("wise-agents (/help for available commands): ")
         
     
 

@@ -413,7 +413,7 @@ class CollaboratorWiseAgent(WiseAgent):
         """
         ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
         chat_id = request.chat_id
-        if chat_id is not None and chat_id in ctx.llm_chat_completion != {}:
+        if chat_id is not None and ctx.llm_chat_completion != {}:
             # Get the chat messages so far
             messages = ctx.llm_chat_completion[chat_id]
         else:

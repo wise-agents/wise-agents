@@ -1,6 +1,6 @@
 !wiseagents.WiseAgent
 _description: This is a test agent
-_graph_db: !wiseagents.graphdb.PGVectorLangChainWiseAgentVectorDB
+_graph_db: !wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB
   _url: bolt://localhost:7687
   _refresh_graph_schema: False
   _embedding_model_name: all-MiniLM-L6-v2

@@ -13,7 +13,7 @@ import gradio
 class AssistantAgent(WiseAgent):
     """
     This utility agent start a web interface and pass the user input to another agent.
-    Rhe web interface will be running at http://127.0.0.1:7860
+    The web interface will be running at http://127.0.0.1:7860
     """
     yaml_tag = u'!wiseagents.agents.AssistantAgent'
     
