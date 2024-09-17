@@ -22,6 +22,7 @@ class PassThroughClientAgent(WiseAgent):
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the optional instance variables."""
         obj = super().__new__(cls)
+        obj._destination_agent_name = "WiseIntelligentAgent"
         return obj
 
     def __init__(self, name: str, description: str , transport: WiseAgentTransport,
@@ -46,10 +47,11 @@ class PassThroughClientAgent(WiseAgent):
             destination_agent_name={self.destination_agent_name},\
             response_delivery={self.response_delivery}"
      
-    def handle_request(self, request):
+    def process_request(self, request: WiseAgentMessage,
+                        conversation_history: List[ChatCompletionMessageParam]) -> Optional[str]:
         """Process a request message by just passing it to another agent."""
         self.send_request(WiseAgentMessage(request, self.name), self.destination_agent_name)
-        return True
+        return None
 
     def process_response(self, response):
         """Process a response message just sending it back to the client."""
@@ -362,8 +364,8 @@ class LLMWiseAgentWithTools(WiseAgent):
 
 class ChatWiseAgent(WiseAgent):
     """
-    This agent implementation is meant to be used in conjunction with a Assistant.
-    A ChatWiseAgent agent will receive a request from a assiatnt agent and will process the
+    This agent implementation is meant to be used in conjunction with an Assistant.
+    A ChatWiseAgent agent will receive a request from an assistant agent and will process the
     request, adding its response to the shared context. The chatAgent agent will then send
     the assistant agent a message to let the assistant know that it has finished executing
     its work.
@@ -410,34 +412,26 @@ class ChatWiseAgent(WiseAgent):
         logging.error(error)
         return True
 
-    def process_request(self, request: WiseAgentMessage):
+    def process_request(self, request: WiseAgentMessage,
+                        conversation_history: List[ChatCompletionMessageParam]) -> Optional[str]:
         """
         Process a request message by passing it to the LLM and then send a response back to the sender
         to let them know the request has been processed.
 
         Args:
             request (WiseAgentMessage): the request message to process
+            conversation_history (List[ChatCompletionMessageParam]): The conversation history that
+            can be used while processing the request. If this agent isn't involved in a type of
+            collaboration that makes use of the conversation history, this will be an empty list.
+
+        Returns:
+            Optional[str]: the response to the request message as a string or None if there is
+            no string response yet
         """
-        ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
-        chat_id = request.chat_id
-        if chat_id is not None and ctx.llm_chat_completion != {}:
-            # Get the chat messages so far
-            messages = ctx.llm_chat_completion[chat_id]
-        else:
-            messages = []
-
-        messages.append({"role": "system", "content": self.system_message or self.llm.system_message})
-        messages.append({"role": "user", "content": request.message})
-        llm_response = self.llm.process_chat_completion(messages, [])
-
-        # Add this agent's response to the shared context
-        ctx.append_chat_completion(chat_uuid=chat_id, messages=llm_response.choices[0].message)
-
-        # Let the sender know that this agent has finished processing the request
-        self.send_response(
-            WiseAgentMessage(message=llm_response.choices[0].message.content, message_type=WiseAgentMessageType.ACK, sender=self.name, context_name=request.context_name,
-                             chat_id=request.chat_id), request.sender)
-        return True
+        conversation_history.append({"role": "system", "content": self.system_message or self.llm.system_message})
+        conversation_history.append({"role": "user", "content": request.message})
+        llm_response = self.llm.process_chat_completion(conversation_history, [])
+        return llm_response.choices[0].message.content
 
     def process_response(self, response: WiseAgentMessage):
         """Do nothing"""

@@ -3,10 +3,11 @@ import logging
 from threading import Thread
 import threading
 import time
-from typing import Callable, Optional
+from typing import Callable, List, Optional
 import uuid
 
-from wiseagents import WiseAgent, WiseAgentRegistry, WiseAgentTransport
+from openai.types.chat import ChatCompletionMessageParam
+from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.wise_agent_messaging import WiseAgentMessage
 import gradio
 
@@ -51,21 +52,36 @@ class AssistantAgent(WiseAgent):
     
     def start_agent(self):
         super().start_agent()
-        self._chat_id= str(uuid.uuid4())
+        self._chat_id = str(uuid.uuid4())
+        WiseAgentRegistry.get_or_create_context("default").set_collaboration_type(self._chat_id,
+                                                                                  WiseAgentCollaborationType.CHAT)
         gradio.ChatInterface(self.slow_echo).launch(prevent_thread_lock=True)
 
     def slow_echo(self, message, history):
             with self._cond:
-                self.process_request(WiseAgentMessage(message=message, sender=self.name, chat_id=self._chat_id))
+                self.handle_request(WiseAgentMessage(message=message, sender=self.name, chat_id=self._chat_id))
                 self._cond.wait()
                 return self._response.message
 
-    def process_request(self, request: WiseAgentMessage):
-        """Process a request message by just passing it to another agent."""
+    def process_request(self, request: WiseAgentMessage,
+                        conversation_history: List[ChatCompletionMessageParam]) -> Optional[str]:
+        """
+        Process a request message by just passing it to another agent.
+
+        Args:
+            request (WiseAgentMessage): the request message to process
+            conversation_history (List[ChatCompletionMessageParam]): The conversation history that
+            can be used while processing the request. If this agent isn't involved in a type of
+            collaboration that makes use of the conversation history, this will be an empty list.
+
+        Returns:
+            Optional[str]: the response to the request message as a string or None if there is
+            no string response yet
+        """
         print(f"AssistantAgent: process_request: {request}")
         WiseAgentRegistry.get_or_create_context("default").append_chat_completion(self._chat_id, {"role": "user", "content": request.message})
         self.send_request(request, self.destination_agent_name)
-        return True
+        return None
 
     def process_response(self, response : WiseAgentMessage):
         """Process a response message just sending it back to the client."""
