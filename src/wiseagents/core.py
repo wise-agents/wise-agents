@@ -853,10 +853,10 @@ class WiseAgent(yaml.YAMLObject):
             name (str): the name of the agent
             description (str): a description of what the agent does
             transport (WiseAgentTransport): the transport to use for sending and receiving messages
-            llm Optional(WiseAgentLLM): the LLM associated with the agent
-            vector_db Optional(WiseAgentVectorDB): the vector DB associated with the agent
-            collection_name Optional(str) = "wise-agent-collection": the vector DB collection name associated with the agent
-            graph_db Optional (WiseAgentGraphDB): the graph DB associated with the agent
+            llm (Optional[WiseAgentLLM]): the LLM associated with the agent
+            vector_db (Optional[WiseAgentVectorDB]): the vector DB associated with the agent
+            collection_name (Optional[str]) = "wise-agent-collection": the vector DB collection name associated with the agent
+            graph_db (Optional[WiseAgentGraphDB]): the graph DB associated with the agent
             system_message Optional(str): an optional system message that can be used by the agent when processing chat
             completions using its LLM
         '''
