@@ -31,7 +31,7 @@ class WiseAgentDoingNothing(WiseAgent):
     def process_error(self, error):
         logging.error(error)
         return True
-    def process_request(self, request: WiseAgentMessage):
+    def handle_request(self, request: WiseAgentMessage):
         self.request_received = request
         self.send_response(WiseAgentMessage('I am doing nothing', self.name), request.sender )
         return True

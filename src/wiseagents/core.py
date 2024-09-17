@@ -3,7 +3,9 @@ import json
 import logging
 import os
 import pickle
+
 from abc import abstractmethod
+from enum import Enum, auto
 from typing import Any, Callable, Dict, Iterable, List, Optional
 
 import yaml
@@ -11,207 +13,16 @@ from openai.types.chat import ChatCompletionToolParam, ChatCompletionMessagePara
 
 import redis
 from wiseagents.graphdb import WiseAgentGraphDB
-from wiseagents.llm import WiseAgentLLM
+from wiseagents.llm import OpenaiAPIWiseAgentLLM, WiseAgentLLM
 from wiseagents.vectordb import WiseAgentVectorDB
-from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentTransport, WiseAgentEvent
+from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentMessageType, WiseAgentTransport, WiseAgentEvent
 
 
-class WiseAgent(yaml.YAMLObject):
-    ''' A WiseAgent is an abstract class that represents an agent that can send and receive messages to and from other agents.
-    '''
-    yaml_tag = u'!wiseagents.WiseAgent'
+class WiseAgentCollaborationType(Enum):
+    SEQUENTIAL = auto()
+    PHASED = auto()
+    INDEPENDENT = auto()
 
-    def __new__(cls, *args, **kwargs):
-        '''Create a new instance of the class, setting default values for the instance variables.'''
-        obj = super().__new__(cls)
-        obj._llm = None
-        obj._vector_db = None
-        obj._graph_db = None
-        obj._collection_name = "wise-agent-collection"
-        obj._system_message = None
-        return obj
-
-    def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
-                 vector_db: Optional[WiseAgentVectorDB] = None, collection_name: Optional[str] = "wise-agent-collection",
-                 graph_db: Optional[WiseAgentGraphDB] = None, system_message: Optional[str] = None):
-        ''' 
-        Initialize the agent with the given name, description, transport, LLM, vector DB, collection name, and graph DB.
-        
-
-        Args:
-            name (str): the name of the agent
-            description (str): a description of what the agent does
-            transport (WiseAgentTransport): the transport to use for sending and receiving messages
-            llm Optional(WiseAgentLLM): the LLM associated with the agent
-            vector_db Optional(WiseAgentVectorDB): the vector DB associated with the agent
-            collection_name Optional(str) = "wise-agent-collection": the vector DB collection name associated with the agent
-            graph_db Optional (WiseAgentGraphDB): the graph DB associated with the agent
-            system_message Optional(str): an optional system message that can be used by the agent when processing chat
-            completions using its LLM
-        '''
-        self._name = name
-        self._description = description
-        self._llm = llm
-        self._vector_db = vector_db
-        self._collection_name = collection_name
-        self._graph_db = graph_db
-        self._transport = transport
-        self._system_message = system_message
-        self.start_agent()
-        
-    def start_agent(self):
-        ''' Start the agent by setting the call backs and starting the transport.'''
-        self.transport.set_call_backs(self.process_request, self.process_event, self.process_error, self.process_response)
-        self.transport.start()
-        WiseAgentRegistry.register_agent(self.name, self.description) 
-    
-    def stop_agent(self):
-        ''' Stop the agent by stopping the transport and removing the agent from the registry.'''
-        self.transport.stop()
-        WiseAgentRegistry.unregister_agent(self.name)
-    
-    def __repr__(self):
-        '''Return a string representation of the agent.'''
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
-                f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db},"
-                f"system_message={self.system_message})")
-    
-    def __eq__(self, value: object) -> bool:
-        return isinstance(value, WiseAgent) and self.__repr__() == value.__repr__()
-
-    @property
-    def name(self) -> str:
-        """Get the name of the agent."""
-        return self._name
-
-    @property
-    def description(self) -> str:
-        """Get a description of what the agent does."""
-        return self._description
-
-    @property
-    def llm(self) -> Optional[WiseAgentLLM]:
-        """Get the LLM associated with the agent."""
-        return self._llm
-
-    @property
-    def vector_db(self) -> Optional[WiseAgentVectorDB]:
-        """Get the vector DB associated with the agent."""
-        return self._vector_db
-
-    @property
-    def collection_name(self) -> str:
-        """Get the vector DB collection name associated with the agent."""
-        return self._collection_name
-
-    @property
-    def graph_db(self) -> Optional[WiseAgentGraphDB]:
-        """Get the graph DB associated with the agent."""
-        return self._graph_db
-    
-    @property
-    def transport(self) -> WiseAgentTransport:
-        """Get the transport associated with the agent."""
-        return self._transport
-
-    @property
-    def system_message(self) -> Optional[str]:
-        """Get the system message associated with the agent."""
-        return self._system_message
-
-    def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
-        '''Send a request message to the destination agent with the given name.
-
-        Args:
-            message (WiseAgentMessage): the message to send
-            dest_agent_name (str): the name of the destination agent'''
-        message.sender = self.name
-        context = WiseAgentRegistry.get_or_create_context(message.context_name)
-        context.add_participant(self.name)
-        self.transport.send_request(message, dest_agent_name)
-        context.trace(message)
-    
-    def send_response(self, message: WiseAgentMessage, dest_agent_name):
-        '''Send a response message to the destination agent with the given name.
-
-        Args:
-            message (WiseAgentMessage): the message to send
-            dest_agent_name (str): the name of the destination agent'''
-        message.sender = self.name
-        context = WiseAgentRegistry.get_or_create_context(message.context_name)
-        context.add_participant(self.name)
-        self.transport.send_response(message, dest_agent_name)
-        context.trace(message)  
-    
-    @abstractmethod
-    def process_request(self, message: WiseAgentMessage) -> bool:
-        """
-        Callback method to process the given request for this agent.
-
-
-        Args:
-            message (WiseAgentMessage): the message to be processed
-
-        Returns:
-            True if the message was processed successfully, False otherwise
-        """
-        ...
-
-    @abstractmethod
-    def process_response(self, message: WiseAgentMessage) -> bool:
-        """
-        Callback method to process the response received from another agent which processed a request from this agent.
-
-
-        Args:
-            message (WiseAgentMessage): the message to be processed
-
-        Returns:
-            True if the message was processed successfully, False otherwise
-        """
-        ...
-
-    @abstractmethod
-    def process_event(self, event: WiseAgentEvent) -> bool:
-        """
-        Callback method to process the given event.
-
-
-        Args:
-            event (WiseAgentEvent): the event to be processed
-
-        Returns:
-           True if the event was processed successfully, False otherwise
-        """
-        ...
-        
-    @abstractmethod
-    def process_error(self, error: Exception) -> bool:
-        """
-        Callback method to process the given error.
-
-
-        Args:
-            error (Exception): the error to be processed
-
-        Returns:
-            True if the error was processed successfully, False otherwise
-        """
-        ...
-
-    @abstractmethod
-    def get_recipient_agent_name(self, message: WiseAgentMessage) -> str:
-        """
-        Get the name of the agent to send the given message to.
-
-
-        Args:
-             message (WiseAgentMessage): the message to be sent
-
-        Returns:
-            str: the name of the agent to send the given message to
-        """
-        ...
 
 class WiseAgentTool(yaml.YAMLObject):
     ''' A WiseAgentTool is an abstract class that represents a tool that can be used by an agent to perform a specific task.'''
@@ -293,7 +104,6 @@ class WiseAgentTool(yaml.YAMLObject):
         return self.call_back(**kwargs)
 
 
-
 class WiseAgentContext():
     
     ''' A WiseAgentContext is a class that represents a context in which agents can communicate with each other.
@@ -333,11 +143,15 @@ class WiseAgentContext():
     # Maps a chat uuid to a list containing the queries attempted for each iteration executed by
     # the phased coordinator
     _queries : Dict[str, List[str]] = {}
-    
+
+    # Maps a chat uuid to the collaboration type
+    _collaboration_type: Dict[str, WiseAgentCollaborationType] = {}
+
     _redis_db : redis.Redis = None
     _use_redis : bool = False
     _config : Dict[str, Any] = {}
-    
+
+
     def __init__(self, name: str, config : Optional[Dict[str,Any]] = {"use_redis": False}):
         ''' Initialize the context with the given name.
 
@@ -959,6 +773,346 @@ class WiseAgentContext():
             return self._queries.get(chat_uuid)
         else:
             return []
+
+    @property
+    def collaboration_type(self) -> Dict[str, WiseAgentCollaborationType]:
+        """Get the collaboration type for chat uuids for this context."""
+        if (self._use_redis == True):
+            return_dict: Dict[str, WiseAgentCollaborationType] = {}
+            redis_dict = self._redis_db.hgetall("collaboration_type")
+            for key in redis_dict:
+                return_dict[key.decode('utf-8')] = pickle.loads(redis_dict[key])
+            return return_dict
+        else:
+            return self._collaboration_type
+
+    def get_collaboration_type(self, chat_uuid: str) -> WiseAgentCollaborationType:
+        """
+        Get the collaboration type for the given chat uuid for this context.
+        Args:
+            chat_uuid (Optional[str]): the chat uuid, may be None
+        Returns:
+            WiseAgentCollaborationType: the collaboration type
+        """
+        if (self._use_redis == True):
+            if chat_uuid is not None:
+                collaboration_type = self._redis_db.hget("collaboration_type", key=chat_uuid)
+                if (collaboration_type is not None):
+                    return pickle.loads(collaboration_type)
+            else:
+                return WiseAgentCollaborationType.INDEPENDENT
+        else:
+            if chat_uuid in self._collaboration_type:
+                return self._collaboration_type.get(chat_uuid)
+            else:
+                return WiseAgentCollaborationType.INDEPENDENT
+
+    def set_collaboration_type(self, chat_uuid: str, collaboration_type: WiseAgentCollaborationType):
+        """
+        Set the collaboration type for the given chat uuid for this context.
+
+        Args:
+            chat_uuid (str): the chat uuid
+            collaboration_type (WiseAgentCollaborationType): the collaboration type
+        """
+        if (self._use_redis == True):
+            self._redis_db.hset("collaboration_type", key=chat_uuid, value=pickle.dumps(collaboration_type))
+        else:
+            self._collaboration_type[chat_uuid] = collaboration_type
+
+
+class WiseAgent(yaml.YAMLObject):
+    ''' A WiseAgent is an abstract class that represents an agent that can send and receive messages to and from other agents.
+    '''
+    yaml_tag = u'!wiseagents.WiseAgent'
+
+    def __new__(cls, *args, **kwargs):
+        '''Create a new instance of the class, setting default values for the instance variables.'''
+        obj = super().__new__(cls)
+        obj._llm = None
+        obj._vector_db = None
+        obj._graph_db = None
+        obj._collection_name = "wise-agent-collection"
+        obj._system_message = None
+        return obj
+
+    def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
+                 vector_db: Optional[WiseAgentVectorDB] = None,
+                 collection_name: Optional[str] = "wise-agent-collection",
+                 graph_db: Optional[WiseAgentGraphDB] = None, system_message: Optional[str] = None):
+        ''' 
+        Initialize the agent with the given name, description, transport, LLM, vector DB, collection name, and graph DB.
+
+
+        Args:
+            name (str): the name of the agent
+            description (str): a description of what the agent does
+            transport (WiseAgentTransport): the transport to use for sending and receiving messages
+            llm Optional(WiseAgentLLM): the LLM associated with the agent
+            vector_db Optional(WiseAgentVectorDB): the vector DB associated with the agent
+            collection_name Optional(str) = "wise-agent-collection": the vector DB collection name associated with the agent
+            graph_db Optional (WiseAgentGraphDB): the graph DB associated with the agent
+            system_message Optional(str): an optional system message that can be used by the agent when processing chat
+            completions using its LLM
+        '''
+        self._name = name
+        self._description = description
+        self._llm = llm
+        self._vector_db = vector_db
+        self._collection_name = collection_name
+        self._graph_db = graph_db
+        self._transport = transport
+        self._system_message = system_message
+        self.start_agent()
+
+    def start_agent(self):
+        ''' Start the agent by setting the call backs and starting the transport.'''
+        self.transport.set_call_backs(self.handle_request, self.process_event, self.process_error,
+                                      self.process_response)
+        self.transport.start()
+        WiseAgentRegistry.register_agent(self.name, self.description)
+
+    def stop_agent(self):
+        ''' Stop the agent by stopping the transport and removing the agent from the registry.'''
+        self.transport.stop()
+        WiseAgentRegistry.unregister_agent(self.name)
+
+    def __repr__(self):
+        '''Return a string representation of the agent.'''
+        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+                f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db},"
+                f"system_message={self.system_message})")
+
+    def __eq__(self, value: object) -> bool:
+        return isinstance(value, WiseAgent) and self.__repr__() == value.__repr__()
+
+    @property
+    def name(self) -> str:
+        """Get the name of the agent."""
+        return self._name
+
+    @property
+    def description(self) -> str:
+        """Get a description of what the agent does."""
+        return self._description
+
+    @property
+    def llm(self) -> Optional[WiseAgentLLM]:
+        """Get the LLM associated with the agent."""
+        return self._llm
+
+    @property
+    def vector_db(self) -> Optional[WiseAgentVectorDB]:
+        """Get the vector DB associated with the agent."""
+        return self._vector_db
+
+    @property
+    def collection_name(self) -> str:
+        """Get the vector DB collection name associated with the agent."""
+        return self._collection_name
+
+    @property
+    def graph_db(self) -> Optional[WiseAgentGraphDB]:
+        """Get the graph DB associated with the agent."""
+        return self._graph_db
+
+    @property
+    def transport(self) -> WiseAgentTransport:
+        """Get the transport associated with the agent."""
+        return self._transport
+
+    @property
+    def system_message(self) -> Optional[str]:
+        """Get the system message associated with the agent."""
+        return self._system_message
+
+    def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
+        '''Send a request message to the destination agent with the given name.
+
+        Args:
+            message (WiseAgentMessage): the message to send
+            dest_agent_name (str): the name of the destination agent'''
+        message.sender = self.name
+        context = WiseAgentRegistry.get_or_create_context(message.context_name)
+        context.add_participant(self.name)
+        self.transport.send_request(message, dest_agent_name)
+        context.trace(message)
+
+    def send_response(self, message: WiseAgentMessage, dest_agent_name):
+        '''Send a response message to the destination agent with the given name.
+
+        Args:
+            message (WiseAgentMessage): the message to send
+            dest_agent_name (str): the name of the destination agent'''
+        message.sender = self.name
+        context = WiseAgentRegistry.get_or_create_context(message.context_name)
+        context.add_participant(self.name)
+        self.transport.send_response(message, dest_agent_name)
+        context.trace(message)
+
+    def handle_request(self, request: WiseAgentMessage) -> bool:
+        """
+        Callback method to handle the given request for this agent. This method optionally retrieves
+        conversation history from the shared context depending on the type of collaboration the agent
+        is involved in (i.e., sequential, phased, or independent) and passes this to the process_request
+        method. Finally, it handles the response from the process_request method, ensuring the shared
+        context is updated if necessary, and determines which agent to the send the response to, both
+        depending on the type of collaboration the agent is involved in.
+        Args:
+            request (WiseAgentMessage): the request message to be processed
+        Returns:
+            True if the message was processed successfully, False otherwise
+        """
+        context = WiseAgentRegistry.get_or_create_context(request.context_name)
+        collaboration_type = context.get_collaboration_type(request.chat_id)
+        conversation_history = self.get_conversation_history_if_needed(context, request.chat_id, collaboration_type)
+        response_str = self.process_request(request, conversation_history)
+        return self.handle_response(response_str, request, context, collaboration_type)
+
+    def get_conversation_history_if_needed(self, context: WiseAgentContext,
+                                           chat_id: Optional[str], collaboration_type: str) -> List[
+        ChatCompletionMessageParam]:
+        """
+        Get the conversation history for the given chat id from the given context, depending on the
+        type of collaboration the agent is involved in (i.e., sequential, phased, independent).
+
+        Args:
+            context (WiseAgentContext): the shared context
+            chat_id (Optional[str]): the chat id, may be None
+            collaboration_type (str): the type of collaboration this agent is involved in
+
+        Returns:
+            List[ChatCompletionMessageParam]: the conversation history for the given chat id if the agent
+            is involved in a collaboration type that makes use of the conversation history and an empty list
+            otherwise
+        """
+        if chat_id:
+            if collaboration_type == WiseAgentCollaborationType.PHASED:
+                # this agent is involved in phased collaboration, so it needs the conversation history
+                return context.llm_chat_completion.get(chat_id)
+        # for sequential collaboration and independent agents, the shared history is not needed
+        return []
+
+    @abstractmethod
+    def process_request(self, request: WiseAgentMessage,
+                        conversation_history: List[ChatCompletionMessageParam]) -> Optional[str]:
+        """
+        Process the given request message to generate a response string.
+
+        Args:
+            request (WiseAgentMessage): the request message to be processed
+            conversation_history (List[ChatCompletionMessageParam]): The conversation history that
+            can be used while processing the request. If this agent isn't involved in a type of
+            collaboration that makes use of the conversation history, this will be an empty list.
+
+        Returns:
+            Optional[str]: the response to the request message as a string or None if there is
+            no string response yet
+        """
+        ...
+
+    def handle_response(self, response_str: str, request: WiseAgentMessage,
+                        context: WiseAgentContext, collaboration_type: str) -> bool:
+        """
+        Handles the given string response, ensuring the shared context is updated if necessary
+        and determines which agent to the send the response to, both depending on the type of
+        collaboration the agent is involved in (i.e., sequential, phased, or independent).
+
+        Args:
+            response_str (str): the string response to be handled
+            context (WiseAgentContext): the shared context
+            chat_id (Optional[str]): the chat id, may be None
+            collaboration_type (str): the type of collaboration this agent is involved in
+
+        Returns:
+            True if the message was processed successfully, False otherwise
+        """
+        if response_str:
+            if collaboration_type == WiseAgentCollaborationType.PHASED:
+                # add this agent's response to the shared context
+                context.append_chat_completion(chat_uuid=request.chat_id,
+                                               messages={"role": "assistant", "content": response_str})
+
+                # let the sender know that this agent has finished processing the request
+                self.send_response(
+                    WiseAgentMessage(message="", message_type=WiseAgentMessageType.ACK, sender=self.name,
+                                     context_name=context.name,
+                                     chat_id=request.chat_id), request.sender)
+            elif collaboration_type == WiseAgentCollaborationType.SEQUENTIAL:
+                next_agent = context.get_next_agent_in_sequence(request.chat_id, self.name)
+                if next_agent is None:
+                    logging.debug(f"Sequential coordination complete - sending response from " + self.name + " to "
+                                  + context.get_route_response_to(request.chat_id))
+                    self.send_response(WiseAgentMessage(message=response_str, sender=self.name,
+                                                        context_name=context.name, chat_id=request.chat_id),
+                                       context.get_route_response_to(request.chat_id))
+                else:
+                    logging.debug(f"Sequential coordination continuing - sending response from " + self.name
+                                  + " to " + next_agent)
+                    self.send_request(
+                        WiseAgentMessage(message=response_str, sender=self.name, context_name=context.name,
+                                         chat_id=request.chat_id), next_agent)
+            else:
+                self.send_response(WiseAgentMessage(message=response_str, sender=self.name,
+                                                    context_name=context.name, chat_id=request.chat_id),
+                                   request.sender)
+        return True
+
+    @abstractmethod
+    def process_response(self, message: WiseAgentMessage) -> bool:
+        """
+        Callback method to process the response received from another agent which processed a request from this agent.
+
+
+        Args:
+            message (WiseAgentMessage): the message to be processed
+
+        Returns:
+            True if the message was processed successfully, False otherwise
+        """
+        ...
+
+    @abstractmethod
+    def process_event(self, event: WiseAgentEvent) -> bool:
+        """
+        Callback method to process the given event.
+
+
+        Args:
+            event (WiseAgentEvent): the event to be processed
+
+        Returns:
+           True if the event was processed successfully, False otherwise
+        """
+        ...
+
+    @abstractmethod
+    def process_error(self, error: Exception) -> bool:
+        """
+        Callback method to process the given error.
+
+
+        Args:
+            error (Exception): the error to be processed
+
+        Returns:
+            True if the error was processed successfully, False otherwise
+        """
+        ...
+
+    @abstractmethod
+    def get_recipient_agent_name(self, message: WiseAgentMessage) -> str:
+        """
+        Get the name of the agent to send the given message to.
+
+
+        Args:
+             message (WiseAgentMessage): the message to be sent
+
+        Returns:
+            str: the name of the agent to send the given message to
+        """
+        ...
 
 
 class WiseAgentRegistry:
