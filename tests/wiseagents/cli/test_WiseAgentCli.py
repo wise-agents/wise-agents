@@ -9,6 +9,7 @@ from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGra
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
 
 
+
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     original_postgres_user = set_env_variable("POSTGRES_USER", "postgres")

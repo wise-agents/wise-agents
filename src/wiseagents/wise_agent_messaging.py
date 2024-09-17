@@ -3,7 +3,7 @@ from enum import Enum, auto
 from typing import Callable, Optional
 
 from yaml import YAMLObject
-
+from wiseagents.yaml import WiseAgentsLoader
 
 class WiseAgentMessageType(Enum):
     ACK = auto()
@@ -94,7 +94,8 @@ class WiseAgentMessage(YAMLObject):
         return self._route_response_to
 
 class WiseAgentTransport(YAMLObject):
-    
+    yaml_loader = WiseAgentsLoader
+
     ''' A transport for sending messages between agents. '''    
     def set_call_backs(self, request_receiver: Optional[Callable[[], WiseAgentMessage]] = None,
                  event_receiver: Optional[Callable[[], WiseAgentEvent]] = None,

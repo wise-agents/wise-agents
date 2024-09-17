@@ -3,11 +3,13 @@ from typing import Iterable
 
 import yaml
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+from wiseagents.yaml import WiseAgentsLoader
 
 
 class WiseAgentLLM(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentLLM."""
-    yaml_tag = u'!WiseAgentLLM'    
+    yaml_tag = u'!WiseAgentLLM'
+    yaml_loader = WiseAgentsLoader
     def __init__(self, system_message, model_name):
         '''Initialize the agent.
 

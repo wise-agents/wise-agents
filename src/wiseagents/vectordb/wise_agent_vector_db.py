@@ -4,6 +4,9 @@ from typing import Optional, List
 
 import yaml
 from pydantic import BaseModel, Field
+from wiseagents.yaml import WiseAgentsLoader
+
+import wiseagents.yaml
 
 
 class Document(BaseModel):
@@ -22,6 +25,7 @@ class Document(BaseModel):
 class WiseAgentVectorDB(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentVectorDB."""
     yaml_tag = u'!WiseAgentVectorDB'
+    yaml_loader = WiseAgentsLoader
 
     @abstractmethod
     def get_or_create_collection(self, collection_name: str):
