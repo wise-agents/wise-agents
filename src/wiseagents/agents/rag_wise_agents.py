@@ -268,7 +268,6 @@ class CoVeChallengerRAGWiseAgent(WiseAgent):
     This agent implementation is used to challenge the response from a RAG agent using the
     Chain-of-Verification (CoVe) method (https://arxiv.org/pdf/2309.11495) to try to prevent
     hallucinations.
-    Uses the Stomp protocol.
     """
     yaml_tag = u'!wiseagents.agents.CoVeChallengerRAGWiseAgent'
 
@@ -278,7 +277,6 @@ class CoVeChallengerRAGWiseAgent(WiseAgent):
         obj._collection_name = DEFAULT_COLLECTION_NAME
         obj._k = DEFAULT_NUM_DOCUMENTS
         obj._num_verification_questions = 4
-        obj._include_sources = DEFAULT_INCLUDE_SOURCES
         obj._num_verification_questions = DEFAULT_NUM_VERIFICATION_QUESTIONS
         obj._system_message = None
         return obj
@@ -386,7 +384,7 @@ class CoVeChallengerRAGWiseAgent(WiseAgent):
             collaboration that makes use of the conversation history, this will be an empty list.
         """
 
-        """Plan verifications"""
+        # plan verifications, taking into account the baseline response and conversation history
         prompt = (f"Given the following question and baseline response, generate a list of {self.num_verification_questions} "
                   f" verification questions that could help determine if there are any mistakes in the baseline response:\n{message}\n"
                   f"Your response should contain only the list of questions, one per line.\n")
@@ -394,21 +392,17 @@ class CoVeChallengerRAGWiseAgent(WiseAgent):
         conversation_history.append({"role": "user", "content": prompt})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
 
-        """Execute verifications"""
+        # execute verifications, answering questions independently, without the baseline response
         verification_questions = llm_response.choices[0].message.content.splitlines()
         verification_responses = ""
         for question in verification_questions:
             retrieved_documents = self.vector_db.query([question], self.collection_name, self.k)
-            context = "\n".join([document.content for document in retrieved_documents[0]])
-            prompt = (f"Answer the question based only on the following context:\n{context}\n"
-                      f"Question: {question}\n")
-            conversation_history.append({"role": "system", "content": self.system_message or self.llm.system_message})
-            conversation_history.append({"role": "user", "content": prompt})
-            llm_response = self.llm.process_chat_completion(conversation_history, [])
+            _create_and_process_rag_prompt(retrieved_documents[0], question, self.llm, False,
+                                           [], self.system_message)
             verification_responses = (verification_responses + "Verification Question: " + question + "\n"
                                       + "Verification Result: " + llm_response.choices[0].message.content + "\n")
 
-        """Generate the final revised response"""
+        # generate the final revised response, conditioned on the baseline response and verification results
         complete_info = message + "\n" + verification_responses
         prompt = (f"Given the following question, baseline response, and a list of verification questions and results,"
                   f" generate a revised response incorporating the verification results:\n{complete_info}\n"
@@ -419,6 +413,9 @@ class CoVeChallengerRAGWiseAgent(WiseAgent):
         conversation_history.append({"role": "user", "content": prompt})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
         return llm_response.choices[0].message.content
+
+    def retrieve_documents(self, question: str) -> List[List[Document]]:
+        return self.vector_db.query([question], self.collection_name, self.k)
 
 
 def _create_and_process_rag_prompt(retrieved_documents: List[Document], question: str, llm: WiseAgentLLM,
