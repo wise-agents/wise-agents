@@ -7,4 +7,5 @@ _transport:  !wiseagents.transports.StompWiseAgentTransport
     _host: localhost
     _port: 61616
     _agent_name: AssistantAgent
----
+
+

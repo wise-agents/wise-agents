@@ -1,3 +1,4 @@
+import importlib
 import sys
 import threading
 import traceback
@@ -6,9 +7,6 @@ from typing import List
 import yaml
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
-#these unsued imports are need for yaml.load_all. If they are removed, the yaml.load_all will not find the constructors for these classes 
-import wiseagents.agents
-from wiseagents.transports import StompWiseAgentTransport
 
 cond = threading.Condition()
 
@@ -55,6 +53,20 @@ def main():
                     file_path = "src/wiseagents/cli/test-multiple.yaml"
             with open(file_path) as stream:
                 try:
+                    for token in yaml.scan(stream):
+                        if type(token) is yaml.TagToken and token.value[0] == "!":
+                            package_name = ""
+                            for part in token.value[1].split(".")[:-1]:
+                                package_name += part + "."
+                            package_name = package_name[:-1]
+                            print(f'importing {package_name}')
+                            importlib.import_module(package_name)
+                    
+                except yaml.YAMLError as exc:
+                    traceback.print_exc()
+            with open(file_path) as stream:
+                try:  
+
                     for agent in yaml.load_all(stream, Loader=yaml.FullLoader):
                         agent : WiseAgent
                         print(f'Loaded agent: {agent.name}')

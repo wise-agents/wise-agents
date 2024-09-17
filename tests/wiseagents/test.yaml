@@ -1,20 +1,20 @@
 !wiseagents.WiseAgent
 _description: This is a test agent
-_graph_db: !Neo4jLangChainWiseAgentGraphDB
+_graph_db: !wiseagents.graphdb.PGVectorLangChainWiseAgentVectorDB
   _url: bolt://localhost:7687
   _refresh_graph_schema: False
   _embedding_model_name: all-MiniLM-L6-v2
   _collection_name: test-cli-vector-db
   _properties: [ name, type ]
-_llm: !OpenaiAPIWiseAgentLLM
+_llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   _model_name: Phi-3-mini-4k-instruct-q4.gguf
   _remote_address: http://localhost:8001/v1
   _system_message: Answer my greeting saying Hello and my name
 _name: Agent1
-_vector_db: !PGVectorLangChainWiseAgentVectorDB
+_vector_db: !wiseagents.vectordb.PGVectorLangChainWiseAgentVectorDB
   _connection_string: postgresql+psycopg://langchain:langchain@localhost:6024/langchain
   _embedding_model_name: all-MiniLM-L6-v2
-_transport:  !wiseagents.transport.StompWiseAgentTransport
+_transport:  !wiseagents.transports.StompWiseAgentTransport
     _host: localhost
     _port: 61616
     _agent_name: Agent1

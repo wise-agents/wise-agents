@@ -51,7 +51,7 @@ class WiseAgentResponseQueueListener(stomp.ConnectionListener):
 class StompWiseAgentTransport(WiseAgentTransport):
     '''A transport for sending messages between agents using the STOMP protocol.'''
     
-    yaml_tag = u'!wiseagents.transport.StompWiseAgentTransport'
+    yaml_tag = u'!wiseagents.transports.StompWiseAgentTransport'
     request_conn : stomp.Connection = None
     response_conn : stomp.Connection = None
     def __init__(self, host: str, port: int, agent_name: str):
