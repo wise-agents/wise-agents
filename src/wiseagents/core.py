@@ -22,6 +22,7 @@ class WiseAgentCollaborationType(Enum):
     SEQUENTIAL = auto()
     PHASED = auto()
     INDEPENDENT = auto()
+    CHAT = auto()
 
 
 class WiseAgentTool(yaml.YAMLObject):
@@ -958,8 +959,10 @@ class WiseAgent(yaml.YAMLObject):
         method. Finally, it handles the response from the process_request method, ensuring the shared
         context is updated if necessary, and determines which agent to the send the response to, both
         depending on the type of collaboration the agent is involved in.
+
         Args:
             request (WiseAgentMessage): the request message to be processed
+
         Returns:
             True if the message was processed successfully, False otherwise
         """
@@ -987,8 +990,9 @@ class WiseAgent(yaml.YAMLObject):
             otherwise
         """
         if chat_id:
-            if collaboration_type == WiseAgentCollaborationType.PHASED:
-                # this agent is involved in phased collaboration, so it needs the conversation history
+            if (collaboration_type == WiseAgentCollaborationType.PHASED
+                    or collaboration_type == WiseAgentCollaborationType.CHAT):
+                # this agent is involved in phased collaboration or a chat, so it needs the conversation history
                 return context.llm_chat_completion.get(chat_id)
         # for sequential collaboration and independent agents, the shared history is not needed
         return []
@@ -1028,14 +1032,15 @@ class WiseAgent(yaml.YAMLObject):
             True if the message was processed successfully, False otherwise
         """
         if response_str:
-            if collaboration_type == WiseAgentCollaborationType.PHASED:
+            if (collaboration_type == WiseAgentCollaborationType.PHASED
+                    or collaboration_type == WiseAgentCollaborationType.CHAT):
                 # add this agent's response to the shared context
                 context.append_chat_completion(chat_uuid=request.chat_id,
                                                messages={"role": "assistant", "content": response_str})
 
                 # let the sender know that this agent has finished processing the request
                 self.send_response(
-                    WiseAgentMessage(message="", message_type=WiseAgentMessageType.ACK, sender=self.name,
+                    WiseAgentMessage(message=response_str, message_type=WiseAgentMessageType.ACK, sender=self.name,
                                      context_name=context.name,
                                      chat_id=request.chat_id), request.sender)
             elif collaboration_type == WiseAgentCollaborationType.SEQUENTIAL:
