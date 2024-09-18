@@ -1,13 +1,12 @@
 import yaml
+from wiseagents.yaml import WiseAgentsLoader
 
 # This appears to be unused but actually does something!
 import wiseagents.yaml
 
-wiseagents.yaml.setup_yaml_for_env_vars()
-
 
 def test_yaml_env_var_not_set():
-    loader = yaml.FullLoader
+    loader = WiseAgentsLoader
     input = """
     test:
         name: ${NAME}
@@ -30,7 +29,7 @@ def test_yaml_env_var_set(monkeypatch):
         - ${ONE}
         - ${TWO}
     """
-    loader = yaml.FullLoader
+    loader = WiseAgentsLoader
     monkeypatch.setenv("NAME", "Stefano")
     monkeypatch.setenv("HOST", "192.168.0.1")
     monkeypatch.setenv("PORT", "433")
@@ -55,7 +54,7 @@ test:
 """
 
 def test_yaml_with_defaults_no_env_vars_set():
-    loader = yaml.FullLoader
+    loader = WiseAgentsLoader
     test_values = yaml.load(input_with_defaults, loader)["test"]
     assert test_values["name"] == "Kabir"
     assert test_values["url"] == "http://localhost:8080/something"
@@ -70,7 +69,7 @@ def test_yaml_with_defaults_env_vars_set(monkeypatch):
     monkeypatch.setenv("ONE", "en")
     monkeypatch.setenv("TWO", "to")
 
-    loader = yaml.FullLoader
+    loader = WiseAgentsLoader
     test_values = yaml.load(input_with_defaults, loader)["test"]
     assert test_values["name"] == "Farah"
     assert test_values["url"] == "http://127.0.0.1:80/something"
@@ -82,7 +81,7 @@ def test_yaml_with_defaults_env_vars_set(monkeypatch):
 def test_data_types_sanity():
     # Sanity test to check the types of the values loaded from YAML
 
-    loader = yaml.FullLoader
+    loader = WiseAgentsLoader
     input = """
     test:
         int: 1
@@ -138,7 +137,7 @@ def test_data_types_sanity():
 
 
 def test_data_types_when_replaced_by_env_var(monkeypatch):
-    loader = yaml.FullLoader
+    loader = WiseAgentsLoader
     input = """
     test:
         int: ${INT}
@@ -202,7 +201,7 @@ def test_data_types_when_replaced_by_env_var(monkeypatch):
 
 
 def test_data_types_when_replaced_by_env_var_default():
-    loader = yaml.FullLoader
+    loader = WiseAgentsLoader
     input = """
     test:
         int: ${INT:1}
