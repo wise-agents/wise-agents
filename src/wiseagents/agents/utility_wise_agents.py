@@ -366,7 +366,7 @@ class ChatWiseAgent(WiseAgent):
             description (str): a description of the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
             transport (WiseAgentTransport): the transport to use for communication
-            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
+            system_message (Optional[str]): the optional system message to be used by the agent when processing
             chat completions using its LLM
         """
         self._name = name
