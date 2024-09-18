@@ -3,6 +3,7 @@ import sys
 import threading
 import traceback
 from typing import List
+from wiseagents.yaml import WiseAgentsLoader
 
 import yaml
 
@@ -61,22 +62,9 @@ def main():
                 if not file_path:
                     file_path = default_file_path
             with open(file_path) as stream:
-                try:
-                    for token in yaml.scan(stream):
-                        if type(token) is yaml.TagToken and token.value[0] == "!":
-                            package_name = ""
-                            for part in token.value[1].split(".")[:-1]:
-                                package_name += part + "."
-                            package_name = package_name[:-1]
-                            print(f'importing {package_name}')
-                            importlib.import_module(package_name)
-                    
-                except yaml.YAMLError as exc:
-                    traceback.print_exc()
-            with open(file_path) as stream:
                 try:  
 
-                    for agent in yaml.load_all(stream, Loader=yaml.FullLoader):
+                    for agent in yaml.load_all(stream, Loader=WiseAgentsLoader):
                         agent : WiseAgent
                         print(f'Loaded agent: {agent.name}')
                         if agent.name == "PassThroughClientAgent1":

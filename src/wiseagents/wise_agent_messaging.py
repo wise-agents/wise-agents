@@ -3,7 +3,7 @@ from enum import Enum, auto
 from typing import Callable, Optional
 
 from yaml import YAMLObject
-
+from wiseagents.yaml import WiseAgentsLoader
 
 class WiseAgentMessageType(Enum):
     ACK = auto()
@@ -94,7 +94,8 @@ class WiseAgentMessage(YAMLObject):
         return self._route_response_to
 
 class WiseAgentTransport(YAMLObject):
-    
+    yaml_loader = WiseAgentsLoader
+
     ''' A transport for sending messages between agents. '''    
     def set_call_backs(self, request_receiver: Optional[Callable[[], WiseAgentMessage]] = None,
                  event_receiver: Optional[Callable[[], WiseAgentEvent]] = None,
@@ -112,6 +113,16 @@ class WiseAgentTransport(YAMLObject):
         self._event_receiver = event_receiver
         self._error_receiver = error_receiver
         self._response_receiver = response_receiver
+
+    def __getstate__(self) -> object:
+        '''Return the state of the transport. Removing the instance variable chain to avoid it is serialized/deserialized by pyyaml.'''
+        state = self.__dict__.copy()
+        del state['_request_receiver']
+        del state['_response_receiver']
+        del state['_event_receiver']
+        del state['_error_receiver']
+        return state
+
        
     @abstractmethod
     def start(self):

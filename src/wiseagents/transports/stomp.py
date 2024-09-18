@@ -54,6 +54,7 @@ class StompWiseAgentTransport(WiseAgentTransport):
     yaml_tag = u'!wiseagents.transports.StompWiseAgentTransport'
     request_conn : stomp.Connection = None
     response_conn : stomp.Connection = None
+    
     def __init__(self, host: str, port: int, agent_name: str):
         '''Initialize the transport.
 
@@ -71,14 +72,10 @@ class StompWiseAgentTransport(WiseAgentTransport):
 
     def __getstate__(self) -> object:
         '''Return the state of the transport. Removing the instance variable chain to avoid it is serialized/deserialized by pyyaml.'''
-        state = self.__dict__.copy()
-        del state['_request_receiver']
-        del state['_response_receiver']
-        del state['_event_receiver']
-        del state['_error_receiver']
+        state = super().__getstate__()
         del state['request_conn']
         del state['response_conn']
-        return state 
+        return state
 
 
     def start(self):

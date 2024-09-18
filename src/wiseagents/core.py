@@ -15,6 +15,7 @@ import redis
 from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM, WiseAgentLLM
 from wiseagents.vectordb import WiseAgentVectorDB
+from wiseagents.yaml import WiseAgentsLoader
 from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentMessageType, WiseAgentTransport, WiseAgentEvent
 
 
@@ -28,6 +29,8 @@ class WiseAgentCollaborationType(Enum):
 class WiseAgentTool(yaml.YAMLObject):
     ''' A WiseAgentTool is an abstract class that represents a tool that can be used by an agent to perform a specific task.'''
     yaml_tag = u'!wiseagents.WiseAgentTool'
+    yaml_loader = WiseAgentsLoader
+
     def __init__(self, name: str, description: str, agent_tool: bool, parameters_json_schema: dict = {}, 
                  call_back : Optional[Callable[...,str]] = None):
        ''' Initialize the tool with the given name, description, agent tool, parameters json schema, and call back.
@@ -826,6 +829,7 @@ class WiseAgent(yaml.YAMLObject):
     ''' A WiseAgent is an abstract class that represents an agent that can send and receive messages to and from other agents.
     '''
     yaml_tag = u'!wiseagents.WiseAgent'
+    yaml_loader = WiseAgentsLoader
 
     def __new__(cls, *args, **kwargs):
         '''Create a new instance of the class, setting default values for the instance variables.'''

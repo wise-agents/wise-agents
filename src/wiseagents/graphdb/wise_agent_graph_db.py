@@ -4,6 +4,7 @@ from typing import Optional, Any, List
 
 import yaml
 from pydantic import BaseModel, Field
+from wiseagents.yaml import WiseAgentsLoader
 
 
 class Entity(BaseModel):
@@ -68,6 +69,7 @@ class WiseAgentGraphDB(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentGraphDB."""
 
     yaml_tag = u'!WiseAgentGraphDB'
+    yaml_loader = WiseAgentsLoader
 
     @abstractmethod
     def get_schema(self) -> str:
