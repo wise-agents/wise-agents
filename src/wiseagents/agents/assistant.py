@@ -99,10 +99,6 @@ class AssistantAgent(WiseAgent):
         """Do nothing"""
         return True
 
-    def get_recipient_agent_name(self, message):
-        """Return the name of the agent to send the message to."""
-        return self.name
-
     def stop(self):
         """Do nothing"""
         pass
