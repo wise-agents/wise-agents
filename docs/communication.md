@@ -4,13 +4,13 @@ The communication between agents happen on STOMP protocol. The message exchanged
 
 ## STOMP Queue
 
-Per convention each agent listen on 2 queues, normally sharing the name with the Agent using them (not mandatory, its a configuration of the transport):
+Per convention each agent listens on 2 queues, normally sharing the name with the Agent using them (not mandatory, its a configuration of the transport):
 
 ```plain-text
 /queue/request/AgentName
 /queue/response/AgentName
 ```
-The first one is used to send request to the Agent and the second one to send answer back.
+The first one is used to send requests to the Agent and the second one to send answers back.
 
 ## WiseAgentMessage Schema
 
@@ -92,7 +92,7 @@ schema:
 ### `_message_type`
 - **Type**: `string`
 - **Description**: 
-  (Optional) The type of the message, represented as an integer.
+  (Optional) The type of the message, represented as an string.
 - **Required**: false
 
   **Enum**: 
@@ -113,7 +113,7 @@ schema:
 ### `_sender`
 - **Type**: `string`
 - **Description**: 
-  (Optional) he agent that is sending this message.
+  (Optional) The agent that is sending this message.
 - **Required**: false
 
 ### `_tool_id`

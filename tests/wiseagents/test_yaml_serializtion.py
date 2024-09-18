@@ -1,4 +1,7 @@
 import logging
+import os
+import pathlib
+import unittest
 
 import pytest
 import yaml
@@ -149,6 +152,16 @@ def test_serialize_message():
                                tool_id="WeatherAgent", 
                                context_name="Weather", 
                                route_response_to="Agent1")
-    with open("test_message.yaml", "w") as stream:
+    with open(pathlib.Path().resolve() / "tests/wiseagents/test_serialized_message.yaml", "w") as stream:
         yaml.dump(message, stream)
+    unittest.TestCase().assertListEqual(
+        list(open(pathlib.Path().resolve() / "tests/wiseagents/test_serialized_message.yaml", "r")),
+        list(open(pathlib.Path().resolve() / "tests/wiseagents/test_message.yaml", "r")))
+    with open(pathlib.Path().resolve() / "tests/wiseagents/test_serialized_message.yaml") as stream:
+        try:
+            deserialized_message = yaml.load(stream, Loader=yaml.Loader)
+        except yaml.YAMLError as exc:
+            print(exc)  
+    os.remove(pathlib.Path().resolve() / "tests/wiseagents/test_serialized_message.yaml")
+
     

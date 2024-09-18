@@ -2,8 +2,7 @@
 _chat_id: '12345'
 _context_name: Weather
 _message: Hello
-_message_type: !!python/object/apply:wiseagents.wise_agent_messaging.WiseAgentMessageType
-- 1
+_message_type: ACK
 _route_response_to: Agent1
 _sender: Agent1
 _tool_id: WeatherAgent
