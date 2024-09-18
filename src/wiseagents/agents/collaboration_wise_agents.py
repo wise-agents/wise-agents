@@ -73,15 +73,6 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
         logging.error(error)
         return True
 
-    def get_recipient_agent_name(self, message):
-        """
-        Return the name of the agent to send the message to.
-
-        Args:
-            message (WiseAgentMessage): the message to process
-        """
-        return self.name
-
     def stop(self):
         """Do nothing"""
         pass
@@ -309,15 +300,6 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
         """Log the error and return True."""
         logging.error(error)
         return True
-
-    def get_recipient_agent_name(self, message):
-        """
-        Return the name of the agent to send the message to.
-
-        Args:
-            message (WiseAgentMessage): the message to process
-        """
-        return self.name
 
     def stop(self):
         """Do nothing"""

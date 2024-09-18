@@ -69,10 +69,6 @@ class PassThroughClientAgent(WiseAgent):
         """Do nothing"""
         return True
 
-    def get_recipient_agent_name(self, message):
-        """Return the name of the agent to send the message to."""
-        return self.name
-
     def stop(self):
         """Do nothing"""
         pass
@@ -171,15 +167,6 @@ class LLMOnlyWiseAgent(WiseAgent):
     def process_response(self, response : WiseAgentMessage):
         """Do nothing"""
         return True
-
-    def get_recipient_agent_name(self, message):
-        """
-        Return the name of the agent to send the message to.
-
-        Args:
-            message (WiseAgentMessage): the message to process
-        """
-        return self.name
 
     def stop(self):
         pass
@@ -344,15 +331,6 @@ class LLMWiseAgentWithTools(WiseAgent):
             ctx.llm_chat_completion.pop(chat_id)
             return True
 
-    def get_recipient_agent_name(self, message):
-        """
-        Return the name of the agent to send the message to.
-
-        Args:
-            message (WiseAgentMessage): the message to process
-        """
-        return self.name
-
     def stop(self):
         """Do nothing"""
         pass
@@ -436,15 +414,6 @@ class ChatWiseAgent(WiseAgent):
     def process_response(self, response: WiseAgentMessage):
         """Do nothing"""
         return True
-
-    def get_recipient_agent_name(self, message):
-        """
-        Return the name of the agent to send the message to.
-
-        Args:
-            message (WiseAgentMessage): the message to process
-        """
-        return self.name
 
     def stop(self):
         pass

@@ -78,8 +78,7 @@ class WiseAgentWeather(WiseAgent):
     def process_response(self, response : WiseAgentMessage):
         self.response_received = response
         return True
-    def get_recipient_agent_name(self, message):
-        return self.name
+
     def stop(self):
         pass    
 

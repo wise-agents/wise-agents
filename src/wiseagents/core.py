@@ -1109,19 +1109,6 @@ class WiseAgent(yaml.YAMLObject):
         """
         ...
 
-    @abstractmethod
-    def get_recipient_agent_name(self, message: WiseAgentMessage) -> str:
-        """
-        Get the name of the agent to send the given message to.
-
-
-        Args:
-             message (WiseAgentMessage): the message to be sent
-
-        Returns:
-            str: the name of the agent to send the given message to
-        """
-        ...
 
 
 class WiseAgentRegistry:
