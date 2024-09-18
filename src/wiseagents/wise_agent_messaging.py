@@ -113,6 +113,16 @@ class WiseAgentTransport(YAMLObject):
         self._event_receiver = event_receiver
         self._error_receiver = error_receiver
         self._response_receiver = response_receiver
+
+    def __getstate__(self) -> object:
+        '''Return the state of the transport. Removing the instance variable chain to avoid it is serialized/deserialized by pyyaml.'''
+        state = self.__dict__.copy()
+        del state['_request_receiver']
+        del state['_response_receiver']
+        del state['_event_receiver']
+        del state['_error_receiver']
+        return state
+
        
     @abstractmethod
     def start(self):

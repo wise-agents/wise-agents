@@ -54,20 +54,6 @@ class WiseAgentsLoader(Reader, Scanner, Parser, Composer, FullConstructor, Resol
     def construct_document(self, node):
         return super().construct_document(node)
 
-
-
-
-class WiseAgentsLoader2(Reader, Scanner, Parser, Composer, FullConstructor, Resolver):
-
-    def __init__(self, stream):
-        Reader.__init__(self, stream)
-        Scanner.__init__(self)
-        Parser.__init__(self)
-        Composer.__init__(self)
-        FullConstructor.__init__(self)
-        Resolver.__init__(self)
-
-
 class _WiseConstructor(FullConstructor):
 
     def construct_yaml_object(self, node, cls):

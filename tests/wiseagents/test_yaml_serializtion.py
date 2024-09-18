@@ -8,6 +8,7 @@ from wiseagents.agents import AssistantAgent
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
+from wiseagents.yaml import WiseAgentsLoader
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -16,6 +17,7 @@ def run_after_all_tests():
     
     
 class DummyTransport(WiseAgentTransport):
+    yaml_tag = "!tests.wiseagents.test_yaml_serializtion.DummyTransport"
     def __init__(self):
         pass
 
@@ -60,7 +62,7 @@ def test_serialize_wise_agent(monkeypatch):
         logging.debug(serialized_agent)
 
         # Assert that the serialized agent can be deserialized back to a WiseAgent object
-        deserialized_agent = yaml.load(serialized_agent, Loader=yaml.Loader)
+        deserialized_agent = yaml.load(serialized_agent, Loader=WiseAgentsLoader)
         assert isinstance(deserialized_agent, WiseAgent)
         assert deserialized_agent.name == agent.name
         assert deserialized_agent.description == agent.description
@@ -110,7 +112,7 @@ def test_using_deserialized_agent(monkeypatch):
         logging.debug(serialized_agent)
 
         # Assert that the serialized agent can be deserialized back to a WiseAgent object
-        deserialized_agent = yaml.load(serialized_agent, Loader=yaml.Loader)
+        deserialized_agent = yaml.load(serialized_agent, Loader=WiseAgentsLoader)
         assert isinstance(deserialized_agent, WiseAgent)
         assert deserialized_agent.name == agent.name
         assert deserialized_agent.description == agent.description
@@ -135,6 +137,6 @@ def test_serialize_assistant():
         assistant = AssistantAgent(name="Assistant1", description="This is a test assistant", transport=DummyTransport(), destination_agent_name="")
         serialized_assistant = yaml.dump(assistant)
         logging.info(serialized_assistant)
-        deserialized_agent = yaml.load(serialized_assistant, Loader=yaml.Loader)
+        deserialized_agent = yaml.load(serialized_assistant, Loader=WiseAgentsLoader)
     finally:
         assistant.stop_agent()

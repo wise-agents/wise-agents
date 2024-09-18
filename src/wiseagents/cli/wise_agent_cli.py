@@ -64,7 +64,6 @@ def main():
             with open(file_path) as stream:
                 try:  
 
-                    print("Agents loaded from file:")
                     for agent in yaml.load_all(stream, Loader=WiseAgentsLoader):
                         agent : WiseAgent
                         print(f'Loaded agent: {agent.name}')

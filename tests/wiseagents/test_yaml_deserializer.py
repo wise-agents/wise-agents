@@ -5,6 +5,7 @@ import pytest
 import yaml
 
 from wiseagents import WiseAgent, WiseAgentRegistry
+from wiseagents.yaml import WiseAgentsLoader
 
 
 @pytest.fixture(scope="session", autouse=True)
@@ -19,7 +20,7 @@ def test_using_deserialized_agent():
         # Create a WiseAgent object
         with open(pathlib.Path().resolve() / "tests/wiseagents/test.yaml") as stream:
             try:
-                deserialized_agent = yaml.load(stream, Loader=yaml.Loader)
+                deserialized_agent = yaml.load(stream, Loader=WiseAgentsLoader)
             except yaml.YAMLError as exc:
                 print(exc)
         # Assert that the serialized agent can be deserialized back to a WiseAgent object
@@ -52,7 +53,7 @@ def test_using_multiple_deserialized_agents():
         deserialized_agent = []
         with open(pathlib.Path().resolve() / "tests/wiseagents/test-multiple.yaml") as stream:
             try:
-                for agent in yaml.load_all(stream, Loader=yaml.Loader):
+                for agent in yaml.load_all(stream, Loader=WiseAgentsLoader):
                     deserialized_agent.append(agent)
             except yaml.YAMLError as exc:
                 print(exc)
