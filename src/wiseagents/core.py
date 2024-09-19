@@ -1180,7 +1180,7 @@ class WiseAgentRegistry:
         if (cls.get_config().get("use_redis") == True):
             pipe = cls.redis_db.pipeline(transaction=True)
             while True:
-                pipe.watch("participants")
+                pipe.watch("agents")
                 try:
                     if(pipe.hexists("agents", agent_name) == True):
                         pipe.unwatch()
@@ -1194,9 +1194,9 @@ class WiseAgentRegistry:
                     logging.debug("WatchError in register_agent")
                     continue
         else:
-            if cls.agents.get(agent_name) is not None:
+            if cls.agents_descriptions_dict.get(agent_name) is not None:
                 raise NameError(f"Agent with name {agent_name} already exists")
-        cls.agents[agent_name] = agent_description
+        cls.agents_descriptions_dict[agent_name] = agent_description
     @classmethod    
     def register_context(cls, context : WiseAgentContext):
         """
@@ -1283,7 +1283,8 @@ class WiseAgentRegistry:
         if (cls.get_config().get("use_redis") == True):
             cls.redis_db.hdel("agents", agent_name)
         else:
-            cls.agents_descriptions_dict.pop(agent_name)
+            if cls.agents_descriptions_dict.get(agent_name) is not None:
+                cls.agents_descriptions_dict.pop(agent_name)
         
     @classmethod
     def remove_context(cls, context_name: str):
