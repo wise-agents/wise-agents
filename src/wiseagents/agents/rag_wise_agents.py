@@ -345,10 +345,6 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         """Do nothing"""
         return True
 
-    def get_recipient_agent_name(self, message):
-        """Return the name of the agent to send the message to."""
-        return self.name
-
     def stop(self):
         """Do nothing"""
         pass
@@ -395,10 +391,10 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         verification_responses = ""
         for question in verification_questions:
             retrieved_documents = self.retrieve_documents(question)
-            create_and_process_rag_prompt(retrieved_documents, question, self.llm, False,
+            llm_response = create_and_process_rag_prompt(retrieved_documents, question, self.llm, False,
                                           [], self.system_message)
             verification_responses = (verification_responses + "Verification Question: " + question + "\n"
-                                      + "Verification Result: " + llm_response.choices[0].message.content + "\n")
+                                      + "Verification Result: " + llm_response + "\n")
 
         # generate the final revised response, conditioned on the baseline response and verification results
         complete_info = message + "\n" + verification_responses
@@ -511,10 +507,6 @@ class CoVeChallengerRAGWiseAgent(BaseCoVeChallengerWiseAgent):
     def process_response(self, response: WiseAgentMessage):
         """Do nothing"""
         return True
-
-    def get_recipient_agent_name(self, message):
-        """Return the name of the agent to send the message to."""
-        return self.name
 
     def stop(self):
         """Do nothing"""
@@ -669,7 +661,7 @@ def create_and_process_rag_prompt(retrieved_documents: List[Document], question:
         source_documents = ""
         for document in retrieved_documents:
             source_documents += f"Source Document:\n    Content: {document.content}\n    Metadata: {json.dumps(document.metadata)}\n\n"
-        return f"{llm_response.content}\n\nSource Documents:\n{source_documents}"
+        return f"{llm_response.choices[0].message.content}\n\nSource Documents:\n{source_documents}"
     else:
         return llm_response.choices[0].message.content
 
