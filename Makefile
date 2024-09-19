@@ -11,7 +11,7 @@ ifeq ($(OS), Windows_NT)
     PY=python
 endif
 
-.PHONY: help venv check_venv clean install test artemis graphdb vectordb model
+.PHONY: help venv check_venv clean install test artemis graphdb vectordb model redis
 .SILENT: check_venv
 
 ## help: Show help
