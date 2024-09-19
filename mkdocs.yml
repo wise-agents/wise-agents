@@ -11,7 +11,7 @@ nav:
     - Declare agents in YAML: declare_agents.md
     - How To Create Custom Agents: custom_agents.md
   - Examples:
-    - Example 1: example_1.md
+    - Agentic chatbot: agentic_chatbot.md
     - Example 2: example_2.md
   - API Reference: reference/
   - About:
