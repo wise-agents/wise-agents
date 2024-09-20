@@ -11,9 +11,8 @@ Wise agents is designed as a fully distributed multi agents framework implementa
 
 ## Getting involved
 
-Join our [community](./community.md) and don't miss our ["how to contribute" page](./contributing.md)
+Join our [community](./community.md) and don't miss our ["how to contribute" page](./contributing.md)!
 
 ## architecture
 
 If you need more details about the architecure of the framework, please check the [Wise Agents architectue page](./wise_agents_architecture.md)
-
