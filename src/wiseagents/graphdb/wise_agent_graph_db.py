@@ -4,6 +4,8 @@ from typing import Optional, Any, List
 
 import yaml
 from pydantic import BaseModel, Field
+
+from wiseagents import enforce_no_abstract_class_instances
 from wiseagents.yaml import WiseAgentsLoader
 
 
@@ -68,8 +70,10 @@ class GraphDocument(BaseModel):
 class WiseAgentGraphDB(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentGraphDB."""
 
-    yaml_tag = u'!WiseAgentGraphDB'
     yaml_loader = WiseAgentsLoader
+
+    def __init__(self):
+        enforce_no_abstract_class_instances(self.__class__, WiseAgentGraphDB)
 
     @abstractmethod
     def get_schema(self) -> str:

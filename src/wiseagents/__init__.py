@@ -2,6 +2,7 @@
 
 # Import any modules or subpackages here
 
+from .utils import AbstractClassError, enforce_no_abstract_class_instances
 from wiseagents.core import WiseAgent
 from wiseagents.core import WiseAgentCollaborationType
 from wiseagents.core import WiseAgentContext
@@ -11,7 +12,6 @@ from wiseagents.wise_agent_messaging import WiseAgentEvent
 from wiseagents.wise_agent_messaging import WiseAgentMessage
 from wiseagents.wise_agent_messaging import WiseAgentMessageType
 from wiseagents.wise_agent_messaging import WiseAgentTransport
-from .utils import AbstractClassError, enforce_no_abstract_class_instances
 
 # Define any necessary initialization code here
 
