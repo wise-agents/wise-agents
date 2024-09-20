@@ -27,7 +27,7 @@ class WiseAgentCollaborationType(Enum):
 
 
 class WiseAgentTool(yaml.YAMLObject):
-    ''' A WiseAgentTool is an abstract class that represents a tool that can be used by an agent to perform a specific task.'''
+    ''' WiseAgentTool represents a tool that can be used by an agent to perform a specific task.'''
     yaml_tag = u'!wiseagents.WiseAgentTool'
     yaml_loader = WiseAgentsLoader
 
