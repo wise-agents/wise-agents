@@ -10,7 +10,7 @@ Gartner’s definition of a multi-agent system is:
 
 For more details refer to our [documentation](https://wise-agents.github.io/multi_agents/#)
 
-For more information on how to build, test and experiment with the project please refer to [GETTING_STARTED.md](GETTING_STARTED.md)
+A good starting point to put the hands in the jam is checking our examples directory and follow the instructions to play with them
 
 If you want to contribute, please have a look to [CONTRIBUTING.md](CONTRIBUTING.md)
 

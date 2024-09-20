@@ -12,7 +12,7 @@ nav:
     - How To Create Custom Agents: custom_agents.md
   - Examples:
     - Agentic chatbot: agentic_chatbot.md
-    - Example 2: example_2.md
+    - Sequential Coordinator Example: sequential_coordinator_example.md
   - API Reference: reference/
   - About:
     - Community: community.md

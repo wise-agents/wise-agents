@@ -52,10 +52,10 @@ def main():
         if (user_input == '/reload-agents' or user_input == '/r'):
             for agent in agent_list:
                 agent.stop_agent()
-                reload_path = input(f'Enter the file path (ENTER for default {file_path} ): ')
-                if reload_path:
-                    file_path = reload_path
-                user_input = '/load-agents'
+            reload_path = input(f'Enter the file path (ENTER for default {file_path} ): ')
+            if reload_path:
+                file_path = reload_path
+            user_input = '/load-agents'
         if (user_input == '/load-agents' or user_input == '/l'):
             if not file_path:
                 file_path = input(f'Enter the file path (ENTER for default {default_file_path} ): ')
