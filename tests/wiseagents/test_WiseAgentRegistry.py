@@ -10,7 +10,13 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 def run_after_all_tests():
     yield
     
-    
+
+class TestAgent(WiseAgent):
+    def __init__(self, name, description, transport):
+        super().__init__(name, description, transport)
+        self._started = False
+        self._stopped = False
+
 class DummyTransport(WiseAgentTransport):
     
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
@@ -26,7 +32,7 @@ class DummyTransport(WiseAgentTransport):
 def test_register_agents():
     
     try:
-        agent = WiseAgent(name="Agent1", description="This is a test agent", 
+        agent = TestAgent(name="Agent1", description="This is a test agent",
                       transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
                                  )
         assert 1 == WiseAgentRegistry.fetch_agents_descriptions_dict().__len__()
@@ -38,9 +44,9 @@ def test_register_agents():
 
 def test_get_agents():
     try:
-        agents = [WiseAgent(name="Agent1", description="This is a test agent", transport=DummyTransport()), 
-                WiseAgent(name="Agent2", description="This is another test agent", transport=DummyTransport()), 
-                WiseAgent(name="Agent3", description="This is yet another test agent", transport=DummyTransport())]
+        agents = [TestAgent(name="Agent1", description="This is a test agent", transport=DummyTransport()),
+                TestAgent(name="Agent2", description="This is another test agent", transport=DummyTransport()),
+                TestAgent(name="Agent3", description="This is yet another test agent", transport=DummyTransport())]
         
         for agent in agents:
             assert agent.description == WiseAgentRegistry.get_agent_description(agent.name)

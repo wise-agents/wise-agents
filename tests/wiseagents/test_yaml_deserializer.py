@@ -12,7 +12,13 @@ from wiseagents.yaml import WiseAgentsLoader
 def run_after_all_tests():
     yield
     
-    
+
+class TestAgent(WiseAgent):
+    yaml_tag = "!tests.wiseagents.TestAgent"
+
+    def __init__(self, name, description, transport):
+        super().__init__(name, description, transport)
+
 
 @pytest.mark.needsllm
 def test_using_deserialized_agent():
@@ -42,15 +48,16 @@ def test_using_deserialized_agent():
         assert deserialized_agent.vector_db.connection_string == "postgresql+psycopg://langchain:langchain@localhost:6024/langchain"
         assert deserialized_agent.vector_db.embedding_model_name == "all-MiniLM-L6-v2"
     finally:
-        #stop the agent
-        deserialized_agent.stop_agent()
+        # stop the agent
+        if deserialized_agent:
+            deserialized_agent.stop_agent()
 
 
 @pytest.mark.skip(reason="does not pass CI/CD")
 def test_using_multiple_deserialized_agents():
+    deserialized_agent = []
     try:
         # Create a WiseAgent object
-        deserialized_agent = []
         with open(pathlib.Path().resolve() / "tests/wiseagents/test-multiple.yaml") as stream:
             try:
                 for agent in yaml.load_all(stream, Loader=WiseAgentsLoader):
@@ -89,10 +96,10 @@ def test_using_multiple_deserialized_agents():
     finally:
         #stop all agents
         for agent in deserialized_agent:
-            agent.stopAgent()
+            agent.stop_agent()
 
 
-def test_assistant_desiralizer():
+def test_assistant_deserializer():
 
     # Create a WiseAgent object
     with open(pathlib.Path().resolve() / "tests/wiseagents/test-assistant.yaml") as stream:
