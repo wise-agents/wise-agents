@@ -11,6 +11,7 @@ from wiseagents.wise_agent_messaging import WiseAgentEvent
 from wiseagents.wise_agent_messaging import WiseAgentMessage
 from wiseagents.wise_agent_messaging import WiseAgentMessageType
 from wiseagents.wise_agent_messaging import WiseAgentTransport
+from .utils import AbstractClassError, enforce_no_abstract_class_instances
 
 # Define any necessary initialization code here
 
@@ -18,4 +19,5 @@ from wiseagents.wise_agent_messaging import WiseAgentTransport
 # __all__ = ['module1', 'module2', 'subpackage']
 __all__ = ['WiseAgentRegistry', 'WiseAgentContext', 'WiseAgent', 'WiseAgentTool',
            'WiseAgentMessage', 'WiseAgentMessageType', 'WiseAgentTransport', 'WiseAgentEvent',
-           'WiseAgentCollaborationType']
+           'WiseAgentCollaborationType',
+           'AbstractClassError', 'enforce_no_abstract_class_instances']
