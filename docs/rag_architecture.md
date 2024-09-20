@@ -1,4 +1,4 @@
-# wise-agents RAG architecture
+# Using Retrieval Augmented Generation (RAG) with Wise Agents
 
 Wise Agents provides agent implementations that can be used for both standard retrieval augmented
 generation (RAG) and also for RAG with knowledge graphs (Graph RAG).
@@ -98,8 +98,9 @@ are meant to ground LLM responses using retrieved information, it's still possib
 to "hallucinate", i.e., generate responses that are not factually correct.
 
 To address this, Wise Agents also provides agent implementations that can be used to challenge
-the response that's been obtained from an LLM using the [Chain-of-Verification (CoVe)](https://arxiv.org/pdf/2309.11495)
-method to try to prevent hallucinations.
+the response that's been obtained from an LLM using the Chain-of-Verification (CoVe) method to
+try to prevent hallucinations. For detailed information about the CoVe method, check out this
+[paper](https://arxiv.org/pdf/2309.11495). We'll also describe the CoVe method below.
 
 ### How does Chain-of-Verification (CoVe) work?
 
