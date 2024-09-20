@@ -16,7 +16,7 @@ nav:
   - API Reference: reference/
   - About:
     - Community: community.md
-    - Contributing: contributing.md
+    - Contributing: contributing_lnk.md
     - License: license.md
     - Security: security.md
 plugins: 
