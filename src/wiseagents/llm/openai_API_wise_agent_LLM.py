@@ -1,4 +1,4 @@
-from typing import Iterable, Optional
+from typing import Dict, Iterable, Optional
 
 import openai
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
@@ -18,10 +18,10 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         obj = super().__new__(cls)
         obj._api_key = "sk-no-key-required"
         obj._remote_address = "http://localhost:8001/v1"
-        obj.chain = None
+        obj._openai_config = {}
         return obj
 
-    def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1", api_key: Optional[str]="sk-no-key-required"):
+    def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1", api_key: Optional[str]="sk-no-key-required", openai_config: Optional[Dict[str,str]]={}):
         '''Initialize the agent.
 
         Args:
@@ -32,7 +32,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         
         super().__init__(system_message, model_name, remote_address)
         self._api_key = api_key
-        self.chain = None
+        self._openai_config = openai_config
     
     
     def __repr__(self):
@@ -70,6 +70,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             model=self.model_name,
             #tools=tools,
             tool_choice="auto",  # auto is default, but we'll be explicit
+            **self.openai_config
             )
         return response.choices[0].message
    
@@ -97,6 +98,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             model=self.model_name,
             tools=tools,
             tool_choice="auto",  # auto is default, but we'll be explicit
+            **self.openai_config
             )
         return response
         
@@ -104,6 +106,9 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     def api_key(self):
         '''Get the API key.'''
         return self._api_key
-        
+    @property
+    def openai_config(self):
+        '''Get the OpenAI configuration.'''
+        return self._openai_config
 
         
