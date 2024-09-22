@@ -1,0 +1,13 @@
+---
+!wiseagents.agents.ChatWiseAgent
+_description: This is another test agent
+_llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
+  _model_name: llama-3.1-70b-versatile
+  _remote_address: https://api.groq.com/openai/v1
+  _api_key: ${GROQ_API_KEY}
+  _system_message: Answer my greeting saying Hello and my name
+_name: WiseIntelligentAgent
+_transport:  !wiseagents.transports.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: WiseIntelligentAgent
