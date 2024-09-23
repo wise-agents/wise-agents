@@ -2,6 +2,7 @@
 
 # Import any modules or subpackages here
 
+from .utils import AbstractClassError, enforce_no_abstract_class_instances
 from wiseagents.core import WiseAgent
 from wiseagents.core import WiseAgentCollaborationType
 from wiseagents.core import WiseAgentContext
@@ -18,4 +19,5 @@ from wiseagents.wise_agent_messaging import WiseAgentTransport
 # __all__ = ['module1', 'module2', 'subpackage']
 __all__ = ['WiseAgentRegistry', 'WiseAgentContext', 'WiseAgent', 'WiseAgentTool',
            'WiseAgentMessage', 'WiseAgentMessageType', 'WiseAgentTransport', 'WiseAgentEvent',
-           'WiseAgentCollaborationType']
+           'WiseAgentCollaborationType',
+           'AbstractClassError', 'enforce_no_abstract_class_instances']

@@ -3,12 +3,13 @@ from typing import Iterable
 
 import yaml
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+
+from wiseagents import enforce_no_abstract_class_instances
 from wiseagents.yaml import WiseAgentsLoader
 
 
 class WiseAgentLLM(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentLLM."""
-    yaml_tag = u'!WiseAgentLLM'
     yaml_loader = WiseAgentsLoader
     def __init__(self, system_message, model_name):
         '''Initialize the agent.
@@ -18,6 +19,7 @@ class WiseAgentLLM(yaml.YAMLObject):
             model_name (str): the model name
         '''
         super().__init__()
+        enforce_no_abstract_class_instances(self.__class__, WiseAgentLLM)
         self._system_message = system_message
         self._model_name = model_name
     

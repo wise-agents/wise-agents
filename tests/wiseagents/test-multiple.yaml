@@ -1,5 +1,5 @@
 ---
-!wiseagents.WiseAgent
+!tests.wiseagents.TestAgent
 _description: This is a test agent
 _graph_db: !wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB
   _url: bolt://localhost:7687
@@ -20,7 +20,7 @@ _transport:  !wiseagents.transports.StompWiseAgentTransport
     _port: 61616
     _agent_name: Agent1
 ---
-!wiseagents.WiseAgent
+!tests.wiseagents.TestAgent
 _description: This is another test agent
 _graph_db: !wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB
   _url: bolt://localhost:7687

@@ -7,6 +7,7 @@ from langchain_postgres import PGVector
 
 from .wise_agent_vector_db import Document
 from .wise_agent_vector_db import WiseAgentVectorDB
+from .. import enforce_no_abstract_class_instances
 from ..constants import DEFAULT_EMBEDDING_MODEL_NAME
 
 
@@ -30,6 +31,8 @@ class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
         Args:
             embedding_model_name (Optional[str]): the optional name of the embedding model to use
         """
+        super().__init__()
+        enforce_no_abstract_class_instances(self.__class__, LangChainWiseAgentVectorDB)
         self._embedding_model_name = embedding_model_name
         self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
 

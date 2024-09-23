@@ -10,6 +10,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 
 from wiseagents.vectordb import Document
 from .wise_agent_graph_db import Entity, Source, GraphDocument, Relationship, WiseAgentGraphDB
+from .. import enforce_no_abstract_class_instances
 from ..constants import DEFAULT_EMBEDDING_MODEL_NAME
 
 
@@ -21,6 +22,7 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
         obj = super().__new__(cls)
+        enforce_no_abstract_class_instances(cls, LangChainWiseAgentGraphDB)
         obj._embedding_model_name = DEFAULT_EMBEDDING_MODEL_NAME
         obj._embedding_function = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL_NAME)
         return obj

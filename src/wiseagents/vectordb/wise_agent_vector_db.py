@@ -4,6 +4,8 @@ from typing import Optional, List
 
 import yaml
 from pydantic import BaseModel, Field
+
+from wiseagents import enforce_no_abstract_class_instances
 from wiseagents.yaml import WiseAgentsLoader
 
 import wiseagents.yaml
@@ -24,8 +26,11 @@ class Document(BaseModel):
 
 class WiseAgentVectorDB(yaml.YAMLObject):
     """Abstract class to define the interface for a WiseAgentVectorDB."""
-    yaml_tag = u'!WiseAgentVectorDB'
     yaml_loader = WiseAgentsLoader
+
+    def __init__(self):
+        enforce_no_abstract_class_instances(self.__class__, WiseAgentVectorDB)
+
 
     @abstractmethod
     def get_or_create_collection(self, collection_name: str):

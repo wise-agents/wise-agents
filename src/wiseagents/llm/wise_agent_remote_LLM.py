@@ -3,15 +3,16 @@ from typing import Iterable
 
 from openai.types.chat import ChatCompletion, ChatCompletionMessageParam, ChatCompletionToolParam
 
+from wiseagents import enforce_no_abstract_class_instances
 from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 
 
 class WiseAgentRemoteLLM(WiseAgentLLM):
     """Extend WiseAgentLLM to support remote execution of WiseAgentLLM on a remote machine."""
-    yaml_tag = u'!WiseAgentRemoteLLM'    
-    
+
     def __init__(self, system_message, model_name, remote_address):
         super().__init__(system_message, model_name)
+        enforce_no_abstract_class_instances(self.__class__, WiseAgentRemoteLLM)
         self._remote_address = remote_address
     
     def __repr__(self):

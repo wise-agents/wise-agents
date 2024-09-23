@@ -12,6 +12,8 @@ import yaml
 from openai.types.chat import ChatCompletionToolParam, ChatCompletionMessageParam
 
 import redis
+
+from wiseagents import enforce_no_abstract_class_instances
 from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM, WiseAgentLLM
 from wiseagents.vectordb import WiseAgentVectorDB
@@ -27,7 +29,7 @@ class WiseAgentCollaborationType(Enum):
 
 
 class WiseAgentTool(yaml.YAMLObject):
-    ''' A WiseAgentTool is an abstract class that represents a tool that can be used by an agent to perform a specific task.'''
+    ''' WiseAgentTool represents a tool that can be used by an agent to perform a specific task.'''
     yaml_tag = u'!wiseagents.WiseAgentTool'
     yaml_loader = WiseAgentsLoader
 
@@ -828,12 +830,12 @@ class WiseAgentContext():
 class WiseAgent(yaml.YAMLObject):
     ''' A WiseAgent is an abstract class that represents an agent that can send and receive messages to and from other agents.
     '''
-    yaml_tag = u'!wiseagents.WiseAgent'
     yaml_loader = WiseAgentsLoader
 
     def __new__(cls, *args, **kwargs):
         '''Create a new instance of the class, setting default values for the instance variables.'''
         obj = super().__new__(cls)
+        enforce_no_abstract_class_instances(cls, WiseAgent)
         obj._llm = None
         obj._vector_db = None
         obj._graph_db = None

@@ -10,12 +10,10 @@ from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
 from wiseagents.yaml import WiseAgentsLoader
 
-
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     yield
-    
-    
+
 class DummyTransport(WiseAgentTransport):
     yaml_tag = "!tests.wiseagents.test_yaml_serializtion.DummyTransport"
     def __init__(self):
@@ -34,6 +32,10 @@ class DummyTransport(WiseAgentTransport):
     def stop(self):
         pass
 
+class TestSerializationAgent(WiseAgent):
+    yaml_tag = "!tests.wiseagents.test_yaml_serializtion.TestSerializationAgent"
+    def __init__(self, name, description, transport, llm=None, graph_db=None, vector_db=None):
+        super().__init__(name, description, transport, llm=llm, graph_db=graph_db, vector_db=vector_db)
 
 def test_serialize_wise_agent(monkeypatch):
     try:
@@ -46,7 +48,7 @@ def test_serialize_wise_agent(monkeypatch):
         agent_vector_db = PGVectorLangChainWiseAgentVectorDB(
             connection_string="postgresql+psycopg://langchain:langchain@localhost:6024/langchain",
             embedding_model_name="all-MiniLM-L6-v2")
-        agent = WiseAgent(name="Agent1", description="This is a test agent", transport=DummyTransport(), llm=agent_llm,
+        agent = TestSerializationAgent(name="Agent1", description="This is a test agent", transport=DummyTransport(), llm=agent_llm,
                         graph_db=agent_graph_db, vector_db=agent_vector_db)
 
         # Serialize the WiseAgent object to YAML
@@ -63,7 +65,7 @@ def test_serialize_wise_agent(monkeypatch):
 
         # Assert that the serialized agent can be deserialized back to a WiseAgent object
         deserialized_agent = yaml.load(serialized_agent, Loader=WiseAgentsLoader)
-        assert isinstance(deserialized_agent, WiseAgent)
+        assert isinstance(deserialized_agent, TestSerializationAgent)
         assert deserialized_agent.name == agent.name
         assert deserialized_agent.description == agent.description
         assert deserialized_agent.llm.system_message == agent.llm.system_message
@@ -80,8 +82,6 @@ def test_serialize_wise_agent(monkeypatch):
     finally:
         deserialized_agent.stop_agent()
 
-    
-
 
 @pytest.mark.needsllm
 def test_using_deserialized_agent(monkeypatch):
@@ -95,7 +95,7 @@ def test_using_deserialized_agent(monkeypatch):
         agent_vector_db = PGVectorLangChainWiseAgentVectorDB(
             connection_string="postgresql+psycopg://langchain:langchain@localhost:6024/langchain",
             embedding_model_name="all-MiniLM-L6-v2")
-        agent = WiseAgent(name="Agent1", description="This is a test agent", transport=DummyTransport(), llm=agent_llm,
+        agent = TestSerializationAgent(name="Agent1", description="This is a test agent", transport=DummyTransport(), llm=agent_llm,
                         graph_db=agent_graph_db,
                         vector_db=agent_vector_db)
 

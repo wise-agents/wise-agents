@@ -1,4 +1,4 @@
-!wiseagents.WiseAgent
+!tests.wiseagents.TestAgent
 _description: This is a test agent
 _graph_db: !wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB
   _url: bolt://localhost:7687

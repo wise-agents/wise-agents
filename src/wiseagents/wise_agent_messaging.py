@@ -4,6 +4,7 @@ from typing import Callable, Optional
 
 from yaml import YAMLObject
 from wiseagents.yaml import WiseAgentsLoader
+from wiseagents import enforce_no_abstract_class_instances
 
 class WiseAgentMessageType(Enum):
     ACK = auto()
@@ -95,6 +96,9 @@ class WiseAgentMessage(YAMLObject):
 
 class WiseAgentTransport(YAMLObject):
     yaml_loader = WiseAgentsLoader
+
+    def __init__(self):
+        enforce_no_abstract_class_instances(self.__class__, WiseAgentTransport)
 
     ''' A transport for sending messages between agents. '''    
     def set_call_backs(self, request_receiver: Optional[Callable[[], WiseAgentMessage]] = None,

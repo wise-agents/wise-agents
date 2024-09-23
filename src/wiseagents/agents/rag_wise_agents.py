@@ -3,7 +3,8 @@ import logging
 from abc import abstractmethod
 from typing import Any, Dict, List, Optional
 
-from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMessage, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMessage, WiseAgentTransport, \
+    enforce_no_abstract_class_instances
 from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm import WiseAgentLLM
 from wiseagents.vectordb import Document, WiseAgentVectorDB
@@ -260,11 +261,11 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
     using the Chain-of-Verification (CoVe) method (https://arxiv.org/pdf/2309.11495) to try to prevent
     hallucinations.
     """
-    yaml_tag = u'!wiseagents.agents.BaseCoVeChallengerWiseAgent'
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the optional instance variables."""
         obj = super().__new__(cls)
+        enforce_no_abstract_class_instances(cls, BaseCoVeChallengerWiseAgent)
         obj._k = DEFAULT_NUM_DOCUMENTS
         obj._num_verification_questions = 4
         obj._num_verification_questions = DEFAULT_NUM_VERIFICATION_QUESTIONS
