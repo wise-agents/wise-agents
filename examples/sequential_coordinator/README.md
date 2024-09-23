@@ -107,7 +107,7 @@ Try as an example to ask something like "Can you give me detailed information ab
 
 ### Step 8: Experiment
 
-You can experiment with different agent configurations or modify the agent behaviors by editing the YAML files located in the `examples/memory_agentic_chatbot` directory. These configuration files define the agents' properties, including memory, communication methods, and response patterns. You can do that without restarting everything, just edit the yaml file(s) and use CLI's /reload command (see our documentation for more details on how to use CLI)
+You can experiment with different agent configurations or modify the agent behaviors by editing the YAML files located in the `examples/sequential_coordinator` directory. These configuration files define the agents' properties, including memory, communication methods, and response patterns. You can do that without restarting everything, just edit the yaml file(s) and use CLI's /reload command (see our documentation for more details on how to use CLI)
 
 ## Understanding the YAML Configuration
 
