@@ -10,6 +10,7 @@ _llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   _model_name: Phi-3-mini-4k-instruct-q4.gguf
   _remote_address: http://localhost:8001/v1
   _system_message: Answer my greeting saying Hello and my name
+  _openai_config: {temperature: 0.5, max_tokens: 100}
 _name: Agent1
 _vector_db: !wiseagents.vectordb.PGVectorLangChainWiseAgentVectorDB
   _connection_string: postgresql+psycopg://langchain:langchain@localhost:6024/langchain

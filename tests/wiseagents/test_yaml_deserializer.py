@@ -37,6 +37,7 @@ def test_using_deserialized_agent():
         assert deserialized_agent.llm.system_message == "Answer my greeting saying Hello and my name"
         assert deserialized_agent.llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
         assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
+        assert deserialized_agent.llm.openai_config == {"temperature": 0.5, "max_tokens": 100}
         logging.debug(deserialized_agent)
         response = deserialized_agent.llm.process_single_prompt("Hello my name is Stefano")
         assert response.content.__len__() > 0
