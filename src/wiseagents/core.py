@@ -253,7 +253,7 @@ class WiseAgentContext():
                         pipe.execute()
                         return
                     else:
-                        if agent_name not in pipe.lrange("participants", 0, -1):
+                        if bytes(agent_name, 'utf-8') not in pipe.lrange("participants", 0, -1):
                             pipe.multi()
                             pipe.rpush("participants", agent_name)
                             pipe.execute()
