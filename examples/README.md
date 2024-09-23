@@ -14,3 +14,6 @@ The example consists of four agents:
     3. **Translator Agent**: Handles requests and provides intelligent responses. Its system message says: 
     *"You are an expert translator from english to italian. Translate the provided text from english to italian. "*
     4. **SequentialCoordinator**: Take care of coordinating the request handling from the user delagating the work to other agents in a predetermined order.
+* [run_examples_podman](./run_examples_podman/README.md)
+
+    This guide walks you through running any of the example in the example directory in podman containers
