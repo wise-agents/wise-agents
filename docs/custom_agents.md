@@ -32,8 +32,11 @@ to create and send a message to the appropriate agent. This destination agent wi
 type of collaboration that the agent is involved in. For example, if the agent has been invoked
 by a `PhasedCoordinatorWiseAgent` or an `AssistantAgent`, the response message will be sent back
 to that agent and the conversation history will be updated with the response as well. If the agent
-is involved in sequential collaboration, the response will be sent to either the next agent in the
+is involved in sequential coordination, the response will be sent to either the next agent in the
 sequence or back to the original requester if there are no more agents remaining.
+
+For more details about sequential and phased coordination, see the
+[Wise Agents Coordination](./agent_coordination.md) section.
 
 ## Implementing the `process_response` method
 

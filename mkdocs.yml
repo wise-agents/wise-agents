@@ -6,7 +6,8 @@ nav:
     - Wise Agents architecture: wise_agents_architecture.md
     - How to contribute: contributing.md
   - Details: 
-    - RAG Architecture: rag_architecture.md
+    - Agent Coordination: agent_coordination.md
+    - Retrieval Augmented Generation (RAG): rag_architecture.md
     - Using CLI: using_cli.md
     - Declare agents in YAML: declare_agents.md
     - How To Create Custom Agents: custom_agents.md
