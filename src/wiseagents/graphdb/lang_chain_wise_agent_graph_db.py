@@ -144,9 +144,9 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     def __getstate__(self) -> object:
         """Return the state of the graph DB. Removing the instance variable neo4j_graph_db to avoid it being serialized/deserialized by pyyaml."""
         state = super().__getstate__()
-        del state['_neo4j_graph_db']
-        del state['_neo4j_vector_db']
-        del state['_embedding_function']
+        del state['neo4j_graph_db']
+        del state['neo4j_vector_db']
+        del state['embedding_function']
         return state
 
     @property
