@@ -1,0 +1,47 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://example.com/product.schema.json",
+  "title": "Neo4j Langchain Wise Agent Graph DB",
+  "description": "An Agent to interact with a Neo4j Langchain Graph DB",
+  "type": "object",
+  "properties": {
+    "collection_name": {
+      "type": "string",
+      "description": "The collection name to use for the vector database",
+      "exclusiveMinimum": 0,
+      "maximum": 1
+    },
+    "embedding_model_name": {
+      "type": "string",
+      "description": "The name of the embedding model to use for the graph",
+      "default": "all-mpnet-base-v2"
+    },
+    "entity_label": {
+      "type": "string",
+      "description": "The label to use for the entities in the graph",
+      "default": "entity"
+    },
+    "properties": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The properties to be used as text node properties for the graph database",
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "refresh_graph_schema": {
+      "type": "boolean",
+      "description": "Whether to refresh the graph schema",
+      "default": true
+    },
+    "url": {
+      "type": "string",
+      "description": "The URL of the Neo4j database (the username, password, and database name to be used"
+    }
+  },
+  "required": [
+    "collection_name",
+    "url"
+  ]
+}
