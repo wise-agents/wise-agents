@@ -1,9 +1,12 @@
 import logging
+import os
+import pathlib
+import unittest
 
 import pytest
 import yaml
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMessageType, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.agents import AssistantAgent
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
@@ -140,3 +143,25 @@ def test_serialize_assistant():
         deserialized_agent = yaml.load(serialized_assistant, Loader=WiseAgentsLoader)
     finally:
         assistant.stop_agent()
+
+def test_serialize_message():
+    message = WiseAgentMessage(message="Hello", 
+                               sender="Agent1", 
+                               message_type=WiseAgentMessageType.ACK,
+                               chat_id="12345", 
+                               tool_id="WeatherAgent", 
+                               context_name="Weather", 
+                               route_response_to="Agent1")
+    with open(pathlib.Path().resolve() / "tests/wiseagents/test_serialized_message.yaml", "w") as stream:
+        yaml.dump(message, stream)
+    unittest.TestCase().assertListEqual(
+        list(open(pathlib.Path().resolve() / "tests/wiseagents/test_serialized_message.yaml", "r")),
+        list(open(pathlib.Path().resolve() / "tests/wiseagents/test_message.yaml", "r")))
+    with open(pathlib.Path().resolve() / "tests/wiseagents/test_serialized_message.yaml") as stream:
+        try:
+            deserialized_message = yaml.load(stream, Loader=yaml.Loader)
+        except yaml.YAMLError as exc:
+            print(exc)  
+    os.remove(pathlib.Path().resolve() / "tests/wiseagents/test_serialized_message.yaml")
+
+    

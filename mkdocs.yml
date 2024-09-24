@@ -10,6 +10,7 @@ nav:
     - Using CLI: using_cli.md
     - Declare agents in YAML: declare_agents.md
     - How To Create Custom Agents: custom_agents.md
+    - Communication between agents: communication.md
   - Examples:
     - Agentic chatbot: agentic_chatbot.md
     - Sequential Coordinator Example: sequential_coordinator_example.md

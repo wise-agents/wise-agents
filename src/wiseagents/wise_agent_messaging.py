@@ -1,24 +1,31 @@
+import logging
 from abc import *
-from enum import Enum, auto
+from enum import StrEnum
 from typing import Callable, Optional
 
+import yaml
 from yaml import YAMLObject
-from wiseagents.yaml import WiseAgentsLoader
+from wiseagents.yaml import WiseAgentsLoader 
 from wiseagents import enforce_no_abstract_class_instances
+from yaml.resolver import BaseResolver
 
-class WiseAgentMessageType(Enum):
-    ACK = auto()
-    ALERT = auto()
-    CANNOT_ANSWER = auto()
-    QUERY = auto()
-    RESPONSE = auto()
-    ACTION_REQUEST = auto()
-    HUMAN = auto()
-    
+
+class WiseAgentMessageType(StrEnum):
+    ACK = "ACK"
+    ALERT = "ALERT"
+    CANNOT_ANSWER = "CANNOT_ANSWER"
+    QUERY = "QUERY"
+    RESPONSE = "RESPONSE"
+    ACTION_REQUEST = "ACTION_REQUEST"
+    HUMAN = "HUMAN"
+
 class WiseAgentEvent:
     """
     TODO
     """
+
+def wiseAgentMessageType_representer(dumper, data):
+    return dumper.represent_scalar(BaseResolver.DEFAULT_SCALAR_TAG, str(data.value))
 
 
 class WiseAgentMessage(YAMLObject):
@@ -48,6 +55,24 @@ class WiseAgentMessage(YAMLObject):
             self._context_name = context_name
         else:
             self._context_name = 'default'
+        self.__class__.yaml_dumper.add_representer(WiseAgentMessageType, wiseAgentMessageType_representer)
+
+    def __setstate__(self, state):
+        self._message = state["_message"]
+        self._sender =  state["_sender"]
+        if state["_message_type"] is not None and state["_message_type"] != "":
+            logging.debug(f"__setstate__ state[_message_type]: {state['_message_type']}")
+            self._message_type = WiseAgentMessageType(state["_message_type"])
+        else:
+            self._message_type = None
+        self._chat_id =  state["_chat_id"]
+        self._tool_id =  state["_tool_id"]
+        self._route_response_to =  state["_route_response_to"]
+        if  state["_context_name"] is not None:
+            self._context_name = state["_context_name"]
+        else:
+            self._context_name = 'default'
+
 
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(message={self.message}, sender={self.sender}, message_type={self.message_type}, id={self.chat_id}, tool_id={self.tool_id}, context_name={self.context_name}, route_response_to={self.route_response_to}, route_response_to={self.route_response_to})"

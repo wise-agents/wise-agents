@@ -4,7 +4,7 @@ import pathlib
 import pytest
 import yaml
 
-from wiseagents import WiseAgent, WiseAgentRegistry
+from wiseagents import WiseAgent, WiseAgentRegistry, WiseAgentMessage, WiseAgentMessageType
 from wiseagents.yaml import WiseAgentsLoader
 
 
@@ -108,3 +108,24 @@ def test_assistant_deserializer():
             deserialized_agent = yaml.load(stream, Loader=yaml.Loader)
         except yaml.YAMLError as exc:
             print(exc)
+def test_deserialize_message():
+    message = [];
+    with open(pathlib.Path().resolve() / "tests/wiseagents/test_message.yaml") as stream:
+        try:
+            message = yaml.load(stream, Loader=yaml.Loader)
+            logging.info(str(message))
+        except yaml.YAMLError as exc:
+            print(exc)
+    assert isinstance(message, WiseAgentMessage)
+    assert message.message == "Hello"
+    assert message.sender == "Agent1"
+    msgType = type(message.message_type)
+    logging.info(str(msgType))
+    assert isinstance(message.message_type, WiseAgentMessageType)
+    assert message.message_type == WiseAgentMessageType.ACK
+    assert message.chat_id == "12345"
+    assert message.tool_id == "WeatherAgent"
+    assert message.context_name =="Weather"
+    assert message.route_response_to =="Agent1"
+
+
