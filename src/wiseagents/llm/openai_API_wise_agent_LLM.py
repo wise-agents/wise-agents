@@ -49,6 +49,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     
     def connect(self):
         '''Connect to the remote machine.'''
+        print(f"Connecting to WiseAgentLLM on remote machine at {self.remote_address} with API key {self.api_key}")
         self.client = openai.OpenAI(base_url=self.remote_address, 
                 api_key=self.api_key)
     
