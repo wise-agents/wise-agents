@@ -185,7 +185,7 @@ class WiseAgentContext():
     
     def __getstate__(self) -> object:
         '''Get the state of the context.'''
-        state = self.__dict__.copy()
+        state = super().__getstate__()
         if '_redis_db' in state:
             del state['_redis_db']
             del state['_use_redis']

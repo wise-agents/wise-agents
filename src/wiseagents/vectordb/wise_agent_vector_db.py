@@ -6,7 +6,7 @@ import yaml
 from pydantic import BaseModel, Field
 
 from wiseagents import enforce_no_abstract_class_instances
-from wiseagents.yaml import WiseAgentsLoader
+from wiseagents.yaml import WiseAgentsLoader, WiseAgentsYAMLObject
 
 import wiseagents.yaml
 
@@ -24,7 +24,7 @@ class Document(BaseModel):
     metadata: Optional[dict] = Field(default_factory=dict)
 
 
-class WiseAgentVectorDB(yaml.YAMLObject):
+class WiseAgentVectorDB(WiseAgentsYAMLObject):
     """Abstract class to define the interface for a WiseAgentVectorDB."""
     yaml_loader = WiseAgentsLoader
 

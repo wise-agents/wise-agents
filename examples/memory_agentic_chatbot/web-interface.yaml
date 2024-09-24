@@ -1,11 +1,11 @@
 ---
 !wiseagents.agents.AssistantAgent
-_description: This is a test agent
-_name: AssistantAgent
-_destination_agent_name: WiseIntelligentAgent
-_transport:  !wiseagents.transports.StompWiseAgentTransport
-    _host: localhost
-    _port: 61616
-    _agent_name: AssistantAgent
+description: This is a test agent
+name: AssistantAgent
+destination_agent_name: WiseIntelligentAgent
+transport:  !wiseagents.transports.StompWiseAgentTransport
+    host: localhost
+    port: 61616
+    agent_name: AssistantAgent
 
 
