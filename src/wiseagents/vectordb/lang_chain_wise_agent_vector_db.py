@@ -103,9 +103,9 @@ class PGVectorLangChainWiseAgentVectorDB(LangChainWiseAgentVectorDB):
 
     def __getstate__(self) -> object:
         """Return the state of the vector DB. Removing _vector_dbs and _embedding_function to avoid them being serialized/deserialized by pyyaml."""
-        state = self.__dict__.copy()
-        del state['_vector_dbs']
-        del state['_embedding_function']
+        state = super().__getstate__()
+        del state['vector_dbs']
+        del state['embedding_function']
         return state
 
     @property

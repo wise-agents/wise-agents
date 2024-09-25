@@ -16,6 +16,7 @@ import redis
 from wiseagents import enforce_no_abstract_class_instances
 from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM, WiseAgentLLM
+from wiseagents.yaml import WiseAgentsYAMLObject
 from wiseagents.vectordb import WiseAgentVectorDB
 from wiseagents.yaml import WiseAgentsLoader
 from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentMessageType, WiseAgentTransport, WiseAgentEvent
@@ -28,7 +29,7 @@ class WiseAgentCollaborationType(Enum):
     CHAT = auto()
 
 
-class WiseAgentTool(yaml.YAMLObject):
+class WiseAgentTool(WiseAgentsYAMLObject):
     ''' WiseAgentTool represents a tool that can be used by an agent to perform a specific task.'''
     yaml_tag = u'!wiseagents.WiseAgentTool'
     yaml_loader = WiseAgentsLoader
@@ -184,7 +185,7 @@ class WiseAgentContext():
     
     def __getstate__(self) -> object:
         '''Get the state of the context.'''
-        state = self.__dict__.copy()
+        state = super().__getstate__()
         if '_redis_db' in state:
             del state['_redis_db']
             del state['_use_redis']
@@ -827,7 +828,7 @@ class WiseAgentContext():
             self._collaboration_type[chat_uuid] = collaboration_type
 
 
-class WiseAgent(yaml.YAMLObject):
+class WiseAgent(WiseAgentsYAMLObject):
     ''' A WiseAgent is an abstract class that represents an agent that can send and receive messages to and from other agents.
     '''
     yaml_loader = WiseAgentsLoader

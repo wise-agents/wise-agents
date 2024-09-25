@@ -97,6 +97,7 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     and a corresponding Neo4j vector database.
     """
     yaml_tag = u'!wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB'
+    expects_underscores_in_yaml_keys = False
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
@@ -142,10 +143,10 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
 
     def __getstate__(self) -> object:
         """Return the state of the graph DB. Removing the instance variable neo4j_graph_db to avoid it being serialized/deserialized by pyyaml."""
-        state = self.__dict__.copy()
-        del state['_neo4j_graph_db']
-        del state['_neo4j_vector_db']
-        del state['_embedding_function']
+        state = super().__getstate__()
+        del state['neo4j_graph_db']
+        del state['neo4j_vector_db']
+        del state['embedding_function']
         return state
 
     @property

@@ -5,7 +5,7 @@ from typing import Callable, Optional
 
 import yaml
 from yaml import YAMLObject
-from wiseagents.yaml import WiseAgentsLoader 
+from wiseagents.yaml import WiseAgentsLoader, WiseAgentsYAMLObject
 from wiseagents import enforce_no_abstract_class_instances
 from yaml.resolver import BaseResolver
 
@@ -119,7 +119,7 @@ class WiseAgentMessage(YAMLObject):
         """Get the id of the tool."""
         return self._route_response_to
 
-class WiseAgentTransport(YAMLObject):
+class WiseAgentTransport(WiseAgentsYAMLObject):
     yaml_loader = WiseAgentsLoader
 
     def __init__(self):
@@ -145,11 +145,11 @@ class WiseAgentTransport(YAMLObject):
 
     def __getstate__(self) -> object:
         '''Return the state of the transport. Removing the instance variable chain to avoid it is serialized/deserialized by pyyaml.'''
-        state = self.__dict__.copy()
-        del state['_request_receiver']
-        del state['_response_receiver']
-        del state['_event_receiver']
-        del state['_error_receiver']
+        state = super().__getstate__()
+        del state['request_receiver']
+        del state['response_receiver']
+        del state['event_receiver']
+        del state['error_receiver']
         return state
 
        

@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 
 from wiseagents import enforce_no_abstract_class_instances
 from wiseagents.yaml import WiseAgentsLoader
+from wiseagents.yaml import WiseAgentsYAMLObject
 
 
 class Entity(BaseModel):
@@ -67,7 +68,7 @@ class GraphDocument(BaseModel):
     source: Source
 
 
-class WiseAgentGraphDB(yaml.YAMLObject):
+class WiseAgentGraphDB(WiseAgentsYAMLObject):
     """Abstract class to define the interface for a WiseAgentGraphDB."""
 
     yaml_loader = WiseAgentsLoader

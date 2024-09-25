@@ -8,6 +8,9 @@ from wiseagents.yaml import WiseAgentsLoader
 import yaml
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
+# These unsued imports are need for yaml.load_all. If they are removed, the yaml.load_all will not find the constructors for these classes
+import wiseagents.agents
+from wiseagents.transports import StompWiseAgentTransport
 
 cond = threading.Condition()
 
