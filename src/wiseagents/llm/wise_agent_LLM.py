@@ -5,12 +5,11 @@ import yaml
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
 
 from wiseagents import enforce_no_abstract_class_instances
-from wiseagents.yaml import WiseAgentsLoader, WiseAgentsYAMLObject
+from wiseagents.yaml import WiseAgentsYAMLObject
 
 
 class WiseAgentLLM(WiseAgentsYAMLObject):
     """Abstract class to define the interface for a WiseAgentLLM."""
-    yaml_loader = WiseAgentsLoader
     def __init__(self, system_message, model_name):
         '''Initialize the agent.
 

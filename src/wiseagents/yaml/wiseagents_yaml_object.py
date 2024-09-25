@@ -2,12 +2,15 @@ import abc
 import yaml
 
 from wiseagents import enforce_no_abstract_class_instances
+from wiseagents.yaml import WiseAgentsLoader
 
 
 class WiseAgentsYAMLObject(yaml.YAMLObject):
     """
         Abstract class to deal with removing the underscores from the keys of the parsed YAML object.
     """
+
+    yaml_loader = WiseAgentsLoader
 
     def __init__(self):
         enforce_no_abstract_class_instances(self.__class__, WiseAgentsYAMLObject)
