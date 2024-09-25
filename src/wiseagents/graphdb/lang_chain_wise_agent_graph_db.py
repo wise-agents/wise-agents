@@ -97,7 +97,6 @@ class Neo4jLangChainWiseAgentGraphDB(LangChainWiseAgentGraphDB):
     and a corresponding Neo4j vector database.
     """
     yaml_tag = u'!wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB'
-    expects_underscores_in_yaml_keys = False
 
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
