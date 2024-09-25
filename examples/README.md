@@ -5,6 +5,11 @@ The example consists of two main agents:
 
     1. **Web Interface Agent**: Simulates a web-based client for interacting with other agents.
     2. **Intelligent Agent**: Handles requests and provides intelligent responses based on memory and context.
+
+* [memory_agentic_chatbot_groq](./memory_agentic_chatbot_groq/README.md)
+
+    This guide walks you through running a practical example of a multi-agent system using Wise Agents. In this example, two agents (a web interface agent and an intelligent agent) are started, allowing you to experiment with agent communication and interaction in a simulated environment. This is the same as described in [memory_agentic_chatbot](./memory_agentic_chatbot/), but instead of using a local LLM it uses [https://groq.com/](https://groq.com/) for model inference. Please obtain an API key from [https://console.groq.com/keys](https://console.groq.com/keys) and set the env variable GROQ_API_KEY to start playing with this example.
+
 * [sequential_coordinator](./sequential_coordinator/README.md)
 The example consists of four agents:
 
@@ -15,7 +20,7 @@ The example consists of four agents:
     *"You are an expert translator from english to italian. Translate the provided text from english to italian. "*
     4. **SequentialCoordinator**: Take care of coordinating the request handling from the user delagating the work to other agents in a predetermined order.
 
-* [peceive_and_act](./perceive_and_act/README.md) 
+* [perceive_and_act](./perceive_and_act/README.md) 
 The example consists of four agents:
 
     1. **PerceivingAgent**: This is an agent that can perceive file changes. In case of changes it send a message with the list of books contained in books_read.txt to the SequentialCoordinator. This agent code is not part of wise-agents framework, but it's defined for this example use only in `custom_agent.py` present in the example directory.
@@ -24,10 +29,10 @@ The example consists of four agents:
     3. **ActionAgent**: This agent will write what received (the books suggested) in a file (books_suggested.txt). It will override the file each time. This agent code is not part of wise-agents framework, but it's defined for this example use only in `custom_agent.py` present in the example directory.
     4. **SequentialCoordinator**: Take care of coordinating the request handling from the user delagating the work to other agents in a predetermined order.
 
+* [perceive_ask_and_act](./perceive_ask_and_act/README.md)
+
+    This guide walks you through running a practical example of a multi-agent system using Wise Agents. In this example, six agents (an agent interacting with a human with a text based interface, a sequential agent coordinator, and four intelligent agents) are started, allowing you to experiment with agents/humans communication and interaction in a simulated environment. It uses a sequential coordination able to share chat history between involved agents.
+
 * [run_examples_podman](./run_examples_podman/README.md)
 
     This guide walks you through running any of the example in the examples directory in podman containers
-
-* [memory_agentic_chatbot_groq](./memory_agentic_chatbot_groq/README.md)
-
-    This guide walks you through running a practical example of a multi-agent system using Wise Agents. In this example, two agents (a web interface agent and an intelligent agent) are started, allowing you to experiment with agent communication and interaction in a simulated environment. This is the same as described in [memory_agentic_chatbot](./memory_agentic_chatbot/), but instead of using a local LLM it uses [https://groq.com/](https://groq.com/) for model inference. Please obtain an API key from [https://console.groq.com/keys](https://console.groq.com/keys) and set the env variable GROQ_API_KEY to start playing with this example.

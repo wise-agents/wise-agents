@@ -23,6 +23,7 @@ from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentMessageTy
 
 class WiseAgentCollaborationType(Enum):
     SEQUENTIAL = auto()
+    SEQUENTIAL_MEMORY = auto()
     PHASED = auto()
     INDEPENDENT = auto()
     CHAT = auto()
@@ -997,7 +998,8 @@ class WiseAgent(yaml.YAMLObject):
         """
         if chat_id:
             if (collaboration_type == WiseAgentCollaborationType.PHASED
-                    or collaboration_type == WiseAgentCollaborationType.CHAT):
+                    or collaboration_type == WiseAgentCollaborationType.CHAT
+                    or collaboration_type == WiseAgentCollaborationType.SEQUENTIAL_MEMORY):
                 # this agent is involved in phased collaboration or a chat, so it needs the conversation history
                 return context.llm_chat_completion.get(chat_id)
         # for sequential collaboration and independent agents, the shared history is not needed
@@ -1049,7 +1051,12 @@ class WiseAgent(yaml.YAMLObject):
                     WiseAgentMessage(message=response_str, message_type=WiseAgentMessageType.ACK, sender=self.name,
                                      context_name=context.name,
                                      chat_id=request.chat_id), request.sender)
-            elif collaboration_type == WiseAgentCollaborationType.SEQUENTIAL:
+            elif (collaboration_type == WiseAgentCollaborationType.SEQUENTIAL 
+                    or collaboration_type == WiseAgentCollaborationType.SEQUENTIAL_MEMORY):
+                if collaboration_type == WiseAgentCollaborationType.SEQUENTIAL_MEMORY:
+                    # add this agent's response to the shared context
+                    context.append_chat_completion(chat_uuid=request.chat_id,
+                                               messages={"role": "assistant", "content": response_str})
                 next_agent = context.get_next_agent_in_sequence(request.chat_id, self.name)
                 if next_agent is None:
                     logging.debug(f"Sequential coordination complete - sending response from " + self.name + " to "
