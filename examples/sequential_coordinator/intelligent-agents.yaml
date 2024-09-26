@@ -1,6 +1,7 @@
 ---
 !wiseagents.agents.ChatWiseAgent
-description: This is an agent that can answer questions about english literature
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is an agent that can answer questions about english literature
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   model_name: llama3.1
   remote_address: http://localhost:11434/v1
@@ -12,7 +13,8 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
     agent_name: LiterateAgent
 ---
 !wiseagents.agents.ChatWiseAgent
-description: This is an agent that can translate from english to italian
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is an agent that can translate from english to italian
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   model_name: llama3.1
   remote_address: http://localhost:11434/v1
@@ -24,7 +26,8 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
     agent_name: TranslatorAgent
 ---
 !wiseagents.agents.SequentialCoordinatorWiseAgent
-description: This is a coordinator agent
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is a coordinator agent
 name: SequentialCoordinator
 agents: ["LiterateAgent", "TranslatorAgent"]
 transport:  !wiseagents.transports.StompWiseAgentTransport

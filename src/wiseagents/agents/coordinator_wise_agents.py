@@ -2,7 +2,7 @@ import logging
 import uuid
 from typing import Callable, List, Optional
 
-from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMessage, WiseAgentMessageType, WiseAgentRegistry, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMessage, WiseAgentMessageType, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.llm import WiseAgentLLM
 
 CONFIDENCE_SCORE_THRESHOLD = 85
@@ -16,23 +16,24 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
     """
     yaml_tag = u'!wiseagents.agents.SequentialCoordinatorWiseAgent'
 
-    def __init__(self, name: str, description: str, transport: WiseAgentTransport, agents: List[str]):
+    
+    def __init__(self, name: str, metadata: WiseAgentMetaData, transport: WiseAgentTransport, agents: List[str]):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             transport (WiseAgentTransport): the transport to use for communication
             agents (List[str]): the list of agents to coordinate
         """
         self._name = name
         self._agents = agents
-        super().__init__(name=name, description=description, transport=transport, llm=None)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=None)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return f"{self.__class__.__name__}(name={self.name}, description={self.description}, agents={self.agents})"
+        return f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, agents={self.agents})"
 
     def handle_request(self, request):
         """
@@ -101,24 +102,28 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
         """Set the function to deliver the response to the client."""
         self._response_delivery = response_delivery
 
-class SequentialMemoryCoordinatorWiseAgent(SequentialCoordinatorWiseAgent):
+class SequentialMemoryCoordinatorWiseAgent(WiseAgent):
     yaml_tag = u'!wiseagents.agents.SequentialMemoryCoordinatorWiseAgent'
-    
-    def __new__(cls, *args, **kwargs):
-        """Create a new instance of the class, setting default values for the instance variables."""
-        obj = super().__new__(cls)
-        obj._system_message = None
-        return obj
 
-    def __init__(self, name: str, description: str, transport: WiseAgentTransport, agents: List[str], system_message: Optional[str] = None):
-        self._system_message = system_message
-        super().__init__(name, description, transport, agents)
+    def __init__(self, name: str, metadata: WiseAgentMetaData, transport: WiseAgentTransport, agents: List[str]):
+        """
+        Initialize the agent.
 
-    @property
-    def system_message(self) -> str:
-        """Get the system message."""
-        return self._system_message
-    
+        Args:
+            name (str): the name of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
+            transport (WiseAgentTransport): the transport to use for communication
+            agents (List[str]): the list of agents to coordinate
+        """
+        self._name = name
+        self._agents = agents
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=None)
+
+    def __repr__(self):
+        """Return a string representation of the agent."""
+        return f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, agents={self.agents})"
+
+
     def handle_request(self, request):
         """
         Process a request message by passing it to the first agent in the sequence.
@@ -133,12 +138,13 @@ class SequentialMemoryCoordinatorWiseAgent(SequentialCoordinatorWiseAgent):
 
         ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
         ctx.set_collaboration_type(chat_id, WiseAgentCollaborationType.SEQUENTIAL_MEMORY)
-        ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "system", "content": self.system_message or self.llm.system_message})
+        ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "system", "content": self.metadata.system_message})
         
         ctx.set_agents_sequence(chat_id, self._agents)
         ctx.set_route_response_to(chat_id, request.sender)
         self.send_request(WiseAgentMessage(message=request.message, sender=self.name, context_name=request.context_name,
                                            chat_id=chat_id), self._agents[0])
+
 
 class PhasedCoordinatorWiseAgent(WiseAgent):
     """
@@ -155,38 +161,34 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
         obj._phases = ["Data Collection", "Data Analysis"]
         obj._max_iterations = MAX_ITERATIONS_FOR_COORDINATOR
         obj._confidence_score_threshold = CONFIDENCE_SCORE_THRESHOLD
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: WiseAgentLLM,
+    def __init__(self, name: str, metadata: WiseAgentMetaData, transport: WiseAgentTransport, llm: WiseAgentLLM,
                  phases: Optional[List[str]] = None, max_iterations: Optional[int] = MAX_ITERATIONS_FOR_COORDINATOR,
-                 confidence_score_threshold: Optional[int] = CONFIDENCE_SCORE_THRESHOLD, system_message: Optional[str] = None):
+                 confidence_score_threshold: Optional[int] = CONFIDENCE_SCORE_THRESHOLD):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             transport (WiseAgentTransport): the transport to use for communication
             llm (WiseAgentLLM): the LLM to use for coordinating the collaboration
             phases (Optional[List[str]]): the optional list of phase names, defaults to "Data Collection" and "Data Analysis"
             max_iterations (Optional[int]): the maximum number of iterations to run the phases, defaults to 5
             confidence_score_threshold (Optional[int]): the confidence score threshold to determine if the final answer
             is acceptable, defaults to 85
-            system_message (Optional[str]): the optional system message to be used by the coordinator when processing
-            chat completions using its LLM
         """
         self._name = name
         self._phases = phases if phases is not None else ["Data Collection", "Data Analysis"]
         self._max_iterations = max_iterations
         self._confidence_score_threshold = confidence_score_threshold
-        self._system_message = system_message
-        super().__init__(name=name, description=description, transport=transport, llm=llm, system_message=system_message)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=llm)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, transport={self.transport},"
-                f"llm={self.llm}, phases={self.phases},max_iterations={self.max_iterations}, system_message={self.system_message}")
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, transport={self.transport},"
+                f"llm={self.llm}, phases={self.phases},max_iterations={self.max_iterations}")
 
     @property
     def phases(self) -> List[str]:
@@ -226,7 +228,7 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
                                   " anything else in the response.\n" +
                                   " Query: " + request.message + "\n" + "Available agents:\n" +
                                   "\n".join(WiseAgentRegistry.get_agent_names_and_descriptions()) + "\n")
-        ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "system", "content": self.system_message or self.llm.system_message})
+        ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "user", "content": agent_selection_prompt})
 
         logging.debug(f"messages: {ctx.llm_chat_completion[chat_id]}")

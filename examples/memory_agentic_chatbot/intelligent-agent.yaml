@@ -1,6 +1,7 @@
 ---
-!wiseagents.agents.ChatWiseAgent
-description: This is another test agent
+!wiseagents.agents.ChatWiseAgent 
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is another test agent
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   model_name: llama3.1
   remote_address: http://localhost:11434/v1

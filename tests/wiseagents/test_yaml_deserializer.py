@@ -16,8 +16,8 @@ def run_after_all_tests():
 class TestAgent(WiseAgent):
     yaml_tag = "!tests.wiseagents.TestAgent"
 
-    def __init__(self, name, description, transport):
-        super().__init__(name, description, transport)
+    def __init__(self, name, metadata, transport):
+        super().__init__(name, metadata, transport)
 
 
 @pytest.mark.needsllm
@@ -33,7 +33,7 @@ def test_using_deserialized_agent():
 
         assert isinstance(deserialized_agent, WiseAgent)
         assert deserialized_agent.name == "Agent1"
-        assert deserialized_agent.description == "This is a test agent"
+        assert deserialized_agent.metadata.description == "This is a test agent"
         assert deserialized_agent.llm.system_message == "Answer my greeting saying Hello and my name"
         assert deserialized_agent.llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
         assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
@@ -70,7 +70,7 @@ def test_using_multiple_deserialized_agents():
 
         #assert isinstance(deserialized_agent[0], WiseAgent)
         assert deserialized_agent[0].name == "Agent1"
-        assert deserialized_agent[0].description == "This is a test agent"
+        assert deserialized_agent[0].metadata.description == "This is a test agent"
         assert deserialized_agent[0].llm.system_message == "Answer my greeting saying Hello and my name"
         assert deserialized_agent[0].llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
         assert deserialized_agent[0].llm.remote_address == "http://localhost:8001/v1"
@@ -85,7 +85,7 @@ def test_using_multiple_deserialized_agents():
 
         assert isinstance(deserialized_agent[1], WiseAgent)
         assert deserialized_agent[1].name == "Agent2"
-        assert deserialized_agent[1].description == "This is another test agent"
+        assert deserialized_agent[1].metadata.description == "This is another test agent"
         assert deserialized_agent[1].llm.system_message == "Answer my greeting saying Hello and my name"
         assert deserialized_agent[1].llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
         assert deserialized_agent[1].llm.remote_address == "http://localhost:8001/v1"

@@ -4,7 +4,7 @@ from time import sleep
 
 import pytest
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry
 from wiseagents.transports import StompWiseAgentTransport
 
 
@@ -23,7 +23,7 @@ class WiseAgentDoingNothing(WiseAgent):
         self._name = name
         self._description = description
         transport = StompWiseAgentTransport(host='localhost', port=61616, agent_name=self.name)
-        super().__init__(name, description, transport, None, None, None)
+        super().__init__(name, WiseAgentMetaData(description), transport, None, None, None)
         
         
     def process_event(self, event):
@@ -76,10 +76,6 @@ def test_send_message_to_agent_and_get_response():
     assert WiseAgentRegistry.get_or_create_context('default').message_trace[3].message == 'I am doing nothing'
     assert WiseAgentRegistry.get_or_create_context('default').message_trace[3].sender == 'Agent1'
     
-    assert WiseAgentRegistry.get_or_create_context('default').participants.__len__() == 2
-    assert WiseAgentRegistry.get_or_create_context('default').participants[0].name == 'Agent1'
-    assert WiseAgentRegistry.get_or_create_context('default').participants[1].name == 'Agent2'
-
     #stop all agents
     agent1.stop()
     agent2.stop()

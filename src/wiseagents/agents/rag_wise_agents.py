@@ -3,7 +3,7 @@ import logging
 from abc import abstractmethod
 from typing import Any, Dict, List, Optional
 
-from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMessage, WiseAgentTransport, \
+from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMessage, WiseAgentMetaData, WiseAgentTransport, \
     enforce_no_abstract_class_instances
 from wiseagents.graphdb import WiseAgentGraphDB
 from wiseagents.llm import WiseAgentLLM
@@ -36,19 +36,17 @@ class RAGWiseAgent(WiseAgent):
         obj._collection_name = DEFAULT_COLLECTION_NAME
         obj._k = DEFAULT_NUM_DOCUMENTS
         obj._include_sources = DEFAULT_INCLUDE_SOURCES
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, llm: WiseAgentLLM, vector_db: WiseAgentVectorDB,
+    def __init__(self, name: str, metadata: WiseAgentMetaData, llm: WiseAgentLLM, vector_db: WiseAgentVectorDB,
                  transport: WiseAgentTransport, collection_name: Optional[str] = DEFAULT_COLLECTION_NAME,
-                 k: Optional[int] = DEFAULT_NUM_DOCUMENTS, include_sources: Optional[bool] = DEFAULT_INCLUDE_SOURCES,
-                 system_message: Optional[str] = None):
+                 k: Optional[int] = DEFAULT_NUM_DOCUMENTS, include_sources: Optional[bool] = DEFAULT_INCLUDE_SOURCES):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             llm (WiseAgentLLM): the LLM to use for processing requests
             vector_db (WiseAgentVectorDB): the vector database to use for retrieving documents
             transport (WiseAgentTransport): the transport to use for communication
@@ -58,21 +56,16 @@ class RAGWiseAgent(WiseAgent):
             include_sources Optional(bool): whether to include the sources of the documents that were consulted to
             produce the response, defaults to False
         """
-        self._name = name
-        self._description = description
-        self._transport = transport
-        self._vector_db = vector_db
-        self._collection_name = collection_name
         self._k = k
         self._include_sources = include_sources
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm,
-                         vector_db=vector_db, collection_name=collection_name, system_message=system_message)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=llm,
+                         vector_db=vector_db, collection_name=collection_name)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm},"
                 f"vector_db={self.vector_db}, collection_name={self.collection_name}, transport={self.transport},"
-                f"k={self.k}, include_sources={self.include_sources}), system_message={self.system_message})")
+                f"k={self.k}, include_sources={self.include_sources}))")
 
     def process_event(self, event):
         """Do nothing"""
@@ -100,7 +93,7 @@ class RAGWiseAgent(WiseAgent):
         retrieved_documents = retrieve_documents_for_rag(request.message, self.vector_db, self.collection_name, self.k)
         llm_response_with_sources = create_and_process_rag_prompt(retrieved_documents, request.message, self.llm,
                                                                   self.include_sources, conversation_history,
-                                                                  self.system_message)
+                                                                  self.metadata.system_message)
         return llm_response_with_sources
 
     def process_response(self, response: WiseAgentMessage):
@@ -141,20 +134,19 @@ class GraphRAGWiseAgent(WiseAgent):
         obj._retrieval_query = ""
         obj._params = None
         obj._metadata_filter = None
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, llm: WiseAgentLLM, graph_db: WiseAgentGraphDB,
+    def __init__(self, name: str, metadata: WiseAgentMetaData, llm: WiseAgentLLM, graph_db: WiseAgentGraphDB,
                  transport: WiseAgentTransport, k: Optional[int] = DEFAULT_NUM_DOCUMENTS,
                  include_sources: Optional[bool] = DEFAULT_INCLUDE_SOURCES,
                  retrieval_query: Optional[str] = "", params: Optional[Dict[str, Any]] = None,
-                 metadata_filter: Optional[Dict[str, Any]] = None, system_message: Optional[str] = None):
+                 metadata_filter: Optional[Dict[str, Any]] = None):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             llm (WiseAgentLLM): the LLM to use for processing requests
             graph_db (WiseAgentGraphDB): the graph database to use for retrieving documents
             transport (WiseAgentTransport): the transport to use for communication
@@ -165,27 +157,21 @@ class GraphRAGWiseAgent(WiseAgent):
             retrieved from a similarity search
             params (Optional[Dict[str, Any]]): the optional parameters for the query
             metadata_filter (Optional[Dict[str, Any]]): the optional metadata filter to use with similarity search
-            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
-            chat completions using its LLM
         """
-        self._name = name
-        self._description = description
-        self._transport = transport
-        self._graph_db = graph_db
         self._k = k
         self._include_sources = include_sources
         self._retrieval_query = retrieval_query
         self._params = params
         self._metadata_filter = metadata_filter
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm,
-                         graph_db=graph_db, system_message=system_message)
+        super().__init__(name=name, metadata=metadata, transport=self.transport, llm=llm,
+                         graph_db=graph_db)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm},"
                 f"graph_db={self.graph_db}, transport={self.transport}, k={self.k},"
                 f"include_sources={self.include_sources}), retrieval_query={self.retrieval_query},"
-                f"params={self.params}, metadata_filter={self.metadata_filter}, system_message={self.system_message})")
+                f"params={self.params}, metadata_filter={self.metadata_filter})")
 
     def process_event(self, event):
         """Do nothing"""
@@ -213,7 +199,7 @@ class GraphRAGWiseAgent(WiseAgent):
         retrieved_documents = retrieve_documents_for_graph_rag(request.message, self.graph_db, self.k,
                                                                self.retrieval_query, self.params, self.metadata_filter)
         llm_response_with_sources = create_and_process_rag_prompt(retrieved_documents, request.message, self.llm, self.include_sources,
-                                                                   conversation_history, self.system_message)
+                                                                   conversation_history, self.metadata.system_message)
         return llm_response_with_sources
 
     def process_response(self, response: WiseAgentMessage):
@@ -272,20 +258,19 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         obj._vector_db = None
         obj._collection_name = DEFAULT_COLLECTION_NAME
         obj._graph_db = None
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, llm: WiseAgentLLM, transport: WiseAgentTransport,
+    def __init__(self, name: str, metadata: WiseAgentMetaData, llm: WiseAgentLLM, transport: WiseAgentTransport,
                  k: Optional[int] = DEFAULT_NUM_DOCUMENTS,
                  num_verification_questions: Optional[int] = DEFAULT_NUM_VERIFICATION_QUESTIONS,
                  vector_db: Optional[WiseAgentVectorDB] = None, collection_name: Optional[str] = DEFAULT_COLLECTION_NAME,
-                 graph_db: Optional[WiseAgentGraphDB] = None, system_message: Optional[str] = None):
+                 graph_db: Optional[WiseAgentGraphDB] = None):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
             transport (WiseAgentTransport): the transport to use for communication
             k Optional(int): the number of documents to retrieve from the vector database, defaults to 4
@@ -293,28 +278,20 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
             vector_db (Optional[WiseAgentVectorDB]): the vector DB associated with the agent (to be used for challenging RAG results)
             collection_name (Optional[str]) = "wise-agent-collection": the vector DB collection name associated with the agent
             graph_db (Optional[WiseAgentGraphDB]): the graph DB associated with the agent (to be used for challenging Graph RAG results)
-            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
-            chat completions using its LLM
         """
-        self._name = name
-        self._description = description
-        self._transport = transport
         self._k = k
         self._num_verification_questions = num_verification_questions
         self._vector_db = vector_db
-        self._collection_name = collection_name
-        self._graph_db = graph_db
         llm_agent = llm
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent,
-                         vector_db=vector_db, collection_name=collection_name, graph_db=graph_db,
-                         system_message=system_message)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=llm_agent,
+                         vector_db=vector_db, collection_name=collection_name, graph_db=graph_db)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm},"
                 f"k={self.k}, num_verification_questions={self._num_verification_questions},"
                 f"transport={self.transport}, vector_db={self.vector_db}, collection_name={self.collection_name},"
-                f"graph_db={self.graph_db}, system_message={self.system_message})")
+                f"graph_db={self.graph_db})")
 
     def process_event(self, event):
         """Do nothing"""
@@ -383,7 +360,7 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
                   f" verification questions that could help determine if there are any mistakes in the baseline response:"
                   f"\n{message}\n"
                   f"Your response should contain only the list of questions, one per line.\n")
-        conversation_history.append({"role": "system", "content": self.system_message or self.llm.system_message})
+        conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": prompt})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
 
@@ -393,7 +370,7 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         for question in verification_questions:
             retrieved_documents = self.retrieve_documents(question)
             llm_response = create_and_process_rag_prompt(retrieved_documents, question, self.llm, False,
-                                          [], self.system_message)
+                                          [], self.metadata.system_message)
             verification_responses = (verification_responses + "Verification Question: " + question + "\n"
                                       + "Verification Result: " + llm_response + "\n")
 
@@ -404,7 +381,7 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
                   f"Your response must contain only the revised response to the question in the JSON format shown below:\n"
                   f"{{'revised': 'Your revised response to the question.'}}\n")
 
-        conversation_history.append({"role": "system", "content": self.system_message or self.llm.system_message})
+        conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": prompt})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
         return llm_response.choices[0].message.content
@@ -437,47 +414,36 @@ class CoVeChallengerRAGWiseAgent(BaseCoVeChallengerWiseAgent):
         obj._collection_name = DEFAULT_COLLECTION_NAME
         obj._k = DEFAULT_NUM_DOCUMENTS
         obj._num_verification_questions = DEFAULT_NUM_VERIFICATION_QUESTIONS
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, llm: WiseAgentLLM, vector_db: WiseAgentVectorDB,
+    def __init__(self, name: str, metadata: WiseAgentMetaData, llm: WiseAgentLLM, vector_db: WiseAgentVectorDB,
                  transport: WiseAgentTransport, collection_name: Optional[str] = DEFAULT_COLLECTION_NAME,
                  k: Optional[int] = DEFAULT_NUM_DOCUMENTS,
-                 num_verification_questions: Optional[int] = DEFAULT_NUM_VERIFICATION_QUESTIONS,
-                 system_message: Optional[str] = None):
+                 num_verification_questions: Optional[int] = DEFAULT_NUM_VERIFICATION_QUESTIONS):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
             vector_db (WiseAgentVectorDB): the vector database to use for retrieving documents
             transport (WiseAgentTransport): the transport to use for communication
             collection_name (Optional[str]): the name of the collection to use in the vector database, defaults to wise-agents-collection
             k (Optional[int]): the number of documents to retrieve from the vector database, defaults to 4
             num_verification_questions (Optional[int]): the number of verification questions to generate, defaults to 4
-            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
-            chat completions using its LLM
         """
-        self._name = name
-        self._description = description
-        self._transport = transport
-        self._vector_db = vector_db
-        self._collection_name = collection_name
         self._k = k
         self._num_verification_questions = num_verification_questions
-        llm_agent = llm
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent,
-                         system_message=system_message, vector_db=vector_db, collection_name=collection_name,
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=llm,
+                         vector_db=vector_db, collection_name=collection_name,
                          k=k, num_verification_questions=num_verification_questions)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm},"
                 f"vector_db={self.vector_db}, collection_name={self.collection_name}, k={self.k},"
-                f"num_verification_questions={self._num_verification_questions}, transport={self.transport},"
-                f"system_message={self.system_message})")
+                f"num_verification_questions={self._num_verification_questions}, transport={self.transport})")
 
     def process_event(self, event):
         """Do nothing"""
@@ -534,21 +500,19 @@ class CoVeChallengerGraphRAGWiseAgent(BaseCoVeChallengerWiseAgent):
         obj._retrieval_query = ""
         obj._params = None
         obj._metadata_filter = None
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, llm: WiseAgentLLM, graph_db: WiseAgentGraphDB,
+    def __init__(self, name: str, metadata: WiseAgentMetaData, llm: WiseAgentLLM, graph_db: WiseAgentGraphDB,
                  transport: WiseAgentTransport, k: Optional[int] = DEFAULT_NUM_DOCUMENTS,
                  num_verification_questions: Optional[int] = DEFAULT_NUM_VERIFICATION_QUESTIONS,
                  retrieval_query: Optional[str] = "", params: Optional[Dict[str, Any]] = None,
-                 metadata_filter: Optional[Dict[str, Any]] = None,
-                 system_message: Optional[str] = None):
+                 metadata_filter: Optional[Dict[str, Any]] = None):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
             graph_db (Optional[WiseAgentGraphDB]): the graph database to use for retrieving documents
             transport (WiseAgentTransport): the transport to use for communication
@@ -558,29 +522,22 @@ class CoVeChallengerGraphRAGWiseAgent(BaseCoVeChallengerWiseAgent):
             retrieved from a similarity search
             params (Optional[Dict[str, Any]]): the optional parameters for the query
             metadata_filter (Optional[Dict[str, Any]]): the optional metadata filter to use with similarity search
-            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
-            chat completions using its LLM
         """
-        self._name = name
-        self._description = description
-        self._transport = transport
-        self._graph_db = graph_db
         self._k = k
         self._num_verification_questions = num_verification_questions
         self._retrieval_query = retrieval_query
         self._params = params
         self._metadata_filter = metadata_filter
-        llm_agent = llm
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent,
-                         system_message=system_message, graph_db=graph_db, k=k,
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=llm,
+                         graph_db=graph_db, k=k,
                          num_verification_questions=num_verification_questions)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm},"
                 f"graph_db={self.graph_db}, k={self.k},num_verification_questions={self._num_verification_questions}"
                 f"transport={self.transport}, retrieval_query={self.retrieval_query}, params={self.params}"
-                f"metadata_filter={self.metadata_filter}, system_message={self.system_message})")
+                f"metadata_filter={self.metadata_filter})")
 
     def process_event(self, event):
         """Do nothing"""

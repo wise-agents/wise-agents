@@ -4,7 +4,7 @@ import uuid
 from typing import Callable, List, Optional
 
 from openai.types.chat import ChatCompletionMessageParam
-from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMessage, WiseAgentMessageType, WiseAgentRegistry, WiseAgentTransport, \
+from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMessage, WiseAgentMessageType, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTransport, \
     WiseAgentTool
 from wiseagents.llm import WiseAgentLLM
 
@@ -25,25 +25,25 @@ class PassThroughClientAgent(WiseAgent):
         obj._destination_agent_name = "WiseIntelligentAgent"
         return obj
 
-    def __init__(self, name: str, description: str , transport: WiseAgentTransport,
+    def __init__(self, name: str, metadata: WiseAgentMetaData , transport: WiseAgentTransport,
                  destination_agent_name: Optional[str] = "WiseIntelligentAgent"):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             transport (WiseAgentTransport): the transport to use for communication
             destination_agent_name (str): the name of the agent to send requests to
         """
         self._name = name
         self._destination_agent_name = destination_agent_name
-        super().__init__(name=name, description=description, transport=transport, llm=None)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=None)
 
     def __repr__(self):
         """Return a string representation of the agent."""
         return f"{self.__class__.__name__}(name={self.name}, \
-            description={self.description}, transport={self.transport}, \
+            metadata={self.metadata}, transport={self.transport}, \
             destination_agent_name={self.destination_agent_name},\
             response_delivery={self.response_delivery}"
      
@@ -108,33 +108,24 @@ class LLMOnlyWiseAgent(WiseAgent):
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
         obj = super().__new__(cls)
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, llm : WiseAgentLLM, transport: WiseAgentTransport,
-                 system_message: Optional[str] = None):
+    def __init__(self, name: str, metadata: WiseAgentMetaData, llm : WiseAgentLLM, transport: WiseAgentTransport):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
             transport (WiseAgentTransport): the transport to use for communication
-            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
-            chat completions using its LLM
+            
         """
-        self._name = name
-        self._description = description
-        self._transport = transport
-        llm_agent = llm
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent,
-                         system_message=system_message)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=llm)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm}, transport={self.transport},"
-                f"system_message={self.system_message})")
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm}, transport={self.transport})")
         
     def process_event(self, event):
         """Do nothing"""
@@ -159,7 +150,7 @@ class LLMOnlyWiseAgent(WiseAgent):
             Optional[str]: the response to the request message as a string or None if there is
             no string response yet
         """
-        conversation_history.append({"role": "system", "content": self.system_message or self.llm.system_message})
+        conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": request.message})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
         return llm_response.choices[0].message.content
@@ -187,33 +178,25 @@ class LLMWiseAgentWithTools(WiseAgent):
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
         obj = super().__new__(cls)
-        obj._system_message = None
         return obj
     
-    def __init__(self, name: str, description: str, llm : WiseAgentLLM, transport: WiseAgentTransport, tools: List[str],
-                 system_message: Optional[str] = None):
+    def __init__(self, name: str, metadata: WiseAgentMetaData, llm : WiseAgentLLM, transport: WiseAgentTransport, tools: List[str]):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
             transport (WiseAgentTransport): the transport to use for communication
-            system_message (Optional[str]): the optional system message to be used by the collaborator when processing
-            chat completions using its LLM
+            
         """
-        self._name = name
-        self._description = description
-        self._transport = transport
-        llm_agent = llm
         self._tools = tools
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm_agent, system_message=system_message)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=llm)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm}, transport={self.transport},"
-                f"system_message={self.system_message})")
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm}, transport={self.transport}")
 
     def process_event(self, event):
         """Do nothing"""
@@ -353,33 +336,24 @@ class ChatWiseAgent(WiseAgent):
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the instance variables."""
         obj = super().__new__(cls)
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, llm: WiseAgentLLM, transport: WiseAgentTransport,
-                 system_message: Optional[str] = None):
+    def __init__(self, name: str, metadata: WiseAgentMetaData, llm: WiseAgentLLM, transport: WiseAgentTransport):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             llm (WiseAgentLLM): the LLM agent to use for processing requests
             transport (WiseAgentTransport): the transport to use for communication
-            system_message (Optional[str]): the optional system message to be used by the agent when processing
-            chat completions using its LLM
         """
-        self._name = name
-        self._description = description
-        self._transport = transport
-        self._llm = llm
-        self._system_message = system_message
-        super().__init__(name=name, description=description, transport=self.transport, llm=llm, system_message=system_message)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=llm)
 
     def __repr__(self):
         """Return a string representation of the agent."""
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
-                f"transport={self.transport}, system_message={self.system_message})")
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm},"
+                f"transport={self.transport})")
 
     def process_event(self, event):
         """Do nothing"""
@@ -406,7 +380,7 @@ class ChatWiseAgent(WiseAgent):
             Optional[str]: the response to the request message as a string or None if there is
             no string response yet
         """
-        conversation_history.append({"role": "system", "content": self.system_message or self.llm.system_message})
+        conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": request.message})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
         return llm_response.choices[0].message.content

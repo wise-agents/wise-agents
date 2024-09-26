@@ -116,7 +116,6 @@ class WiseAgentContext():
     '''
     
     _message_trace : List[str] = []
-    _participants : List[str] = []
     
     # Maps a chat uuid to a list of chat completion messages
     _llm_chat_completion : Dict[str, List[ChatCompletionMessageParam]] = {}
@@ -156,6 +155,7 @@ class WiseAgentContext():
     _redis_db : redis.Redis = None
     _use_redis : bool = False
     _config : Dict[str, Any] = {}
+    _trace_enabled : bool = False
 
 
     def __init__(self, name: str, config : Optional[Dict[str,Any]] = {"use_redis": False}):
@@ -168,13 +168,14 @@ class WiseAgentContext():
         if config.get("use_redis") == True and self._redis_db is None:
             self._redis_db = redis.Redis(host=self._config["redis_host"], port=self._config["redis_port"])
             self._use_redis = True
-            
+        if (config.get("trace_enabled") == True):
+            self._trace_enabled = True  
         WiseAgentRegistry.register_context(self)
     
     def __repr__(self) -> str:
         '''Return a string representation of the context.'''
         return (f"{self.__class__.__name__}(name={self.name}, message_trace={self.message_trace},"
-                f"participants={self.participants}, llm_chat_completion={self.llm_chat_completion},"
+                f"llm_chat_completion={self.llm_chat_completion},"
                 f"llm_required_tool_call={self.llm_required_tool_call}, llm_available_tools_in_chat={self.llm_available_tools_in_chat},"
                 f"agents_sequence={self._agents_sequence}, route_response_to={self._route_response_to},"
                 f"agent_phase_assignments={self._agent_phase_assignments}, current_phase={self._current_phase},"
@@ -203,6 +204,11 @@ class WiseAgentContext():
         return self._name
     
     @property
+    def trace_enabled(self) -> bool:
+        """Get the trace enabled of the context."""
+        return self._trace_enabled
+
+    @property
     def message_trace(self) -> List[str]:
         """Get the message trace of the context."""
         if (self._use_redis == True):
@@ -212,19 +218,12 @@ class WiseAgentContext():
 
     def trace(self, message : WiseAgentMessage):
         '''Trace the message.'''
-        if (self._use_redis == True):
-            self._redis_db.rpush("message_trace", message.__repr__())
-        else:
-            self._message_trace.append(message)   
-            
-        
-    @property
-    def participants(self) -> List[str]:
-        """Get the participants of the context."""
-        if (self._use_redis == True):
-            return self._redis_db.lrange("participants", 0, -1)
-        else:
-            return self._participants
+        if (self.trace_enabled):
+            if (self._use_redis == True):
+                self._redis_db.rpush("message_trace", message.__repr__())
+            else:
+                self._message_trace.append(message)   
+                
     
     @property
     def llm_chat_completion(self) -> Dict[str, List[ChatCompletionMessageParam]]:
@@ -236,40 +235,8 @@ class WiseAgentContext():
                 return_dict[key.decode('utf-8')] = pickle.loads(redis_dict[key])
             return return_dict
         else:
-            return self._llm_chat_completion
-    
-    def add_participant(self, agent_name: str):
-        '''Add a participant to the context.
-
-        Args:
-            agent (WiseAgent): the agent to add'''
-        
-        if (self._use_redis == True):
-            pipe = self._redis_db.pipeline(transaction=True)
-            while True:
-                pipe.watch("participants")
-                try:
-                    if(pipe.exists("participants") == False):
-                        pipe.multi()
-                        pipe.rpush("participants", agent_name)
-                        pipe.execute()
-                        return
-                    else:
-                        if bytes(agent_name, 'utf-8') not in pipe.lrange("participants", 0, -1):
-                            pipe.multi()
-                            pipe.rpush("participants", agent_name)
-                            pipe.execute()
-                            return
-                        else:
-                            pipe.unwatch()
-                            return
-                except redis.WatchError:
-                    logging.debug("WatchError in add_participant")
-                    continue
-        
-        else:
-            if agent_name not in self.participants:    
-                self._participants.append(agent_name)
+            return self._llm_chat_completion   
+            
     
     def append_chat_completion(self, chat_uuid: str, messages: Iterable[ChatCompletionMessageParam]):
         '''Append chat completion to the context.
@@ -826,6 +793,42 @@ class WiseAgentContext():
         else:
             self._collaboration_type[chat_uuid] = collaboration_type
 
+class WiseAgentMetaData(WiseAgentsYAMLObject):
+    ''' A WiseAgentMetaData is a class that represents metadata associated with an agent.
+    Except description, all the metadata is optional and set to None as default.
+    '''
+    yaml_tag = u"!wiseagents.WiseAgentMetaData"
+    def __new__(cls, *args, **kwargs):
+        '''Create a new instance of the class, setting default values for the instance variables.'''
+        obj = super().__new__(cls)
+        obj._system_message = None
+        return obj
+    def __init__(self, description : str, system_message: Optional[str] = None):
+        ''' Initialize the metadata with the given system message.
+
+        Args:
+            description (str): a description of what the agent does
+            system_message (Optional[str]): an optional system message that can be used by the agent when processing chat
+            completions using its LLM'''
+        self._description = description
+        self._system_message = system_message
+    def __repr__(self):
+        '''Return a string representation of the metadata.'''
+        return (f"{self.__class__.__name__}(description={self.description}, system_message={self.system_message})") 
+    
+    def __eq__(self, value: object) -> bool:
+        return self.__repr__() == value.__repr__()
+
+    @property
+    def description(self) -> str:
+        """Get a description of what the agent does."""
+        return self._description
+    
+    @property
+    def system_message(self) -> Optional[str]:
+        """Get the system message associated with the agent."""
+        return self._system_message
+
 
 class WiseAgent(WiseAgentsYAMLObject):
     ''' A WiseAgent is an abstract class that represents an agent that can send and receive messages to and from other agents.
@@ -839,36 +842,32 @@ class WiseAgent(WiseAgentsYAMLObject):
         obj._vector_db = None
         obj._graph_db = None
         obj._collection_name = "wise-agent-collection"
-        obj._system_message = None
         return obj
 
-    def __init__(self, name: str, description: str, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
+    def __init__(self, name: str, metadata: WiseAgentMetaData, transport: WiseAgentTransport, llm: Optional[WiseAgentLLM] = None,
                  vector_db: Optional[WiseAgentVectorDB] = None,
                  collection_name: Optional[str] = "wise-agent-collection",
-                 graph_db: Optional[WiseAgentGraphDB] = None, system_message: Optional[str] = None):
+                 graph_db: Optional[WiseAgentGraphDB] = None):
         ''' 
-        Initialize the agent with the given name, description, transport, LLM, vector DB, collection name, and graph DB.
+        Initialize the agent with the given name, metadata, transport, LLM, vector DB, collection name, and graph DB.
 
 
         Args:
             name (str): the name of the agent
-            description (str): a description of what the agent does
+            metadata (WiseAgentMetaData): the metadata associated with the agent
             transport (WiseAgentTransport): the transport to use for sending and receiving messages
             llm (Optional[WiseAgentLLM]): the LLM associated with the agent
             vector_db (Optional[WiseAgentVectorDB]): the vector DB associated with the agent
             collection_name (Optional[str]) = "wise-agent-collection": the vector DB collection name associated with the agent
             graph_db (Optional[WiseAgentGraphDB]): the graph DB associated with the agent
-            system_message Optional(str): an optional system message that can be used by the agent when processing chat
-            completions using its LLM
         '''
         self._name = name
-        self._description = description
+        self._metadata = metadata
         self._llm = llm
         self._vector_db = vector_db
         self._collection_name = collection_name
         self._graph_db = graph_db
         self._transport = transport
-        self._system_message = system_message
         self.start_agent()
 
     def start_agent(self):
@@ -876,7 +875,7 @@ class WiseAgent(WiseAgentsYAMLObject):
         self.transport.set_call_backs(self.handle_request, self.process_event, self.process_error,
                                       self.process_response)
         self.transport.start()
-        WiseAgentRegistry.register_agent(self.name, self.description)
+        WiseAgentRegistry.register_agent(self.name, self.metadata)
 
     def stop_agent(self):
         ''' Stop the agent by stopping the transport and removing the agent from the registry.'''
@@ -885,9 +884,8 @@ class WiseAgent(WiseAgentsYAMLObject):
 
     def __repr__(self):
         '''Return a string representation of the agent.'''
-        return (f"{self.__class__.__name__}(name={self.name}, description={self.description}, llm={self.llm},"
-                f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db},"
-                f"system_message={self.system_message})")
+        return (f"{self.__class__.__name__}(name={self.name}, metadata={self.metadata}, llm={self.llm},"
+                f"vector_db={self.vector_db}, collection_name={self._collection_name}, graph_db={self.graph_db},)")
 
     def __eq__(self, value: object) -> bool:
         return isinstance(value, WiseAgent) and self.__repr__() == value.__repr__()
@@ -898,10 +896,10 @@ class WiseAgent(WiseAgentsYAMLObject):
         return self._name
 
     @property
-    def description(self) -> str:
-        """Get a description of what the agent does."""
-        return self._description
-
+    def metadata(self) -> WiseAgentMetaData:
+        """Get the metadata associated with the agent."""
+        return self._metadata
+    
     @property
     def llm(self) -> Optional[WiseAgentLLM]:
         """Get the LLM associated with the agent."""
@@ -927,11 +925,6 @@ class WiseAgent(WiseAgentsYAMLObject):
         """Get the transport associated with the agent."""
         return self._transport
 
-    @property
-    def system_message(self) -> Optional[str]:
-        """Get the system message associated with the agent."""
-        return self._system_message
-
     def send_request(self, message: WiseAgentMessage, dest_agent_name: str):
         '''Send a request message to the destination agent with the given name.
 
@@ -940,7 +933,6 @@ class WiseAgent(WiseAgentsYAMLObject):
             dest_agent_name (str): the name of the destination agent'''
         message.sender = self.name
         context = WiseAgentRegistry.get_or_create_context(message.context_name)
-        context.add_participant(self.name)
         self.transport.send_request(message, dest_agent_name)
         context.trace(message)
 
@@ -952,7 +944,6 @@ class WiseAgent(WiseAgentsYAMLObject):
             dest_agent_name (str): the name of the destination agent'''
         message.sender = self.name
         context = WiseAgentRegistry.get_or_create_context(message.context_name)
-        context.add_participant(self.name)
         self.transport.send_response(message, dest_agent_name)
         context.trace(message)
 
@@ -1123,7 +1114,7 @@ class WiseAgentRegistry:
     """
     A Registry to get available agents and running contexts
     """
-    agents_descriptions_dict : dict[str, str] = {}
+    agents_metadata_dict : dict[str, WiseAgentMetaData] = {}
     contexts : dict[str, WiseAgentContext] = {}
     tools: dict[str, WiseAgentTool] = {}
     
@@ -1180,7 +1171,7 @@ class WiseAgentRegistry:
             exit(1)
     
     @classmethod
-    def register_agent(cls, agent_name : str, agent_description :str):
+    def register_agent(cls, agent_name : str, agent_metadata :WiseAgentMetaData):
         """
         Register an agent with the registry
         """
@@ -1194,16 +1185,16 @@ class WiseAgentRegistry:
                         raise NameError(f"Agent with name {agent_name} already exists")
                     else:
                         pipe.multi()
-                        pipe.hset("agents", key=agent_name, value=agent_description)
+                        pipe.hset("agents", key=agent_name, value=pickle.dumps(agent_metadata))
                         pipe.execute()
                     return
                 except redis.WatchError:
                     logging.debug("WatchError in register_agent")
                     continue
         else:
-            if cls.agents_descriptions_dict.get(agent_name) is not None:
+            if cls.agents_metadata_dict.get(agent_name) is not None:
                 raise NameError(f"Agent with name {agent_name} already exists")
-        cls.agents_descriptions_dict[agent_name] = agent_description
+        cls.agents_metadata_dict[agent_name] = agent_metadata
     @classmethod    
     def register_context(cls, context : WiseAgentContext):
         """
@@ -1214,14 +1205,18 @@ class WiseAgentRegistry:
         else:
             cls.contexts[context.name] = context
     @classmethod    
-    def fetch_agents_descriptions_dict(cls) -> dict [str, str]:
+    def fetch_agents_metadata_dict(cls) -> dict [str, WiseAgentMetaData]:
         """
-        Get the dict with the agent names as keys and descriptions as values
+        Get the dict with the agent names as keys and metadata as values
         """
         if (cls.get_config().get("use_redis") == True):
-            return cls.redis_db.hgetall("agents")
+            redis_dict = cls.redis_db.hgetall("agents")
+            return_dictionary : Dict[str, WiseAgentMetaData]= {}
+            for key in redis_dict:
+                return_dictionary[key.decode('utf-8')] = pickle.loads(redis_dict[key])
+            return return_dictionary
         else:
-            return cls.agents_descriptions_dict
+            return cls.agents_metadata_dict
     
     @classmethod
     def get_contexts(cls) -> dict [str, WiseAgentContext]:
@@ -1238,18 +1233,18 @@ class WiseAgentRegistry:
             return cls.contexts
     
     @classmethod
-    def get_agent_description(cls, agent_name: str) -> str:
+    def get_agent_metadata(cls, agent_name: str) -> WiseAgentMetaData:
         """
-        Get the agent description for the agent with the given name
+        Get the agent metadata for the agent with the given name
         """
         if (cls.get_config().get("use_redis") == True):
             return_byte = cls.redis_db.hget("agents", key=agent_name)
             if return_byte is not None:
-                return return_byte.decode('utf-8')
+                return pickle.loads(return_byte)
             else:  
                 return None
         else:
-            return cls.agents_descriptions_dict.get(agent_name) 
+            return cls.agents_metadata_dict.get(agent_name) 
     
     @classmethod
     def get_or_create_context(cls, context_name: str) -> WiseAgentContext:
@@ -1290,8 +1285,8 @@ class WiseAgentRegistry:
         if (cls.get_config().get("use_redis") == True):
             cls.redis_db.hdel("agents", agent_name)
         else:
-            if cls.agents_descriptions_dict.get(agent_name) is not None:
-                cls.agents_descriptions_dict.pop(agent_name)
+            if cls.agents_metadata_dict.get(agent_name) is not None:
+                cls.agents_metadata_dict.pop(agent_name)
         
     @classmethod
     def remove_context(cls, context_name: str):
@@ -1351,8 +1346,8 @@ class WiseAgentRegistry:
             List[str]: the list of agent descriptions
         """
         agent_descriptions = []
-        for agent_name, agent_description in cls.fetch_agents_descriptions_dict().items():
-            agent_descriptions.append(f"Agent Name: {agent_name} Agent Description: {agent_description}")
+        for agent_name, agent_metadata in cls.fetch_agents_metadata_dict().items():
+            agent_descriptions.append(f"Agent Name: {agent_name} Agent Description: {agent_metadata.description}")
 
         return agent_descriptions
 

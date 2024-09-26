@@ -7,7 +7,7 @@ from typing import Callable, List, Optional
 import uuid
 
 from openai.types.chat import ChatCompletionMessageParam
-from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentRegistry, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentCollaborationType, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.wise_agent_messaging import WiseAgentMessage
 import gradio
 
@@ -28,25 +28,25 @@ class AssistantAgent(WiseAgent):
         obj = super().__new__(cls)
         return obj
 
-    def __init__(self, name: str, description: str , transport: WiseAgentTransport,
+    def __init__(self, name: str, metadata: WiseAgentMetaData , transport: WiseAgentTransport,
                  destination_agent_name: str):
         """
         Initialize the agent.
 
         Args:
             name (str): the name of the agent
-            description (str): a description of the agent
+            metadata (WiseAgentMetaData): the metadata for the agent
             transport (WiseAgentTransport): the transport to use for communication
             destination_agent_name (str): the name of the agent to send requests to
         """
         self._name = name
         self._destination_agent_name = destination_agent_name
-        super().__init__(name=name, description=description, transport=transport, llm=None)
+        super().__init__(name=name, metadata=metadata, transport=transport, llm=None)
 
     def __repr__(self):
         """Return a string representation of the agent."""
         return f"{self.__class__.__name__}(name={self.name}, \
-            description={self.description}, transport={self.transport}, \
+            metadata={self.metadata}, transport={self.transport}, \
             destination_agent_name={self.destination_agent_name},\
             response_delivery={self.response_delivery}"
     

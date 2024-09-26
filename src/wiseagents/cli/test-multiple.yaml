@@ -1,6 +1,7 @@
 ---
 !wiseagents.agents.PassThroughClientAgent
-description: This is a test agent
+metadata: !wiseagents.WiseAgentMetaData
+  description: This is a test agent
 name: PassThroughClientAgent1
 destination_agent_name: WiseIntelligentAgent
 transport:  !wiseagents.transports.StompWiseAgentTransport
@@ -9,7 +10,8 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
     agent_name: PassThroughClientAgent1
 ---
 !wiseagents.agents.LLMOnlyWiseAgent
-description: This is another test agent
+metadata: !wiseagents.WiseAgentMetaData
+  description: This is another test agent
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   model_name: Phi-3-mini-4k-instruct-q4.gguf
   remote_address: http://localhost:8001/v1
@@ -21,7 +23,8 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
     agent_name: LLMOnlyWiseAgent2
 ---
 !wiseagents.agents.RAGWiseAgent
-description: This is an agent that uses RAG
+metadata: !wiseagents.WiseAgentMetaData
+  description: This is an agent that uses RAG
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   model_name: Phi-3-mini-4k-instruct-q4.gguf
   remote_address: http://localhost:8001/v1
@@ -37,7 +40,8 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
     agent_name: RAGWiseAgent1
 ---
 !wiseagents.agents.GraphRAGWiseAgent
-description: This is an agent that uses RAG with a knowledge graph
+metadata: !wiseagents.WiseAgentMetaData
+  description: This is an agent that uses RAG with a knowledge graph
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   model_name: Phi-3-mini-4k-instruct-q4.gguf
   remote_address: http://localhost:8001/v1

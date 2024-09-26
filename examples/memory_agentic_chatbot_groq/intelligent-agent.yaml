@@ -1,6 +1,7 @@
 ---
 !wiseagents.agents.ChatWiseAgent
-description: This is another test agent
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is another test agent
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   model_name: llama-3.1-70b-versatile
   remote_address: https://api.groq.com/openai/v1

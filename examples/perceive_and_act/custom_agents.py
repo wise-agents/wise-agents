@@ -3,7 +3,7 @@ import threading
 import time
 from openai.types.chat import ChatCompletionToolParam, ChatCompletionMessageParam
 from typing import List, Optional
-from wiseagents import WiseAgent, WiseAgentEvent, WiseAgentMessage, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentEvent, WiseAgentMessage, WiseAgentMetaData, WiseAgentTransport
 from wiseagents.yaml import WiseAgentsLoader
 
 class PerceivingAgent(WiseAgent):
@@ -12,11 +12,11 @@ class PerceivingAgent(WiseAgent):
 
     stop_event = threading.Event()
 
-    def __init__(self, name: str, description: str, transport: WiseAgentTransport, file_path: str, check_interval: float, destination_agent_name: str):
+    def __init__(self, name: str, metadata: WiseAgentMetaData, transport: WiseAgentTransport, file_path: str, check_interval: float, destination_agent_name: str):
         self._file_path = file_path
         self._check_interval = check_interval
         self._destination_agent_name = destination_agent_name
-        super().__init__(name=name, description=description, transport=transport)
+        super().__init__(name=name, metadata=metadata, transport=transport)
 
     def start_agent(self):
         super().start_agent()
@@ -86,9 +86,9 @@ class ActionAgent(WiseAgent):
     yaml_tag = u'!custom_agents.ActionAgent'
     yaml_loader = WiseAgentsLoader
 
-    def __init__(self, name: str, description: str, transport: WiseAgentTransport, destination_file_path: str):
+    def __init__(self, name: str, metadata: WiseAgentMetaData, transport: WiseAgentTransport, destination_file_path: str):
         self._destination_file_path = destination_file_path
-        super().__init__(name=name, description=description, transport=transport)
+        super().__init__(name=name, metadata=metadata, transport=transport)
 
     def start_agent(self):
         super().start_agent()
