@@ -101,6 +101,44 @@ class SequentialCoordinatorWiseAgent(WiseAgent):
         """Set the function to deliver the response to the client."""
         self._response_delivery = response_delivery
 
+class SequentialMemoryCoordinatorWiseAgent(SequentialCoordinatorWiseAgent):
+    yaml_tag = u'!wiseagents.agents.SequentialMemoryCoordinatorWiseAgent'
+    
+    def __new__(cls, *args, **kwargs):
+        """Create a new instance of the class, setting default values for the instance variables."""
+        obj = super().__new__(cls)
+        obj._system_message = None
+        return obj
+
+    def __init__(self, name: str, description: str, transport: WiseAgentTransport, agents: List[str], system_message: Optional[str] = None):
+        self._system_message = system_message
+        super().__init__(name, description, transport, agents)
+
+    @property
+    def system_message(self) -> str:
+        """Get the system message."""
+        return self._system_message
+    
+    def handle_request(self, request):
+        """
+        Process a request message by passing it to the first agent in the sequence.
+
+        Args:
+            request (WiseAgentMessage): the request message to process
+        """
+        logging.debug(f"Sequential coordinator received request: {request}")
+
+        # Generate a chat ID that will be used to collaborate on this query
+        chat_id = str(uuid.uuid4())
+
+        ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
+        ctx.set_collaboration_type(chat_id, WiseAgentCollaborationType.SEQUENTIAL_MEMORY)
+        ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "system", "content": self.system_message or self.llm.system_message})
+        
+        ctx.set_agents_sequence(chat_id, self._agents)
+        ctx.set_route_response_to(chat_id, request.sender)
+        self.send_request(WiseAgentMessage(message=request.message, sender=self.name, context_name=request.context_name,
+                                           chat_id=chat_id), self._agents[0])
 
 class PhasedCoordinatorWiseAgent(WiseAgent):
     """

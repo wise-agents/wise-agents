@@ -1,4 +1,5 @@
 import importlib
+import signal
 import sys
 import threading
 import traceback
@@ -23,13 +24,26 @@ def response_delivered(message: WiseAgentMessage):
         print(f"C Response delivered: {msg}")
         cond.notify()
 
+def signal_handler(sig, frame):
+    global user_question_agent
+    print('You pressed Ctrl+C! Please wait for the agents to stop')
+    for agent in agent_list:
+        print(f"Stopping agent {agent.name}")
+        agent.stop_agent()
+    exit(0)
+
+
+    
 
 def main():
-    agent_list : List[WiseAgent]= []
+    global agent_list
+    agent_list = []
     user_input = "h"
     file_path = None
     default_file_path = "src/wiseagents/cli/test-multiple.yaml"
 
+    signal.signal(signal.SIGINT, signal_handler)
+    
     if (sys.argv.__len__() > 1):
             user_input="/load-agents"
             file_path=sys.argv[1]
@@ -49,7 +63,9 @@ def main():
                 print(msg)
         if  (user_input == '/exit' or user_input == '/x'):
             #stop all agents
+            print('/exit seceleted! Please wait for the agents to stop')
             for agent in agent_list:
+                print(f"Stopping agent {agent.name}")
                 agent.stop_agent()
             sys.exit(0)
         if (user_input == '/reload-agents' or user_input == '/r'):

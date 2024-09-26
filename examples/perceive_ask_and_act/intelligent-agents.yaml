@@ -1,0 +1,53 @@
+---
+!wiseagents.agents.ChatWiseAgent
+_description: This is an agent that can give suggestion on what to read next
+_llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
+  _model_name: llama3.1
+  _remote_address: http://localhost:11434/v1
+  _system_message: You are an english literature expert. The user will provide you with a list of books they have read. Suggest the next 5 books they should read and ask user for their favorite one in this list
+_name: LiterateAgent
+_transport:  !wiseagents.transports.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: LiterateAgent
+---
+!custom_agents.PerceivingAgent
+_description: This is an agent that can perceive file changes 
+_name: PerceivingAgent
+_file_path: ./books_read.txt
+_check_interval: 5
+_destination_agent_name: SequentialCoordinator
+_transport:  !wiseagents.transports.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: PerceivingAgent
+---
+!custom_agents.ActionAgent
+_description: This is an agent that can write a file 
+_name: ActionAgent
+_destination_file_path: ./books_suggested.txt
+_transport:  !wiseagents.transports.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: ActionAgent
+---
+!wiseagents.agents.ChatWiseAgent
+_description: This is an agent that can give suggestion on what to read next
+_llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
+  _model_name: llama3.1
+  _remote_address: http://localhost:11434/v1
+  _system_message: You will receive a preference from the user. Considering the previous books read , the user's preference on your first list of suggestion, suggest the next 3 books they should read.
+_name: FinalLiterateAgent
+_transport:  !wiseagents.transports.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: FinalLiterateAgent
+---
+!wiseagents.agents.SequentialMemoryCoordinatorWiseAgent
+_description: This is a coordinator agent
+_name: SequentialCoordinator
+_agents: ["LiterateAgent", "UserQuestionAgent", "FinalLiterateAgent", "ActionAgent"]
+_transport:  !wiseagents.transports.StompWiseAgentTransport
+    _host: localhost
+    _port: 61616
+    _agent_name: SequentialCoordinator
