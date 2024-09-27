@@ -139,9 +139,10 @@ class SequentialMemoryCoordinatorWiseAgent(WiseAgent):
         ctx = WiseAgentRegistry.get_or_create_context(request.context_name)
         ctx.set_collaboration_type(chat_id, WiseAgentCollaborationType.SEQUENTIAL_MEMORY)
         ctx.append_chat_completion(chat_uuid=chat_id, messages={"role": "system", "content": self.metadata.system_message})
-        
+
         ctx.set_agents_sequence(chat_id, self._agents)
         ctx.set_route_response_to(chat_id, request.sender)
+        ctx.add_query(chat_id, request.message)
         self.send_request(WiseAgentMessage(message=request.message, sender=self.name, context_name=request.context_name,
                                            chat_id=chat_id), self._agents[0])
 
