@@ -6,7 +6,7 @@ from typing import Iterable
 import pytest
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
 
-from wiseagents import WiseAgentMessage, WiseAgentRegistry, WiseAgentTool
+from wiseagents import WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTool
 from wiseagents.agents import LLMWiseAgentWithTools, PassThroughClientAgent
 from wiseagents.llm import WiseAgentRemoteLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
@@ -108,7 +108,7 @@ def test_tool():
    llm = FakeOpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
                                          model_name="Phi-3-mini-4k-instruct-q4.gguf")      
    agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
-                                 description="This is a test agent",
+                                 metadata=WiseAgentMetaData(description="This is a test agent"),
                                  llm=llm,
                                  tools = ["get_current_weather"],
                                  transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
@@ -117,7 +117,7 @@ def test_tool():
    logging.info(f"tool: {WiseAgentRegistry.get_tool('get_current_weather').get_tool_OpenAI_format()}")
    with cond:    
    
-        client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",
+        client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", metadata=WiseAgentMetaData(description="This is a test agent"),
                                                 transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
                                                 )
         client_agent1.set_response_delivery(response_delivered)
@@ -126,7 +126,7 @@ def test_tool():
         cond.wait()
         
 
-   logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+   logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
    for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
        logging.debug(f'{message}')
    

@@ -5,7 +5,7 @@ from typing import Callable, Optional
 
 import yaml
 from yaml import YAMLObject
-from wiseagents.yaml import WiseAgentsLoader, WiseAgentsYAMLObject
+from wiseagents.yaml import WiseAgentsYAMLObject
 from wiseagents import enforce_no_abstract_class_instances
 from yaml.resolver import BaseResolver
 
@@ -120,8 +120,7 @@ class WiseAgentMessage(YAMLObject):
         return self._route_response_to
 
 class WiseAgentTransport(WiseAgentsYAMLObject):
-    yaml_loader = WiseAgentsLoader
-
+    
     def __init__(self):
         enforce_no_abstract_class_instances(self.__class__, WiseAgentTransport)
 

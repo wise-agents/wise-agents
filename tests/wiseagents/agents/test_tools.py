@@ -5,7 +5,7 @@ import threading
 
 import pytest
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentRegistry, WiseAgentTool
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTool
 from wiseagents.agents import LLMWiseAgentWithTools, PassThroughClientAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
@@ -49,11 +49,9 @@ class WiseAgentWeather(WiseAgent):
     request_received : WiseAgentMessage = None
     response_received : WiseAgentMessage = None
     
-    def __init__(self, name: str, description: str):
-        self._name = name
-        self._description = description
-        transport = StompWiseAgentTransport(host='localhost', port=61616, agent_name=self.name)
-        super().__init__(name, description, transport, None, None, None)
+    def __init__(self, name: str, metadata: WiseAgentMetaData):
+        transport = StompWiseAgentTransport(host='localhost', port=61616, agent_name=name)
+        super().__init__(name, metadata, transport, None, None, None)
         
         
     def process_event(self, event):
@@ -107,10 +105,10 @@ def test_agent_tool():
                                             model_name="llama3.1",
                                             remote_address="http://localhost:11434/v1")      
         
-        weather_agent = WiseAgentWeather(name="WeatherAgent", description="Get the current weather in a given location")
+        weather_agent = WiseAgentWeather(name="WeatherAgent", metadata=WiseAgentMetaData(description="Get the current weather in a given location"))
         
         agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
-                                    description="This is a test agent",
+                                    metadata=WiseAgentMetaData(description="This is a test agent"),
                                     llm=llm,
                                     tools = ["WeatherAgent"],
                                     transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
@@ -119,7 +117,7 @@ def test_agent_tool():
         logging.info(f"tool: {WiseAgentRegistry.get_tool('WeatherAgent').get_tool_OpenAI_format()}")
         with cond:    
 
-            client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",
+            client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", metadata=WiseAgentMetaData(description="This is a test agent"),
                                                     transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
                                                     )
             client_agent1.set_response_delivery(response_delivered)
@@ -128,7 +126,7 @@ def test_agent_tool():
             cond.wait()
             
 
-        logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+        logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             logging.debug(f'{message}')
     finally:
@@ -156,7 +154,7 @@ def test_tool():
                                             model_name="llama3.1",
                                             remote_address="http://localhost:11434/v1")      
         agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
-                                    description="This is a test agent",
+                                    metadata=WiseAgentMetaData(description="This is a test agent"),
                                     llm=llm,
                                     tools = ["get_current_weather"],
                                     transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
@@ -165,7 +163,7 @@ def test_tool():
         logging.info(f"tool: {WiseAgentRegistry.get_tool('get_current_weather').get_tool_OpenAI_format()}")
         with cond:    
 
-            client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", description="This is a test agent",
+            client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", metadata=WiseAgentMetaData(description="This is a test agent"),
                                                     transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
                                                     )
             client_agent1.set_response_delivery(response_delivered)
@@ -174,7 +172,7 @@ def test_tool():
             cond.wait()
             
 
-        logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+        logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
         for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
             logging.debug(f'{message}')
     finally:

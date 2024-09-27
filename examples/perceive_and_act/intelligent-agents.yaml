@@ -1,6 +1,7 @@
 ---
 !wiseagents.agents.LLMOnlyWiseAgent
-description: This is an agent that can give suggestion on what to read next
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is an agent that can give suggestion on what to read next
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
   model_name: llama3.1
   remote_address: http://localhost:11434/v1
@@ -12,7 +13,8 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
     agent_name: LiterateAgent
 ---
 !custom_agents.PerceivingAgent
-description: This is an agent that can perceive file changes
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is an agent that can perceive file changes
 name: PerceivingAgent
 file_path: ./books_read.txt
 check_interval: 5
@@ -23,7 +25,8 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
     agent_name: PerceivingAgent
 ---
 !custom_agents.ActionAgent
-description: This is an agent that can write a file
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is an agent that can write a file
 name: ActionAgent
 destination_file_path: ./books_suggested.txt
 transport:  !wiseagents.transports.StompWiseAgentTransport
@@ -32,7 +35,8 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
     agent_name: ActionAgent
 ---
 !wiseagents.agents.SequentialCoordinatorWiseAgent
-description: This is a coordinator agent
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is a coordinator agent
 name: SequentialCoordinator
 agents: ["LiterateAgent", "ActionAgent"]
 transport:  !wiseagents.transports.StompWiseAgentTransport

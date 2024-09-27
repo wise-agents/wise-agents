@@ -6,7 +6,7 @@ import unittest
 import pytest
 import yaml
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMessageType, WiseAgentRegistry, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMessageType, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.agents import AssistantAgent
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
@@ -37,8 +37,8 @@ class DummyTransport(WiseAgentTransport):
 
 class TestSerializationAgent(WiseAgent):
     yaml_tag = "!tests.wiseagents.test_yaml_serializtion.TestSerializationAgent"
-    def __init__(self, name, description, transport, llm=None, graph_db=None, vector_db=None):
-        super().__init__(name, description, transport, llm=llm, graph_db=graph_db, vector_db=vector_db)
+    def __init__(self, name, metadata, transport, llm=None, graph_db=None, vector_db=None):
+        super().__init__(name, metadata, transport, llm=llm, graph_db=graph_db, vector_db=vector_db)
 
 def test_serialize_wise_agent(monkeypatch):
     try:
@@ -51,7 +51,7 @@ def test_serialize_wise_agent(monkeypatch):
         agent_vector_db = PGVectorLangChainWiseAgentVectorDB(
             connection_string="postgresql+psycopg://langchain:langchain@localhost:6024/langchain",
             embedding_model_name="all-MiniLM-L6-v2")
-        agent = TestSerializationAgent(name="Agent1", description="This is a test agent", transport=DummyTransport(), llm=agent_llm,
+        agent = TestSerializationAgent(name="Agent1", metadata=WiseAgentMetaData(description="This is a test agent"), transport=DummyTransport(), llm=agent_llm,
                         graph_db=agent_graph_db, vector_db=agent_vector_db)
 
         # Serialize the WiseAgent object to YAML
@@ -70,7 +70,7 @@ def test_serialize_wise_agent(monkeypatch):
         deserialized_agent = yaml.load(serialized_agent, Loader=WiseAgentsLoader)
         assert isinstance(deserialized_agent, TestSerializationAgent)
         assert deserialized_agent.name == agent.name
-        assert deserialized_agent.description == agent.description
+        assert deserialized_agent.metadata == agent.metadata
         assert deserialized_agent.llm.system_message == agent.llm.system_message
         assert deserialized_agent.llm.model_name == agent.llm.model_name
         assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
@@ -98,7 +98,7 @@ def test_using_deserialized_agent(monkeypatch):
         agent_vector_db = PGVectorLangChainWiseAgentVectorDB(
             connection_string="postgresql+psycopg://langchain:langchain@localhost:6024/langchain",
             embedding_model_name="all-MiniLM-L6-v2")
-        agent = TestSerializationAgent(name="Agent1", description="This is a test agent", transport=DummyTransport(), llm=agent_llm,
+        agent = TestSerializationAgent(name="Agent1", metadata=WiseAgentMetaData(description="This is a test agent"), transport=DummyTransport(), llm=agent_llm,
                         graph_db=agent_graph_db,
                         vector_db=agent_vector_db)
 
@@ -118,7 +118,7 @@ def test_using_deserialized_agent(monkeypatch):
         deserialized_agent = yaml.load(serialized_agent, Loader=WiseAgentsLoader)
         assert isinstance(deserialized_agent, WiseAgent)
         assert deserialized_agent.name == agent.name
-        assert deserialized_agent.description == agent.description
+        assert deserialized_agent.metadata == agent.metadata
         assert deserialized_agent.llm.system_message == agent.llm.system_message
         assert deserialized_agent.llm.model_name == agent.llm.model_name
         assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
@@ -137,7 +137,7 @@ def test_using_deserialized_agent(monkeypatch):
 
 def test_serialize_assistant():
     try:
-        assistant = AssistantAgent(name="Assistant1", description="This is a test assistant", transport=DummyTransport(), destination_agent_name="")
+        assistant = AssistantAgent(name="Assistant1", metadata=WiseAgentMetaData(description="This is a test assistant"), transport=DummyTransport(), destination_agent_name="")
         serialized_assistant = yaml.dump(assistant)
         logging.info(serialized_assistant)
         deserialized_agent = yaml.load(serialized_assistant, Loader=WiseAgentsLoader)

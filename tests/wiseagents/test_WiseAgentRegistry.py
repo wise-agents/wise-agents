@@ -2,7 +2,7 @@ import logging
 
 import pytest
 
-from wiseagents import WiseAgent, WiseAgentContext, WiseAgentMessage, WiseAgentRegistry, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentContext, WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.transports.stomp import StompWiseAgentTransport
 
 
@@ -12,8 +12,8 @@ def run_after_all_tests():
     
 
 class TestAgent(WiseAgent):
-    def __init__(self, name, description, transport):
-        super().__init__(name, description, transport)
+    def __init__(self, name, metadata, transport):
+        super().__init__(name, metadata, transport)
         self._started = False
         self._stopped = False
 
@@ -32,24 +32,24 @@ class DummyTransport(WiseAgentTransport):
 def test_register_agents():
     
     try:
-        agent = TestAgent(name="Agent1", description="This is a test agent",
+        agent = TestAgent(name="Agent1", metadata=WiseAgentMetaData(description="This is a test agent"),
                       transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
                                  )
-        assert 1 == WiseAgentRegistry.fetch_agents_descriptions_dict().__len__()
+        assert 1 == WiseAgentRegistry.fetch_agents_metadata_dict().__len__()
         logging.info(f'Agent ={agent}')
-        logging.info(f'Agent in the registry={WiseAgentRegistry.get_agent_description(agent.name)}')
-        assert agent.description == WiseAgentRegistry.get_agent_description(agent.name)
+        logging.info(f'Agent in the registry={WiseAgentRegistry.get_agent_metadata(agent.name)}')
+        assert agent.metadata.description == WiseAgentRegistry.get_agent_metadata(agent.name).description
     finally:    
         agent.stop_agent()
 
 def test_get_agents():
     try:
-        agents = [TestAgent(name="Agent1", description="This is a test agent", transport=DummyTransport()),
-                TestAgent(name="Agent2", description="This is another test agent", transport=DummyTransport()),
-                TestAgent(name="Agent3", description="This is yet another test agent", transport=DummyTransport())]
+        agents = [TestAgent(name="Agent1", metadata=WiseAgentMetaData(description="This is a test agent"), transport=DummyTransport()),
+                TestAgent(name="Agent2", metadata=WiseAgentMetaData(description="This is another test agent"), transport=DummyTransport()),
+                TestAgent(name="Agent3", metadata=WiseAgentMetaData(description="This is yet another test agent"), transport=DummyTransport())]
         
         for agent in agents:
-            assert agent.description == WiseAgentRegistry.get_agent_description(agent.name)
+            assert agent.metadata == WiseAgentRegistry.get_agent_metadata(agent.name)
         #stop the agents
     finally:
         for agent in agents:

@@ -93,7 +93,7 @@ def main():
                         agent_list.append(agent)
                 except yaml.YAMLError as exc:
                     traceback.print_exc()
-                print(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+                print(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
         if  (user_input == '/chat' or user_input == '/c'):
             while True:
                 user_input = input("Enter a message (or /back): ")
@@ -103,12 +103,12 @@ def main():
                     _passThroughClientAgent1.send_request(WiseAgentMessage(user_input, "PassThroughClientAgent1"), "LLMOnlyWiseAgent2")
                     cond.wait()
         if (user_input == '/agents' or user_input == '/a'):
-            print(f"registered agents= {WiseAgentRegistry.fetch_agents_descriptions_dict()}")
+            print(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
 
         if (user_input == '/send' or user_input == '/s'):
             agent_name = input("Enter the agent name: ")
             message = input("Enter the message: ")
-            agent : WiseAgent = WiseAgentRegistry.get_agent_description(agent_name)
+            agent : WiseAgent = WiseAgentRegistry.get_agent_metadata(agent_name)
             if agent:
                 with cond:
                     _passThroughClientAgent1.send_request(WiseAgentMessage(message, "PassThroughClientAgent1"), agent_name)

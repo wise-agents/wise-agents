@@ -1,6 +1,7 @@
 ---
 !wiseagents.agents.AssistantAgent
-description: This is a test agent
+metadata: !wiseagents.WiseAgentMetaData 
+  description: This is a test agent
 name: AssistantAgent
 destination_agent_name: SequentialCoordinator
 transport:  !wiseagents.transports.StompWiseAgentTransport

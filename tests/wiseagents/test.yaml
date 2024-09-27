@@ -1,5 +1,6 @@
 !tests.wiseagents.TestAgent
-description: This is a test agent
+metadata: !wiseagents.WiseAgentMetaData
+  description: This is a test agent
 graph_db: !wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB
   url: bolt://localhost:7687
   refresh_graph_schema: False
