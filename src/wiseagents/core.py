@@ -146,11 +146,14 @@ class WiseAgentContext():
     _required_agents_for_current_phase : Dict[str, List[str]] = {}
 
     # Maps a chat uuid to a list containing the queries attempted for each iteration executed by
-    # the phased coordinator
+    # the phased coordinator or sequential memory coordinator
     _queries : Dict[str, List[str]] = {}
 
     # Maps a chat uuid to the collaboration type
     _collaboration_type: Dict[str, WiseAgentCollaborationType] = {}
+
+    # Maps a chat uuid to a boolean value indicating whether to restart a sequence of agents
+    _restart_sequence: Dict[str, bool] = {}
 
     _redis_db : redis.Redis = None
     _use_redis : bool = False
@@ -676,6 +679,7 @@ class WiseAgentContext():
     def get_current_query(self, chat_uuid: str) -> Optional[str]:
         """
         Get the current query for the given chat uuid for this context. This is used by a phased coordinator.
+        Can also be used for sequential memory coordination.
 
         Args:
             chat_uuid (str): the chat uuid
@@ -701,6 +705,7 @@ class WiseAgentContext():
     def add_query(self, chat_uuid: str, query: str):
         """
         Add the current query for the given chat uuid for this context. This is used by a phased coordinator.
+        Can also be used for sequential memory coordination.
 
         Args:
             chat_uuid (str): the chat uuid
@@ -712,6 +717,7 @@ class WiseAgentContext():
                     pipe = self._redis_db.pipeline(transaction=True)
                     pipe.watch("queries")
                     if (pipe.hexists("queries", key=chat_uuid) == False):
+                        pipe.multi()
                         pipe.hset("queries", key=chat_uuid, value=pickle.dumps([query]))
                     else :
                         redis_stored_queries = pipe.hget("queries", key=chat_uuid)
@@ -732,6 +738,7 @@ class WiseAgentContext():
     def get_queries(self, chat_uuid: str) -> List[str]:
         """
         Get the queries attempted for the given chat uuid for this context. This is used by a phased coordinator.
+        Can also be used for sequential memory coordination.
 
         Returns:
             List[str]: the queries attempted for the given chat uuid for this context
@@ -792,6 +799,40 @@ class WiseAgentContext():
             self._redis_db.hset("collaboration_type", key=chat_uuid, value=pickle.dumps(collaboration_type))
         else:
             self._collaboration_type[chat_uuid] = collaboration_type
+    
+    def set_restart_sequence(self, chat_uuid: str, restart_sequence: bool):
+        """
+        Set whether to restart a sequence of agents for the given chat uuid for this context.
+        This is used by a sequential memory coordinator.
+
+        Args:
+            chat_uuid (str): the chat uuid
+            restart_sequence(bool): whether to restart a sequence of agents
+        """
+        if (self._use_redis == True):
+            self._redis_db.hset("restart_sequence", key=chat_uuid, value=pickle.dumps(restart_sequence))
+        else:
+            self._restart_sequence[chat_uuid] = restart_sequence
+    
+    def get_restart_sequence(self, chat_uuid: str) -> bool:
+        """
+        Get whether to restart the sequence for the chat uuid for this context.
+        This is used by a sequential memory coordinator.
+
+        Args:
+            chat_uuid (str): the chat uuid
+
+        Returns:
+            bool: whether to restart the sequence for the chat uuid for this context
+        """
+        if (self._use_redis == True):
+            restart = self._redis_db.hget("restart_sequence", key=chat_uuid)
+            if restart is not None:
+                return pickle.loads(restart)
+            else:
+                return False
+        else:
+            return self._restart_sequence.get(chat_uuid)
 
 class WiseAgentMetaData(WiseAgentsYAMLObject):
     ''' A WiseAgentMetaData is a class that represents metadata associated with an agent.
@@ -1048,11 +1089,20 @@ class WiseAgent(WiseAgentsYAMLObject):
                                                messages={"role": "assistant", "content": response_str})
                 next_agent = context.get_next_agent_in_sequence(request.chat_id, self.name)
                 if next_agent is None:
-                    logging.debug(f"Sequential coordination complete - sending response from " + self.name + " to "
-                                  + context.get_route_response_to(request.chat_id))
-                    self.send_response(WiseAgentMessage(message=response_str, sender=self.name,
-                                                        context_name=context.name, chat_id=request.chat_id),
-                                       context.get_route_response_to(request.chat_id))
+                    if context.get_restart_sequence(request.chat_id):
+                        next_agent = context.get_agents_sequence(request.chat_id)[0]
+                        logging.debug(f"Sequential coordination restarting")
+                        self.send_request(
+                            WiseAgentMessage(message=context.get_current_query(request.chat_id), sender=self.name,
+                                             context_name=context.name, chat_id=request.chat_id), next_agent)
+                        # clear the restart state for the chat_id
+                        context.set_restart_sequence(request.chat_id, False)
+                    else:
+                        logging.debug(f"Sequential coordination complete - sending response from " + self.name + " to "
+                                      + context.get_route_response_to(request.chat_id))
+                        self.send_response(WiseAgentMessage(message=response_str, sender=self.name,
+                                                            context_name=context.name, chat_id=request.chat_id),
+                                           context.get_route_response_to(request.chat_id))
                 else:
                     logging.debug(f"Sequential coordination continuing - sending response from " + self.name
                                   + " to " + next_agent)
