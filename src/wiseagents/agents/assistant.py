@@ -21,7 +21,7 @@ class AssistantAgent(WiseAgent):
     _response_delivery = None
     _cond = threading.Condition()
     _response : WiseAgentMessage = None
-    _chat_id = None
+    _ctx = None
     
     def __new__(cls, *args, **kwargs):
         """Create a new instance of the class, setting default values for the optional instance variables."""
@@ -52,14 +52,17 @@ class AssistantAgent(WiseAgent):
     
     def start_agent(self):
         super().start_agent()
-        self._chat_id = str(uuid.uuid4())
-        WiseAgentRegistry.get_or_create_context("default").set_collaboration_type(self._chat_id,
-                                                                                  WiseAgentCollaborationType.CHAT)
+        self._ctx = f'{self.name}.{str(uuid.uuid4())}'
+        WiseAgentRegistry.create_context(self._ctx).set_collaboration_type(WiseAgentCollaborationType.CHAT)
         gradio.ChatInterface(self.slow_echo).launch(prevent_thread_lock=True)
+    
+    def stop_agent(self):
+        super().stop_agent()
+        WiseAgentRegistry.remove_context(self._ctx)
 
     def slow_echo(self, message, history):
             with self._cond:
-                self.handle_request(WiseAgentMessage(message=message, sender=self.name, chat_id=self._chat_id))
+                self.handle_request(WiseAgentMessage(message=message, sender=self.name, context_name=self._ctx))
                 self._cond.wait()
                 return self._response.message
 
@@ -79,7 +82,7 @@ class AssistantAgent(WiseAgent):
             no string response yet
         """
         print(f"AssistantAgent: process_request: {request}")
-        WiseAgentRegistry.get_or_create_context("default").append_chat_completion(self._chat_id, {"role": "user", "content": request.message})
+        WiseAgentRegistry.get_context(request.context_name).append_chat_completion({"role": "user", "content": request.message})
         self.send_request(request, self.destination_agent_name)
         return None
 

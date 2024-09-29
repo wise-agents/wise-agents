@@ -93,7 +93,8 @@ def test_using_deserialized_agent(monkeypatch):
     try:
         # Create a WiseAgent object
         agent_llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                                model_name="Phi-3-mini-4k-instruct-q4.gguf")
+                                            model_name="llama3.1",
+                                            remote_address="http://localhost:11434/v1")
         agent_graph_db = Neo4jLangChainWiseAgentGraphDB(url="bolt://localhost:7687", refresh_graph_schema=False,
                                                         embedding_model_name="all-MiniLM-L6-v2", collection_name="test-cli-vector-db",
                                                         properties=["name", "type"])
@@ -123,7 +124,7 @@ def test_using_deserialized_agent(monkeypatch):
         assert deserialized_agent.metadata == agent.metadata
         assert deserialized_agent.llm.system_message == agent.llm.system_message
         assert deserialized_agent.llm.model_name == agent.llm.model_name
-        assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
+        assert deserialized_agent.llm.remote_address == agent.llm.remote_address
         assert deserialized_agent.graph_db.collection_name == "test-cli-vector-db"
         assert deserialized_agent.graph_db.properties == ["name", "type"]
         assert deserialized_agent.graph_db.url == "bolt://localhost:7687"
@@ -150,7 +151,6 @@ def test_serialize_message():
     message = WiseAgentMessage(message="Hello", 
                                sender="Agent1", 
                                message_type=WiseAgentMessageType.ACK,
-                               chat_id="12345", 
                                tool_id="WeatherAgent", 
                                context_name="Weather", 
                                route_response_to="Agent1")
