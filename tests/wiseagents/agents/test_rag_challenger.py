@@ -9,6 +9,7 @@ from wiseagents.agents import CoVeChallengerRAGWiseAgent, PassThroughClientAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
+from tests.wiseagents import assert_standard_variables_set
 
 cond = threading.Condition()
 assertError : AssertionError = None
@@ -16,12 +17,7 @@ assertError : AssertionError = None
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
-    original_postgres_user = set_env_variable("POSTGRES_USER", "postgres")
-    original_postgres_password = set_env_variable("POSTGRES_PASSWORD", "postgres")
-    original_postgres_db = set_env_variable("POSTGRES_DB", "postgres")
-    original_stomp_user = set_env_variable("STOMP_USER", "artemis")
-    original_stomp_password = set_env_variable("STOMP_PASSWORD", "artemis")
-
+    assert_standard_variables_set()
     # Vector DB set up
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
     pg_vector_db.delete_collection("wise-agents-collection")
@@ -39,29 +35,6 @@ def run_after_all_tests():
 
     # Vector DB clean up
     pg_vector_db.delete_collection("wise-agents-collection")
-
-    # Clean up environment variables
-    reset_env_variable("POSTGRES_USER", original_postgres_user)
-    reset_env_variable("POSTGRES_PASSWORD", original_postgres_password)
-    reset_env_variable("POSTGRES_DB", original_postgres_db)
-    reset_env_variable("STOMP_USER", original_stomp_user)
-    reset_env_variable("STOMP_PASSWORD", original_stomp_password)
-    
-    
-    
-
-
-def set_env_variable(env_variable: str, value: str) -> str:
-    original_value = os.environ.get(env_variable)
-    os.environ[env_variable] = value
-    return original_value
-
-
-def reset_env_variable(env_variable: str, original_value: str):
-    if original_value is None:
-        del os.environ[env_variable]
-    else:
-        os.environ[env_variable] = original_value
 
 
 def get_connection_string():

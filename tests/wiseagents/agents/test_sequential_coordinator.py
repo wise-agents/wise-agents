@@ -12,6 +12,7 @@ from wiseagents.agents import LLMOnlyWiseAgent, PassThroughClientAgent, Sequenti
     SequentialMemoryCoordinatorWiseAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM, WiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
+from tests.wiseagents import assert_standard_variables_set
 
 cond1 = threading.Condition()
 cond2 = threading.Condition()
@@ -20,6 +21,7 @@ assertError : AssertionError = None
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+    assert_standard_variables_set()
     yield
 
 

@@ -4,10 +4,11 @@ import pytest
 
 from wiseagents import WiseAgent, WiseAgentContext, WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTransport
 from wiseagents.transports.stomp import StompWiseAgentTransport
-
+from tests.wiseagents import assert_standard_variables_set
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+    assert_standard_variables_set()
     yield
     
 

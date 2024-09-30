@@ -6,10 +6,11 @@ import yaml
 
 from wiseagents import WiseAgent, WiseAgentRegistry, WiseAgentMessage, WiseAgentMessageType
 from wiseagents.yaml import WiseAgentsLoader
-
+from tests.wiseagents import assert_standard_variables_set
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+    assert_standard_variables_set()
     yield
     
 

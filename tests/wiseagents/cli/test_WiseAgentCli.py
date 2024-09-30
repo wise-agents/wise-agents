@@ -7,17 +7,11 @@ from wiseagents import WiseAgentRegistry
 from wiseagents.cli.wise_agent_cli import main
 from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
-
+from tests.wiseagents import assert_standard_variables_set
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
-    original_postgres_user = set_env_variable("POSTGRES_USER", "postgres")
-    original_postgres_password = set_env_variable("POSTGRES_PASSWORD", "postgres")
-    original_postgres_db = set_env_variable("POSTGRES_DB", "postgres")
-    original_stomp_user = set_env_variable("STOMP_USER", "artemis")
-    original_stomp_password = set_env_variable("STOMP_PASSWORD", "artemis")
-    original_neo4j_username = set_env_variable("NEO4J_USERNAME", "neo4j")
-    original_neo4j_password = set_env_variable("NEO4J_PASSWORD", "neo4jpassword")
+    assert_standard_variables_set()
 
     # Vector DB set up
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
@@ -60,43 +54,9 @@ def run_after_all_tests():
     graph_db.delete_vector_db()
     graph_db.close()
 
-    # Clean up environment variables
-    reset_env_variable("POSTGRES_USER", original_postgres_user)
-    reset_env_variable("POSTGRES_PASSWORD", original_postgres_password)
-    reset_env_variable("POSTGRES_DB", original_postgres_db)
-    reset_env_variable("STOMP_USER", original_stomp_user)
-    reset_env_variable("STOMP_PASSWORD", original_stomp_password)
-    reset_env_variable("NEO4J_USERNAME", original_neo4j_username)
-    reset_env_variable("NEO4J_PASSWORD", original_neo4j_password)
-    
-    
-    
-
-def set_env_variable(env_variable: str, value: str) -> str:
-    original_value = os.environ.get(env_variable)
-    os.environ[env_variable] = value
-    return original_value
-
-
-def reset_env_variable(env_variable: str, original_value: str):
-    if original_value is None:
-        del os.environ[env_variable]
-    else:
-        os.environ[env_variable] = original_value
-
 
 def get_connection_string():
     return f"postgresql+psycopg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@localhost:6024/{os.environ['POSTGRES_DB']}"
-
-
-def set_env(monkeypatch):
-    """
-        This test requires a running pgvector instance. The required
-        vector database can be started using the run_vectordb.sh script.
-    """
-    monkeypatch.setenv("POSTGRES_USER", "postgres")
-    monkeypatch.setenv("POSTGRES_PASSWORD", "postgres")
-    monkeypatch.setenv("POSTGRES_DB", "postgres")
 
 
 @pytest.mark.needsllm
