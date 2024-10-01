@@ -12,6 +12,7 @@ def run_after_all_tests():
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
     graph_db.query("MATCH (n)-[r]-() DELETE r")
     graph_db.query("MATCH (n) DELETE n")
+    graph_db.close()
 
     yield
 
