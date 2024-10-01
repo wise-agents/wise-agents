@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 import threading
 
 import pytest
@@ -9,10 +8,12 @@ from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMetaData, WiseAgent
 from wiseagents.agents import LLMWiseAgentWithTools, PassThroughClientAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
+from tests.wiseagents import assert_standard_variables_set
 
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+    assert_standard_variables_set()
     yield
     
     

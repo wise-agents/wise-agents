@@ -1,24 +1,21 @@
 import os
 
+import pytest
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
+from tests.wiseagents import assert_standard_variables_set
+
+
+@pytest.fixture(scope="session", autouse=True)
+def run_after_all_tests():
+    assert_standard_variables_set()
+    yield
 
 
 def get_connection_string():
     return f"postgresql+psycopg://{os.environ['POSTGRES_USER']}:{os.environ['POSTGRES_PASSWORD']}@localhost:6024/{os.environ['POSTGRES_DB']}"
 
 
-def set_env(monkeypatch):
-    """
-        This test requires a running pgvector instance. The required
-        vector database can be started using the run_vectordb.sh script.
-    """
-    monkeypatch.setenv("POSTGRES_USER", "postgres")
-    monkeypatch.setenv("POSTGRES_PASSWORD", "postgres")
-    monkeypatch.setenv("POSTGRES_DB", "postgres")
-
-
-def test_create_and_delete_collection(monkeypatch):
-    set_env(monkeypatch)
+def test_create_and_delete_collection():
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
     pg_vector_db.get_or_create_collection("test_collection")
     assert "test_collection" in pg_vector_db._vector_dbs
@@ -26,8 +23,7 @@ def test_create_and_delete_collection(monkeypatch):
     assert "test_collection" not in pg_vector_db._vector_dbs
 
 
-def test_insert_documents_and_query(monkeypatch):
-    set_env(monkeypatch)
+def test_insert_documents_and_query():
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
 
     try:
@@ -61,8 +57,7 @@ def test_insert_documents_and_query(monkeypatch):
         pg_vector_db.delete_collection("test_collection")
 
 
-def test_insert_or_update_documents_and_query(monkeypatch):
-    set_env(monkeypatch)
+def test_insert_or_update_documents_and_query():
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
 
     try:
@@ -88,8 +83,7 @@ def test_insert_or_update_documents_and_query(monkeypatch):
         pg_vector_db.delete_collection("test_collection")
 
 
-def test_delete_documents(monkeypatch):
-    set_env(monkeypatch)
+def test_delete_documents():
     pg_vector_db = PGVectorLangChainWiseAgentVectorDB(get_connection_string())
 
     try:

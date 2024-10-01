@@ -1,15 +1,16 @@
 import logging
-import os
 from time import sleep
 
 import pytest
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry
 from wiseagents.transports import StompWiseAgentTransport
+from tests.wiseagents import assert_standard_variables_set
 
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+    assert_standard_variables_set()
     yield
     
     
@@ -46,10 +47,6 @@ class WiseAgentDoingNothing(WiseAgent):
 
 @pytest.mark.skip(reason="This works fine when run on its own, but fails when run with all the other tests")
 def test_send_message_to_agent_and_get_response():
-    os.environ['STOMP_USER'] = 'artemis'
-    os.environ['STOMP_PASSWORD'] = 'artemis'
-    
-    
     agent1 = WiseAgentDoingNothing('Agent1', 'Agent1')
     agent2 = WiseAgentDoingNothing('Agent2', 'Agent2')
     

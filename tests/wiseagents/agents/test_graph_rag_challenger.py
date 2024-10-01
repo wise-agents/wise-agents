@@ -11,6 +11,7 @@ from wiseagents.agents.rag_wise_agents import CoVeChallengerGraphRAGWiseAgent
 from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
+from tests.wiseagents import assert_standard_variables_set
 
 cond = threading.Condition()
 assertError : AssertionError = None
@@ -19,11 +20,10 @@ assertError : AssertionError = None
 collection_name = "test-vector-db"
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+
+    assert_standard_variables_set()
+
     # Ensure that nothing exists the graph DB
-    original_neo4j_username = os.environ.get("NEO4J_USERNAME")
-    os.environ["NEO4J_USERNAME"] = "neo4j"
-    original_neo4j_password = os.environ.get("NEO4J_PASSWORD")
-    os.environ["NEO4J_PASSWORD"] = "neo4jpassword"
     graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
     graph_db.query("MATCH (n)-[r]-() DELETE r")
@@ -53,33 +53,6 @@ def run_after_all_tests():
     graph_db.query("MATCH (n) DELETE n")
     graph_db.delete_vector_db()
     graph_db.close()
-
-    # Clean up environment variables
-    if original_neo4j_username is None:
-        del os.environ["NEO4J_USERNAME"]
-    else:
-        os.environ["NEO4J_USERNAME"] = original_neo4j_username
-    if original_neo4j_password is None:
-        del os.environ["NEO4J_PASSWORD"]
-    else:
-        os.environ["NEO4J_PASSWORD"] = original_neo4j_password
-
-    
-    
-    
-
-
-def set_env_variable(env_variable: str, value: str) -> str:
-    original_value = os.environ.get(env_variable)
-    os.environ[env_variable] = value
-    return original_value
-
-
-def reset_env_variable(env_variable: str, original_value: str):
-    if original_value is None:
-        del os.environ[env_variable]
-    else:
-        os.environ[env_variable] = original_value
 
 
 def get_connection_string():

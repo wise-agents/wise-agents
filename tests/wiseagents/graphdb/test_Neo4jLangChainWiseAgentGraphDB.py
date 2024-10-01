@@ -1,17 +1,13 @@
-import os
-
 import pytest
 
 from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
+from tests.wiseagents import assert_standard_variables_set
 
 collection_name = "test-vector-db"
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+    assert_standard_variables_set()
     # Ensure that nothing exists the graph DB
-    original_neo4j_username = os.environ.get("NEO4J_USERNAME")
-    os.environ["NEO4J_USERNAME"] = "neo4j"
-    original_neo4j_password = os.environ.get("NEO4J_PASSWORD")
-    os.environ["NEO4J_PASSWORD"] = "neo4jpassword"
     graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
     graph_db.query("MATCH (n)-[r]-() DELETE r")
@@ -27,30 +23,9 @@ def run_after_all_tests():
     graph_db.delete_vector_db()
     graph_db.close()
 
-    # Clean up environment variables
-    if original_neo4j_username is None:
-        del os.environ["NEO4J_USERNAME"]
-    else:
-        os.environ["NEO4J_USERNAME"] = original_neo4j_username
-    if original_neo4j_password is None:
-        del os.environ["NEO4J_PASSWORD"]
-    else:
-        os.environ["NEO4J_PASSWORD"] = original_neo4j_password
 
 
-def set_env(monkeypatch):
-    """
-        This test requires a running Neo4j instance on bolt://localhost:7687. The required
-        graph database can be started using the run_graphdb.sh script.
-    """
-    monkeypatch.setenv("NEO4J_USERNAME", "neo4j")
-    assert os.environ.get("NEO4J_USERNAME") == "neo4j"
-    monkeypatch.setenv("NEO4J_PASSWORD", "neo4jpassword")
-    assert os.environ.get("NEO4J_PASSWORD") == "neo4jpassword"
-
-
-def test_insert_graph_documents_and_query(monkeypatch):
-    set_env(monkeypatch)
+def test_insert_graph_documents_and_query():
     graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
 
@@ -96,8 +71,7 @@ def test_insert_graph_documents_and_query(monkeypatch):
         
 
 
-def test_insert_entity_and_query(monkeypatch):
-    set_env(monkeypatch)
+def test_insert_entity_and_query():
     graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
 
@@ -115,8 +89,7 @@ def test_insert_entity_and_query(monkeypatch):
         graph_db.close()
 
 
-def test_insert_relationship_and_query(monkeypatch):
-    set_env(monkeypatch)
+def test_insert_relationship_and_query():
     graph_db = Neo4jLangChainWiseAgentGraphDB(properties=["name", "type"], collection_name=collection_name,
                                               url="bolt://localhost:7687", refresh_graph_schema=False)
 

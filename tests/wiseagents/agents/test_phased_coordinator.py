@@ -9,12 +9,14 @@ from wiseagents.agents import LLMOnlyWiseAgent, PassThroughClientAgent, \
     PhasedCoordinatorWiseAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
+from tests.wiseagents import assert_standard_variables_set
 
 cond = threading.Condition()
 assertError : AssertionError = None
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+    assert_standard_variables_set()
     yield
     
     
@@ -37,6 +39,7 @@ def test_phased_coordinator():
     """
     try:
         groq_api_key = os.getenv("GROQ_API_KEY")
+
         global assertError
 
         llm = OpenaiAPIWiseAgentLLM(system_message="You are a helpful assistant.",

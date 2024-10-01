@@ -10,10 +10,12 @@ from wiseagents import WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry, W
 from wiseagents.agents import LLMWiseAgentWithTools, PassThroughClientAgent
 from wiseagents.llm import WiseAgentRemoteLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
+from tests.wiseagents import assert_standard_variables_set
 
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
+    assert_standard_variables_set()
     yield
     
     
