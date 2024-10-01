@@ -20,7 +20,9 @@ class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
         """Create a new instance of the class, setting default values for the instance variables."""
         obj = super().__new__(cls)
         obj._embedding_model_name = DEFAULT_EMBEDDING_MODEL_NAME
-        obj._embedding_function = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL_NAME)
+        model_kwargs = dict()
+        model_kwargs['tokenizer_kwargs']={"clean_up_tokenization_spaces": True}
+        obj._embedding_function = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL_NAME,  model_kwargs=model_kwargs)
         return obj
 
     def __init__(self, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
@@ -34,7 +36,9 @@ class LangChainWiseAgentVectorDB(WiseAgentVectorDB):
         super().__init__()
         enforce_no_abstract_class_instances(self.__class__, LangChainWiseAgentVectorDB)
         self._embedding_model_name = embedding_model_name
-        self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
+        model_kwargs = dict()
+        model_kwargs['tokenizer_kwargs']={"clean_up_tokenization_spaces": True}
+        self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name, model_kwargs=model_kwargs )
 
     @property
     def embedding_model_name(self):
@@ -148,4 +152,5 @@ class PGVectorLangChainWiseAgentVectorDB(LangChainWiseAgentVectorDB):
         if collection_name in self._vector_dbs:
             return [self.convert_from_lang_chain_documents(self._vector_dbs[collection_name].similarity_search(query, k))
                     for query in queries]
+
 

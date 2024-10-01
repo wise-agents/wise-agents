@@ -24,7 +24,9 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
         obj = super().__new__(cls)
         enforce_no_abstract_class_instances(cls, LangChainWiseAgentGraphDB)
         obj._embedding_model_name = DEFAULT_EMBEDDING_MODEL_NAME
-        obj._embedding_function = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL_NAME)
+        model_kwargs = dict()
+        model_kwargs['tokenizer_kwargs']={"clean_up_tokenization_spaces": True}
+        obj._embedding_function = HuggingFaceEmbeddings(model_name=DEFAULT_EMBEDDING_MODEL_NAME,  model_kwargs=model_kwargs)
         return obj
 
     def __init__(self, embedding_model_name: Optional[str] = DEFAULT_EMBEDDING_MODEL_NAME):
@@ -36,7 +38,9 @@ class LangChainWiseAgentGraphDB(WiseAgentGraphDB):
             embedding_model_name (Optional[str]): the optional name of the embedding model to use 
         """
         self._embedding_model_name = embedding_model_name
-        self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name)
+        model_kwargs = dict()
+        model_kwargs['tokenizer_kwargs']={"clean_up_tokenization_spaces": True}
+        self._embedding_function = HuggingFaceEmbeddings(model_name=self.embedding_model_name, model_kwargs=model_kwargs )
 
     @property
     def embedding_model_name(self):
