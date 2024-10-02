@@ -65,24 +65,25 @@ def test_cove_challenger():
         agent = CoVeChallengerRAGWiseAgent(name="ChallengerWiseAgent1", metadata=WiseAgentMetaData(description="This is a test agent"), llm=llm1, vector_db=pg_vector_db,
                                 transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="ChallengerWiseAgent1"),
                                         k=2, num_verification_questions=2)
-
+        WiseAgentRegistry.create_context("default")
         with cond:
             client_agent1 = PassThroughClientAgent(name="PassThroughClientAgent1", metadata=WiseAgentMetaData(description="This is a test agent"),
                                                 transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
                                                 )
             client_agent1.set_response_delivery(response_delivered)
-            client_agent1.send_request(WiseAgentMessage(f"{{'question': 'How many medals did Biles win at the Winter Olympics in 2024?'\n"
+            client_agent1.send_request(WiseAgentMessage(message=f"{{'question': 'How many medals did Biles win at the Winter Olympics in 2024?'\n"
                                                         f"  'response': 'Biles won 4 medals.'\n"
-                                                        f"}}",
-                                                        "PassThroughClientAgent1"),
+                                                        f"}}", context_name="default",
+                                                        sender="PassThroughClientAgent1"),
                                     "ChallengerWiseAgent1")
             cond.wait()
             if assertError is not None:
                 raise assertError
             logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
-            for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
+            for message in WiseAgentRegistry.get_context('default').message_trace:
                 logging.debug(f'{message}')
     finally:        
         #stopping the agents
         client_agent1.stop_agent()
         agent.stop_agent()
+        WiseAgentRegistry.remove_context("default")

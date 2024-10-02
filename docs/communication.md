@@ -23,11 +23,6 @@ schema:
       A message object in the Wise Agent system that includes details about the message content,
       the sender, the context, and any related metadata.
     properties:
-      _chat_id:
-        type: string
-        description: |
-          (Optional) The unique identifier for the chat session associated with this message.
-        required: false
       _context_name:
         type: string
         description: |
@@ -70,12 +65,6 @@ schema:
 ```
 
 ## Properties
-
-### `_chat_id`
-- **Type**: `string`
-- **Description**: 
-  (Optional) The unique identifier for the chat session associated with this message.
-- **Required**: false
 
 ### `_context_name`
 - **Type**: `string`
@@ -126,7 +115,6 @@ schema:
 
 ```yaml
 !wiseagents.WiseAgentMessage
-_chat_id: '12345'
 _context_name: Weather
 _message: Hello
 _message_type: ACK
@@ -135,4 +123,4 @@ _sender: Agent1
 _tool_id: WeatherAgent
 ```
 
-This example demonstrates how a `WiseAgentMessage` can be structured using the provided schema. The YAML example includes essential details such as the chat ID, context, message content, sender, and tool identifier.
+This example demonstrates how a `WiseAgentMessage` can be structured using the provided schema. The YAML example includes essential details such as the context, message content, sender, and tool identifier.

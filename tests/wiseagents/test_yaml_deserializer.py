@@ -36,8 +36,8 @@ def test_using_deserialized_agent():
         assert deserialized_agent.name == "Agent1"
         assert deserialized_agent.metadata.description == "This is a test agent"
         assert deserialized_agent.llm.system_message == "Answer my greeting saying Hello and my name"
-        assert deserialized_agent.llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
-        assert deserialized_agent.llm.remote_address == "http://localhost:8001/v1"
+        assert deserialized_agent.llm.model_name =="llama3.1"
+        assert deserialized_agent.llm.remote_address == "http://localhost:11434/v1"
         assert deserialized_agent.llm.openai_config == {"temperature": 0.5, "max_tokens": 100}
         logging.debug(deserialized_agent)
         response = deserialized_agent.llm.process_single_prompt("Hello my name is Stefano")
@@ -73,8 +73,8 @@ def test_using_multiple_deserialized_agents():
         assert deserialized_agent[0].name == "Agent1"
         assert deserialized_agent[0].metadata.description == "This is a test agent"
         assert deserialized_agent[0].llm.system_message == "Answer my greeting saying Hello and my name"
-        assert deserialized_agent[0].llm.model_name == "Phi-3-mini-4k-instruct-q4.gguf"
-        assert deserialized_agent[0].llm.remote_address == "http://localhost:8001/v1"
+        assert deserialized_agent[0].llm.model_name =="llama3.1"
+        assert deserialized_agent[0].llm.remote_address == "http://localhost:11434/v1"
         response = deserialized_agent[0].llm.process("Hello my name is Stefano")
         assert response.content.__len__() > 0
         assert deserialized_agent[0].graph_db.url == "bolt://localhost:7687"
@@ -124,7 +124,6 @@ def test_deserialize_message():
     logging.info(str(msgType))
     assert isinstance(message.message_type, WiseAgentMessageType)
     assert message.message_type == WiseAgentMessageType.ACK
-    assert message.chat_id == "12345"
     assert message.tool_id == "WeatherAgent"
     assert message.context_name =="Weather"
     assert message.route_response_to =="Agent1"

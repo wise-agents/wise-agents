@@ -4,6 +4,7 @@ import sys
 import threading
 import traceback
 from typing import List
+import uuid
 from wiseagents.yaml import WiseAgentsLoader
 
 import yaml
@@ -25,11 +26,14 @@ def response_delivered(message: WiseAgentMessage):
         cond.notify()
 
 def signal_handler(sig, frame):
-    global user_question_agent
+    global agent_list
+    global context_name
     print('You pressed Ctrl+C! Please wait for the agents to stop')
     for agent in agent_list:
         print(f"Stopping agent {agent.name}")
         agent.stop_agent()
+    print(f"Removing context {context_name}")
+    WiseAgentRegistry.remove_context(context_name)
     exit(0)
 
 
@@ -37,13 +41,15 @@ def signal_handler(sig, frame):
 
 def main():
     global agent_list
+    global context_name
     agent_list = []
     user_input = "h"
     file_path = None
     default_file_path = "src/wiseagents/cli/test-multiple.yaml"
 
     signal.signal(signal.SIGINT, signal_handler)
-    
+    context_name = "CLI." + str(uuid.uuid4())
+    WiseAgentRegistry.create_context(context_name)
     if (sys.argv.__len__() > 1):
             user_input="/load-agents"
             file_path=sys.argv[1]
@@ -59,7 +65,7 @@ def main():
             print('(s)end: Send a message to an agent')
             
         if (user_input == '/trace' or user_input == '/t'):
-            for msg in WiseAgentRegistry.get_or_create_context('default').message_trace:
+            for msg in WiseAgentRegistry.get_context(context_name).message_trace:
                 print(msg)
         if  (user_input == '/exit' or user_input == '/x'):
             #stop all agents
@@ -67,6 +73,8 @@ def main():
             for agent in agent_list:
                 print(f"Stopping agent {agent.name}")
                 agent.stop_agent()
+            print(f"Removing context {context_name}")
+            WiseAgentRegistry.remove_context(context_name)
             sys.exit(0)
         if (user_input == '/reload-agents' or user_input == '/r'):
             for agent in agent_list:
@@ -100,7 +108,7 @@ def main():
                 if  (user_input == '/back'):
                     break
                 with cond:
-                    _passThroughClientAgent1.send_request(WiseAgentMessage(user_input, "PassThroughClientAgent1"), "LLMOnlyWiseAgent2")
+                    _passThroughClientAgent1.send_request(WiseAgentMessage(message=user_input, sender="PassThroughClientAgent1", context_name=context_name), "LLMOnlyWiseAgent2")
                     cond.wait()
         if (user_input == '/agents' or user_input == '/a'):
             print(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
@@ -111,7 +119,7 @@ def main():
             agent : WiseAgent = WiseAgentRegistry.get_agent_metadata(agent_name)
             if agent:
                 with cond:
-                    _passThroughClientAgent1.send_request(WiseAgentMessage(message, "PassThroughClientAgent1"), agent_name)
+                    _passThroughClientAgent1.send_request(WiseAgentMessage(message=message, sender="PassThroughClientAgent1", context_name=context_name), agent_name)
                     cond.wait()
             else:
                 print(f"Agent {agent_name} not found")

@@ -61,17 +61,17 @@ def test_send_message_to_agent_and_get_response():
     
     assert agent1.response_received.message == 'I am doing nothing'
 
-    for  message in WiseAgentRegistry.get_or_create_context('default').message_trace:
+    for  message in WiseAgentRegistry.create_context('default').message_trace:
         logging.debug(f'{message}')
     
-    assert WiseAgentRegistry.get_or_create_context('default').message_trace[0].message == 'Do Nothing'
-    assert WiseAgentRegistry.get_or_create_context('default').message_trace[0].sender == 'Agent1'
-    assert WiseAgentRegistry.get_or_create_context('default').message_trace[1].message == 'I am doing nothing'
-    assert WiseAgentRegistry.get_or_create_context('default').message_trace[1].sender == 'Agent2'
-    assert WiseAgentRegistry.get_or_create_context('default').message_trace[2].message == 'Do Nothing'
-    assert WiseAgentRegistry.get_or_create_context('default').message_trace[2].sender == 'Agent2'
-    assert WiseAgentRegistry.get_or_create_context('default').message_trace[3].message == 'I am doing nothing'
-    assert WiseAgentRegistry.get_or_create_context('default').message_trace[3].sender == 'Agent1'
+    assert WiseAgentRegistry.get_context('default').message_trace[0].message == 'Do Nothing'
+    assert WiseAgentRegistry.get_context('default').message_trace[0].sender == 'Agent1'
+    assert WiseAgentRegistry.get_context('default').message_trace[1].message == 'I am doing nothing'
+    assert WiseAgentRegistry.get_context('default').message_trace[1].sender == 'Agent2'
+    assert WiseAgentRegistry.get_context('default').message_trace[2].message == 'Do Nothing'
+    assert WiseAgentRegistry.get_context('default').message_trace[2].sender == 'Agent2'
+    assert WiseAgentRegistry.get_context('default').message_trace[3].message == 'I am doing nothing'
+    assert WiseAgentRegistry.get_context('default').message_trace[3].sender == 'Agent1'
     
     #stop all agents
     agent1.stop()

@@ -1,5 +1,4 @@
 !wiseagents.WiseAgentMessage
-_chat_id: '12345'
 _context_name: Weather
 _message: Hello
 _message_type: ACK
