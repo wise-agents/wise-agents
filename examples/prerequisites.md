@@ -40,16 +40,16 @@ export STOMP_USER=artemis
 export STOMP_PASSWORD=artemis
 ```
 
-# Start Ollama with Llama 3.1
+# Start Ollama with Llama 3.2
 
 To support the Llama model, you need to ensure that Ollama is installed and running:
 
 1. **Install Ollama** if it’s not installed already by following the [Ollama installation instructions](https://ollama.com).
 
-2. **Start Ollama with Llama 3.1**:
+2. **Start Ollama with Llama 3.2**:
 
    ```bash
-   ollama run llama3.1
+   ollama run llama3.2:1b
    ```
 
-This will load the Llama 3.1 model into Ollama, which is necessary for running the intelligent agent.
+This will load the Llama 3.2 model into Ollama, which is necessary for running the intelligent agent.
