@@ -1,7 +1,7 @@
 from typing import Dict, Iterable, Optional
 
 import openai
-from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam, ChatCompletionMessage
 
 from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 
@@ -70,6 +70,8 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         if self.system_message:
             messages.append({"role": "system", "content": self.system_message})
         messages.append({"role": "user", "content": prompt})
+        for message in messages:
+            print(f"==> Message: '{message}'")
         response = self.client.chat.completions.create(
             messages=messages,
             model=self.model_name,
@@ -77,6 +79,21 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             tool_choice="auto",  # auto is default, but we'll be explicit
             **self.openai_config
             )
+        last_user_msg = None
+        for msg in messages:
+            d = msg
+            if isinstance(msg, ChatCompletionMessage):
+                d = msg.__dict__
+            if d["role"] == "user":
+                last_user_msg = msg["content"]
+        print("\n=================")
+        for msg in messages:
+            print(f"--> {msg}")
+        print("-------------------")
+        print(f"User message: {prompt}")
+        print("-------------------")
+        print(f"Response: {response.choices[0].message}")
+        print("===================\n")
         return response.choices[0].message
    
     def process_chat_completion(self, 
@@ -93,10 +110,11 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         Returns:
                 ChatCompletion: the chat completion result'''
         print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
+
         if (self.client is None):
             self.connect()
         #messages = []
-        #messages.append({"role": "system", "content": self.system_message})
+        #messages.append({"role": "system", "content": self.sytem_message})
         #messages.append({"role": "user", "content": message})
         response = self.client.chat.completions.create(
             messages=messages,
@@ -105,6 +123,29 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             tool_choice="auto",  # auto is default, but we'll be explicit
             **self.openai_config
             )
+
+        # Temp
+        # for i, choice in enumerate(response.choices):
+        #     print(f"==> Choice {i}: '{choice.message}'")
+
+
+        last_user_msg = None
+        for msg in messages:
+            d = msg
+            if isinstance(msg, ChatCompletionMessage):
+                d = msg.__dict__
+            if d["role"] == "user":
+                last_user_msg = msg["content"]
+
+        print("\n=================")
+        for msg in messages:
+            print(f"--> {msg}")
+        print("-------------------")
+        print(f"User message: {last_user_msg}")
+        print("-------------------")
+        print(f"Response: {response.choices[0].message}")
+        print("===================\n")
+
         return response
         
     @property

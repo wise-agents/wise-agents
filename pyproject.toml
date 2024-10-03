@@ -31,6 +31,7 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest",
+    "pytest-mock==3.14.0",
 ]
 
 [tool.pytest.ini_options]

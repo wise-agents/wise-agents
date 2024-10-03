@@ -6,7 +6,7 @@ import yaml
 
 from wiseagents import WiseAgent, WiseAgentRegistry, WiseAgentMessage, WiseAgentMessageType
 from wiseagents.yaml import WiseAgentsLoader
-from tests.wiseagents import assert_standard_variables_set
+from tests.wiseagents import assert_standard_variables_set, mock_open_ai_for_ci, mock_open_ai_chat_completion, find_in_user_messages
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
@@ -21,8 +21,14 @@ class TestAgent(WiseAgent):
         super().__init__(name, metadata, transport)
 
 
+def _mock_hello_stefano(*args, **kwargs):
+    assert find_in_user_messages(kwargs["messages"], "Hello my name is Stefano"), \
+        "Expected the message 'Hello my name is Stefano'"
+    return mock_open_ai_chat_completion("Hello Stefano! It's a pleasure to meet you. How can I assist you today?")
+
 @pytest.mark.needsllm
-def test_using_deserialized_agent():
+def test_using_deserialized_agent(mocker):
+    mock_open_ai_for_ci(mocker, _mock_hello_stefano)
     try:
         # Create a WiseAgent object
         with open(pathlib.Path().resolve() / "tests/wiseagents/test.yaml") as stream:
@@ -56,7 +62,8 @@ def test_using_deserialized_agent():
 
 
 @pytest.mark.skip(reason="does not pass CI/CD")
-def test_using_multiple_deserialized_agents():
+def test_using_multiple_deserialized_agents(mocker):
+    mock_open_ai_for_ci(mocker, _mock_hello_stefano)
     deserialized_agent = []
     try:
         # Create a WiseAgent object
@@ -109,6 +116,7 @@ def test_assistant_deserializer():
             deserialized_agent = yaml.load(stream, Loader=yaml.Loader)
         except yaml.YAMLError as exc:
             print(exc)
+
 def test_deserialize_message():
     message = [];
     with open(pathlib.Path().resolve() / "tests/wiseagents/test_message.yaml") as stream:

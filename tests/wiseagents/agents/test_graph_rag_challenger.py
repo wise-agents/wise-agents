@@ -11,10 +11,37 @@ from wiseagents.agents.rag_wise_agents import CoVeChallengerGraphRAGWiseAgent
 from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
-from tests.wiseagents import assert_standard_variables_set
+from tests.wiseagents import assert_standard_variables_set, mock_open_ai_for_ci, mock_open_ai_chat_completion, get_user_messages
 
 cond = threading.Condition()
 assertError : AssertionError = None
+
+
+def _mock_llm(*args, **kwargs):
+    messages = get_user_messages(kwargs["messages"])
+    if len (messages) == 1:
+        # This is either the planning query, or the generated ones
+        if "How many medals did Biles win at the Winter Olympics in 2024?" in messages[0]:
+            return mock_open_ai_chat_completion(
+                "Is Simone Biles a typically Winter Olympics athlete or does she specialize in the Summer Olympics?\n"
+                "Did the 2024 Winter Olympics occur prior to the generation of this knowledge?")
+        elif "Is Simone Biles a typically Winter Olympics athlete" in messages[0]:
+            return mock_open_ai_chat_completion("Based on the provided context, I don't know the answer.")
+        elif "Did the 2024 Winter Olympics occur prior to the generation of this knowledge?" in messages[0]:
+            return mock_open_ai_chat_completion("I don't know the answer.")
+    elif len(messages) == 2:
+        if "How many medals did Biles win at the Winter Olympics in 2024?" in messages[0] and \
+                "Is Simone Biles a typically Winter Olympics athlete" in messages[1] and \
+                "Did the 2024 Winter Olympics occur prior to the generation of this knowledge?" in messages[1]:
+            return mock_open_ai_chat_completion("I don't know how many medals Biles won at the Winter Olympics in 2024.")
+
+    try:
+        assert False, f"Unexpected messages received by the Mock LLM {messages}"
+    except AssertionError as e:
+        global assertError
+        assertError = e
+        with cond:
+            cond.notify()
 
 
 collection_name = "test-vector-db"
@@ -71,7 +98,8 @@ def response_delivered(message: WiseAgentMessage):
         cond.notify()
 
 
-def test_cove_challenger_graph_rag():
+def test_cove_challenger_graph_rag(mocker):
+    mock_open_ai_for_ci(mocker, _mock_llm)
     try:
         global assertError
         groq_api_key = os.getenv("GROQ_API_KEY")
@@ -95,7 +123,7 @@ def test_cove_challenger_graph_rag():
                                                         f"  'response': 'Biles won 4 medals.'\n"
                                                         f"}}", context_name="default", sender="PassThroughClientAgent1"),
                                     "GraphRAGChallengerWiseAgent1")
-            cond.wait()
+            cond.wait(timeout=300)
             if assertError is not None:
                 raise assertError
             logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")

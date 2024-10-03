@@ -234,7 +234,8 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
 
         logging.debug(f"messages: {ctx.llm_chat_completion}")
         llm_response = self.llm.process_chat_completion(ctx.llm_chat_completion, tools=[])
-        ctx.append_chat_completion(messages=llm_response.choices[0].message)
+        msg = {"content": llm_response.choices[0].message.content, "role": "assistant"}
+        ctx.append_chat_completion(messages=msg)
 
         # Assign the agents to phases
         agent_assignment_prompt = ("Assign each of the agents that will be required to solve the query to one of the following phases:\n" +
@@ -245,11 +246,14 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
                                    " agents for the second phase and so on. Don't include anything else in the response.\n")
         ctx.append_chat_completion(messages={"role": "user", "content": agent_assignment_prompt})
         llm_response = self.llm.process_chat_completion(ctx.llm_chat_completion, tools=[])
-        ctx.append_chat_completion(messages=llm_response.choices[0].message)     
+        msg = {"content": llm_response.choices[0].message.content, "role": "assistant"}
+        ctx.append_chat_completion(messages=msg)
         phases = [phase.split() for phase in llm_response.choices[0].message.content.splitlines()]
         ctx.set_agent_phase_assignments(phases)
         ctx.set_current_phase(0)
         ctx.add_query(request.message)
+
+        print("\n====== FIRST PHASE 0\n")
 
         # Kick off the first phase
         for agent in phases[0]:
@@ -277,7 +281,9 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
         # return the final answer, or iterate
         if len(ctx.get_required_agents_for_current_phase()) == 0:
             next_phase = ctx.get_agents_for_next_phase()
+            print("\n====== NEXT PHASE\n")
             if next_phase is None:
+                print("\n====== FINAL ANSWER\n")
                 # Determine the final answer
                 final_answer_prompt = ("What is the final answer for the original query? Provide the answer followed" +
                                        " by a confidence score from 0 to 100 to indicate how certain you are of the" +
