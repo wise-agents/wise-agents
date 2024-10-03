@@ -83,15 +83,15 @@ def test_phased_coordinator():
                                   llm=llm,
                                   transport=StompWiseAgentTransport(host='localhost', port=61616,
                                                                     agent_name="Agent5"))
-
+        WiseAgentRegistry.create_context("default")
         with cond:
             client_agent1 = PassThroughClientAgent(name="PassThroughClientAgent1", metadata=WiseAgentMetaData(description="This is a test agent"),
                                                    transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
                                                    )
             client_agent1.set_response_delivery(final_response_delivered)
-            client_agent1.send_request(WiseAgentMessage("How do I prevent the following exception from occurring:"
+            client_agent1.send_request(WiseAgentMessage(message= "How do I prevent the following exception from occurring:"
                                                         "Exception Details: java.lang.NullPointerException at com.example.ExampleApp.processData(ExampleApp.java:47)",
-                                                        "PassThroughClientAgent1"),
+                                                        sender="PassThroughClientAgent1", context_name="default"),
                                        "Coordinator")
             cond.wait()
             if assertError is not None:
@@ -99,7 +99,7 @@ def test_phased_coordinator():
                 raise assertError
 
             logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
-            for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
+            for message in WiseAgentRegistry.get_context('default').message_trace:
                 logging.debug(f'{message}')
     finally:
         #stop agents
@@ -109,3 +109,4 @@ def test_phased_coordinator():
         agent3.stop_agent()
         agent4.stop_agent()
         agent5.stop_agent()
+        WiseAgentRegistry.remove_context("default")

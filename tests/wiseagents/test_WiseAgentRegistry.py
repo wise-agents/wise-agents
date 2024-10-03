@@ -57,16 +57,20 @@ def test_get_agents():
             agent.stop_agent()
 
 def test_get_contexts():
-    
-    contexts = [WiseAgentContext(name="Context1"), 
-              WiseAgentContext(name="Context2"), 
-              WiseAgentContext(name="Context3")]
-    
-    for context in contexts:
-        assert True == WiseAgentRegistry.does_context_exist(context.name)
+    try:
+        contexts = [WiseAgentContext(name="Context1"), 
+                WiseAgentContext(name="Context2"), 
+                WiseAgentContext(name="Context3")]
+        
+        for context in contexts:
+            assert True == WiseAgentRegistry.does_context_exist(context.name)
+    finally:
+        for context in contexts:
+            WiseAgentRegistry.remove_context(context.name)
         
 def test_get_or_create_context():
-    
-    context = WiseAgentContext(name="Context1")
-    WiseAgentRegistry.get_or_create_context(context.name)
-    assert context == WiseAgentRegistry.get_or_create_context(context.name)
+    try:
+        context = WiseAgentContext(name="Context1")
+        assert context == WiseAgentRegistry.get_context(context.name)
+    finally:
+        WiseAgentRegistry.remove_context(context.name)  

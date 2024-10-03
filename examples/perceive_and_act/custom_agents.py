@@ -1,9 +1,11 @@
 import os
 import threading
 import time
+import uuid
 from openai.types.chat import ChatCompletionToolParam, ChatCompletionMessageParam
 from typing import List, Optional
 from wiseagents import WiseAgent, WiseAgentEvent, WiseAgentMessage, WiseAgentMetaData, WiseAgentTransport
+from wiseagents.core import WiseAgentRegistry
 from wiseagents.yaml import WiseAgentsLoader
 
 class PerceivingAgent(WiseAgent):
@@ -22,10 +24,13 @@ class PerceivingAgent(WiseAgent):
         super().start_agent()
         self.stop_event.clear()
         self.perceive(self._file_path, self.on_file_change, self._check_interval)
+        self.context_name = self.name + str(uuid.uuid4())
+        WiseAgentRegistry.create_context(context_name=self.context_name)
 
     def stop_agent(self):
         self.stop_event.set()
         super().stop_agent()
+        WiseAgentRegistry.remove_context(context_name=self.context_name)
 
     def process_request(self, request: WiseAgentMessage,
             conversation_history: List[ChatCompletionMessageParam]) -> Optional[str]:
@@ -80,7 +85,7 @@ class PerceivingAgent(WiseAgent):
 
     def on_file_change(self, content):
         print(f"sending message: {content}, {self.name}, {self._destination_agent_name}")
-        self.send_request(WiseAgentMessage(content, self.name), self._destination_agent_name)
+        self.send_request(WiseAgentMessage(message = content, sender=self.name, context_name=self.context_name), self._destination_agent_name)
 
 class ActionAgent(WiseAgent):
     yaml_tag = u'!custom_agents.ActionAgent'
@@ -96,7 +101,7 @@ class ActionAgent(WiseAgent):
     def process_request(self, request: WiseAgentMessage, conversation_history: List[ChatCompletionMessageParam]) -> str | None:
         with open(self._destination_file_path, 'w') as f:
             f.write(request.message)
-        self.send_response(WiseAgentMessage("File updated", self.name), request.sender)
+        self.send_response(WiseAgentMessage(message="File updated", sender=self.name, context_name=request.context_name), request.sender)
 
 
     def process_response(self, response: WiseAgentMessage):

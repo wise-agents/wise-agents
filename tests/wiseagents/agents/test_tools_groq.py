@@ -69,7 +69,7 @@ class WiseAgentWeather(WiseAgent):
         logging.info(f"Function args: {function_args}")
         response = get_current_weather(**function_args)
         response_message = WiseAgentMessage(message=json.dumps(response), sender=self.name, 
-                                            chat_id=request.chat_id, tool_id=request.tool_id, 
+                                            tool_id=request.tool_id, 
                                             context_name=request.context_name, 
                                             route_response_to=request.route_response_to)
         logging.info(f"Sending response: {response_message} to {request.sender}")
@@ -117,24 +117,26 @@ def test_agent_tool():
                                     transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="WiseIntelligentAgent")
                                     )
         logging.info(f"tool: {WiseAgentRegistry.get_tool('WeatherAgent').get_tool_OpenAI_format()}")
+        WiseAgentRegistry.create_context("default")
         with cond:    
 
             client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", metadata=WiseAgentMetaData(description="This is a test agent"),
                                                     transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
                                                     )
             client_agent1.set_response_delivery(response_delivered)
-            client_agent1.send_request(WiseAgentMessage("What is the current weather in Tokyo?", "PassThroughClientAgent1"), 
+            client_agent1.send_request(WiseAgentMessage(message="What is the current weather in Tokyo?", sender="PassThroughClientAgent1",context_name="default"), 
                                                         "WiseIntelligentAgent")
             cond.wait()
             
 
         logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
-        for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
+        for message in WiseAgentRegistry.get_context('default').message_trace:
             logging.debug(f'{message}')
     finally:
         client_agent1.stop_agent()
         agent.stop_agent()
         weather_agent.stop_agent()
+        WiseAgentRegistry.remove_context("default")
 
 
 def test_tool():
@@ -165,22 +167,24 @@ def test_tool():
                                     )
         
         logging.info(f"tool: {WiseAgentRegistry.get_tool('get_current_weather').get_tool_OpenAI_format()}")
+        WiseAgentRegistry.create_context("default")
         with cond:    
 
             client_agent1  = PassThroughClientAgent(name="PassThroughClientAgent1", metadata=WiseAgentMetaData(description="This is a test agent"),
                                                     transport=StompWiseAgentTransport(host='localhost', port=61616, agent_name="PassThroughClientAgent1")
                                                     )
             client_agent1.set_response_delivery(response_delivered)
-            client_agent1.send_request(WiseAgentMessage("What is the current weather in Tokyo?", "PassThroughClientAgent1"), 
+            client_agent1.send_request(WiseAgentMessage(message="What is the current weather in Tokyo?", sender="PassThroughClientAgent1",context_name="default"), 
                                                         "WiseIntelligentAgent")
             cond.wait()
             
 
         logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
-        for message in WiseAgentRegistry.get_or_create_context('default').message_trace:
+        for message in WiseAgentRegistry.get_context('default').message_trace:
             logging.debug(f'{message}')
     finally:
         client_agent1.stop_agent()
         agent.stop_agent()
+        WiseAgentRegistry.remove_context("default")
    
     
