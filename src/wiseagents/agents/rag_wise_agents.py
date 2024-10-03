@@ -253,7 +253,6 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         obj = super().__new__(cls)
         enforce_no_abstract_class_instances(cls, BaseCoVeChallengerWiseAgent)
         obj._k = DEFAULT_NUM_DOCUMENTS
-        obj._num_verification_questions = 4
         obj._num_verification_questions = DEFAULT_NUM_VERIFICATION_QUESTIONS
         obj._vector_db = None
         obj._collection_name = DEFAULT_COLLECTION_NAME
@@ -365,7 +364,7 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         llm_response = self.llm.process_chat_completion(conversation_history, [])
 
         # execute verifications, answering questions independently, without the baseline response
-        verification_questions = llm_response.choices[0].message.content.splitlines()
+        verification_questions = llm_response.choices[0].message.content.splitlines()[:self.num_verification_questions]
         verification_responses = ""
         for question in verification_questions:
             retrieved_documents = self.retrieve_documents(question)
