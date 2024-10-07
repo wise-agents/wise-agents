@@ -652,31 +652,31 @@ class WiseAgentMetaData(WiseAgentsYAMLObject):
         '''Create a new instance of the class, setting default values for the instance variables.'''
         obj = super().__new__(cls)
         obj._system_message = None
-        obj._pre_user_message = None
-        obj._post_user_message = None
+        obj._pre_user_messages = None
+        obj._post_user_messages = None
         return obj
-    def __init__(self, description : str, system_message: Optional[str] = None, pre_user_message: Optional[str] = None,
-                 post_user_message: Optional[str] = None):
+    def __init__(self, description : str, system_message: Optional[str] = None, pre_user_messages: Optional[List[str]] = None,
+                 post_user_messages: Optional[List[str]] = None):
         ''' Initialize the metadata with the given system message.
 
         Args:
             description (str): a description of what the agent does
             system_message (Optional[str]): an optional system message that can be used by the agent when processing chat
             completions using its LLM
-            pre_user_message (Optional[str]): an optional user message that can be used by the agent when processing chat
+            pre_user_messages (Optional[List[str]]): an optional list of user messages that can be used by the agent when processing chat
             completions using its LLM (e.g., when processing a request)
-            post_user_message (Optional[str]): an optional user message that can be used by the agent when processing chat
+            post_user_messages (Optional[List[str]]): an optional list of user messages that can be used by the agent when processing chat
             completions using its LLM (e.g., when processing a response)
         '''
         self._description = description
         self._system_message = system_message
-        self._pre_user_message = pre_user_message
-        self._post_user_message = post_user_message
+        self._pre_user_messages = pre_user_messages
+        self._post_user_messages = post_user_messages
 
     def __repr__(self):
         '''Return a string representation of the metadata.'''
         return (f"{self.__class__.__name__}(description={self.description}, system_message={self.system_message},"
-                f"pre_user_message={self.pre_user_message},post_user_message={self.post_user_message})")
+                f"pre_user_messages={self.pre_user_messages},post_user_messages={self.post_user_messages})")
     
     def __eq__(self, value: object) -> bool:
         return self.__repr__() == value.__repr__()
@@ -692,14 +692,14 @@ class WiseAgentMetaData(WiseAgentsYAMLObject):
         return self._system_message
 
     @property
-    def pre_user_message(self) -> Optional[str]:
-        """Get the pre user message associated with the agent."""
-        return self._pre_user_message
+    def pre_user_messages(self) -> Optional[List[str]]:
+        """Get the list of pre user messages associated with the agent."""
+        return self._pre_user_messages
 
     @property
-    def post_user_message(self) -> Optional[str]:
-        """Get the post user message associated with the agent."""
-        return self._post_user_message
+    def post_user_messages(self) -> Optional[List[str]]:
+        """Get the list of post user messages associated with the agent."""
+        return self._post_user_messages
 
 
 class WiseAgent(WiseAgentsYAMLObject):
