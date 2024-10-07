@@ -33,7 +33,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             system_message (Optional[str]): the optional system message
         '''
         
-        super().__init__(model_name, remote_address, system_message)
+        super().__init__(model_name=model_name, remote_address=remote_address, system_message=system_message)
         self._api_key = api_key
         self._openai_config = openai_config
     
