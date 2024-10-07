@@ -359,7 +359,8 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
                   f" verification questions that could help determine if there are any mistakes in the baseline response:"
                   f"\n{message}\n"
                   f"Your response should contain only the list of questions, one per line.\n")
-        conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
+        if self.metadata.system_message or self.llm.system_message:
+            conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": prompt})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
 
@@ -379,8 +380,9 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
                   f" generate a revised response incorporating the verification results:\n{complete_info}\n"
                   f"Your response must contain only the revised response to the question in the JSON format shown below:\n"
                   f"{{'revised': 'Your revised response to the question.'}}\n")
-
-        conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
+        
+        if self.metadata.system_message or self.llm.system_message:
+            conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": prompt})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
         return llm_response.choices[0].message.content
@@ -610,7 +612,8 @@ def create_and_process_rag_prompt(retrieved_documents: List[Document], question:
     context = "\n".join([document.content for document in retrieved_documents])
     prompt = (f"Answer the question based only on the following context:\n{context}\n"
               f"Question: {question}\n")
-    conversation_history.append({"role": "system", "content": system_message or llm.system_message})
+    if system_message or llm.system_message:
+        conversation_history.append({"role": "system", "content": system_message or llm.system_message})
     conversation_history.append({"role": "user", "content": prompt})
     llm_response = llm.process_chat_completion(conversation_history, [])
 

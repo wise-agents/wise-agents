@@ -19,18 +19,21 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         obj._api_key = "sk-no-key-required"
         obj._remote_address = "http://localhost:8001/v1"
         obj._openai_config = {}
+        obj._system_message = None
         return obj
 
-    def __init__(self, system_message, model_name, remote_address = "http://localhost:8001/v1", api_key: Optional[str]="sk-no-key-required", openai_config: Optional[Dict[str,str]]={}):
+    def __init__(self, model_name, remote_address = "http://localhost:8001/v1", api_key: Optional[str]="sk-no-key-required",
+                 openai_config: Optional[Dict[str,str]]={}, system_message: Optional[str] = None):
         '''Initialize the agent.
 
         Args:
-            system_message (str): the system message
             model_name (str): the model name
             remote_address (str): the remote address of the agent. Default is "http://localhost:8001/v1"
-            api_key (str): the API key. Default is "sk-no-key-required"'''
+            api_key (str): the API key. Default is "sk-no-key-required"
+            system_message (Optional[str]): the optional system message
+        '''
         
-        super().__init__(system_message, model_name, remote_address)
+        super().__init__(model_name, remote_address, system_message)
         self._api_key = api_key
         self._openai_config = openai_config
     
@@ -64,7 +67,8 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         if (self.client is None):
             self.connect()
         messages = []
-        messages.append({"role": "system", "content": self.system_message})
+        if self.system_message:
+            messages.append({"role": "system", "content": self.system_message})
         messages.append({"role": "user", "content": prompt})
         response = self.client.chat.completions.create(
             messages=messages,

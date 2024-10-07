@@ -150,7 +150,8 @@ class LLMOnlyWiseAgent(WiseAgent):
             Optional[str]: the response to the request message as a string or None if there is
             no string response yet
         """
-        conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
+        if self.metadata.system_message or self.llm.system_message:
+            conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": request.message})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
         return llm_response.choices[0].message.content
@@ -223,7 +224,8 @@ class LLMWiseAgentWithTools(WiseAgent):
         """
         sub_ctx_name = f'{self.name}.{str(uuid.uuid4())}'
         ctx = WiseAgentRegistry.create_sub_context(request.context_name,sub_ctx_name)
-        ctx.append_chat_completion(messages= {"role": "system", "content": self.llm.system_message})
+        if self.llm.system_message:
+            ctx.append_chat_completion(messages= {"role": "system", "content": self.llm.system_message})
         ctx.append_chat_completion(messages= {"role": "user", "content": request.message})
         
         for tool in self._tools:
@@ -378,7 +380,8 @@ class ChatWiseAgent(WiseAgent):
             Optional[str]: the response to the request message as a string or None if there is
             no string response yet
         """
-        conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
+        if self.metadata.system_message or self.llm.system_message:
+            conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": request.message})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
         return llm_response.choices[0].message.content

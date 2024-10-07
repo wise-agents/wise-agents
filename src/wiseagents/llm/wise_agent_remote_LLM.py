@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import Iterable
+from typing import Iterable, Optional
 
 from openai.types.chat import ChatCompletion, ChatCompletionMessageParam, ChatCompletionToolParam
 
@@ -10,8 +10,8 @@ from wiseagents.llm.wise_agent_LLM import WiseAgentLLM
 class WiseAgentRemoteLLM(WiseAgentLLM):
     """Extend WiseAgentLLM to support remote execution of WiseAgentLLM on a remote machine."""
 
-    def __init__(self, system_message, model_name, remote_address):
-        super().__init__(system_message, model_name)
+    def __init__(self, model_name, remote_address, system_message: Optional[str] = None):
+        super().__init__(model_name, system_message)
         enforce_no_abstract_class_instances(self.__class__, WiseAgentRemoteLLM)
         self._remote_address = remote_address
     

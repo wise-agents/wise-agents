@@ -137,7 +137,8 @@ class SequentialMemoryCoordinatorWiseAgent(WiseAgent):
 
         ctx = WiseAgentRegistry.create_sub_context(request.context_name, sub_ctx_name)
         ctx.set_collaboration_type(WiseAgentCollaborationType.SEQUENTIAL_MEMORY)
-        ctx.append_chat_completion(messages={"role": "system", "content": self.metadata.system_message})
+        if self.metadata.system_message:
+            ctx.append_chat_completion(messages={"role": "system", "content": self.metadata.system_message})
 
         ctx.set_agents_sequence(self._agents)
         ctx.set_route_response_to(request.sender)
@@ -227,7 +228,8 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
                                   " anything else in the response.\n" +
                                   " Query: " + request.message + "\n" + "Available agents:\n" +
                                   "\n".join(WiseAgentRegistry.get_agent_names_and_descriptions()) + "\n")
-        ctx.append_chat_completion(messages={"role": "system", "content": self.metadata.system_message or self.llm.system_message})
+        if self.metadata.system_message or self.llm.system_message:
+            ctx.append_chat_completion(messages={"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         ctx.append_chat_completion(messages={"role": "user", "content": agent_selection_prompt})
 
         logging.debug(f"messages: {ctx.llm_chat_completion}")
