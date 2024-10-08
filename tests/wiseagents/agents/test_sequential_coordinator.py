@@ -38,7 +38,7 @@ class FinalWiseAgent(WiseAgent):
         conversation_history.append({"role": "user", "content": request.message})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
         ctx = WiseAgentRegistry.get_context(request.context_name)
-        ctx.append_chat_completion(messages=llm_response.choices[0].message)
+        ctx.append_chat_completion(messages={"role": "assistant", "content": llm_response.choices[0].message.content})
         if len(ctx.get_queries()) < self._max_iterations:
             ctx.add_query("Atlanta")
             ctx.set_restart_sequence(True)

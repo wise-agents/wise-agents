@@ -20,6 +20,8 @@ from wiseagents.yaml import WiseAgentsYAMLObject
 from wiseagents.vectordb import WiseAgentVectorDB
 from wiseagents.wise_agent_messaging import WiseAgentMessage, WiseAgentMessageType, WiseAgentTransport, WiseAgentEvent
 
+from wiseagents.utils import log_messages_exchanged
+
 
 class WiseAgentCollaborationType(StrEnum):
     SEQUENTIAL = auto()
@@ -917,6 +919,7 @@ class WiseAgent(WiseAgentsYAMLObject):
                 if collaboration_type == WiseAgentCollaborationType.SEQUENTIAL_MEMORY:
                     # add this agent's response to the shared context
                     context.append_chat_completion(messages={"role": "assistant", "content": response_str})
+                    log_messages_exchanged(context.llm_chat_completion, self.name, context.name)
                 next_agent = context.get_next_agent_in_sequence(self.name)
                 if next_agent is None:
                     if context.get_restart_sequence():
