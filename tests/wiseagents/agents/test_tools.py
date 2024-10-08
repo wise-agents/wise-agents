@@ -99,11 +99,7 @@ class WiseAgentWeather(WiseAgent):
 #run ollama with the following command: ollama run llama3.1
 
 
-
-@pytest.mark.needsllm
-@pytest.mark.unmockable
-# This is marked as unmocakable since there were some issues with mocking the ChatCompletionMessageToolCall
-# classes contained in the response
+@pytest.mark.needsllama
 def test_agent_tool():
     try:
         json_schema = {
@@ -156,10 +152,7 @@ def test_agent_tool():
         print("done")
 
 
-@pytest.mark.needsllm
-@pytest.mark.unmockable
-# This is marked as unmocakable since there were some issues with mocking the ChatCompletionMessageToolCall
-# classes contained in the response
+@pytest.mark.needsllama
 def test_tool():
     try:
         json_schema = {

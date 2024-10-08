@@ -52,6 +52,5 @@ pythonpath = [
 markers = [
     "needsllm: The LMM is too big to run in GitHub Actions, so we need to disable tests requiring it there.",
     "needsllama: Needs llama, and the model is too big for GitHub Actions.",
-    "needsqroq: Needs an API key for Groq to be able to run successfully.",
-    "unmockable: LLM tests that cannot be mocked"
+    "needsqroq: Needs an API key for Groq to be able to run successfully."
 ]
