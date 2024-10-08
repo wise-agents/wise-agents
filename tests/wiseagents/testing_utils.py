@@ -113,10 +113,3 @@ def get_messages_for_role(role:str, messages: list[dict:str]) -> list[str]:
             role_messages.append(msg["content"])
 
     return role_messages
-
-
-#
-# msg = mock_open_ai_chat_completion("Hello")
-# print(msg)
-# d = msg.__getstate__()
-# print(msg.__getstate__())

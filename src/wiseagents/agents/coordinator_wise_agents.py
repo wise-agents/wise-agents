@@ -253,8 +253,6 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
         ctx.set_current_phase(0)
         ctx.add_query(request.message)
 
-        print("\n====== FIRST PHASE 0\n")
-
         # Kick off the first phase
         for agent in phases[0]:
             self.send_request(WiseAgentMessage(message=request.message, sender=self.name,
@@ -281,9 +279,7 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
         # return the final answer, or iterate
         if len(ctx.get_required_agents_for_current_phase()) == 0:
             next_phase = ctx.get_agents_for_next_phase()
-            print("\n====== NEXT PHASE\n")
             if next_phase is None:
-                print("\n====== FINAL ANSWER\n")
                 # Determine the final answer
                 final_answer_prompt = ("What is the final answer for the original query? Provide the answer followed" +
                                        " by a confidence score from 0 to 100 to indicate how certain you are of the" +
