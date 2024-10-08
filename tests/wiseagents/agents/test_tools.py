@@ -3,16 +3,16 @@ import logging
 import threading
 
 import pytest
-from openai.types.chat.chat_completion_message_tool_call import Function, ChatCompletionMessageToolCall
 
 from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTool
 from wiseagents.agents import LLMWiseAgentWithTools, PassThroughClientAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.transports.stomp import StompWiseAgentTransport
-from tests.wiseagents import assert_standard_variables_set, mock_open_ai_for_ci, mock_open_ai_chat_completion, \
-    get_user_messages, get_system_messages, get_assistant_messages, get_messages_for_role
+from tests.wiseagents import assert_standard_variables_set
+
 
 assertError : AssertionError = None
+
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
@@ -30,23 +30,6 @@ def _assert(condition: bool, message):
         assertError = e
         with cond:
             cond.notify()
-
-
-def __mock_llm(* args, **kwargs):
-    messages = kwargs.get("messages")
-    print(kwargs)
-    if len(messages) == 2:
-        func = Function(name="get_current_weather", arguments='{"location": "Tokyo", "unit":"fahrenheit"}')
-        tool_call = ChatCompletionMessageToolCall(id="call_99", function=func, type="function")
-        return mock_open_ai_chat_completion("", extra={"tool_calls": [tool_call]})
-    elif len(messages) == 4:
-        messages = get_messages_for_role("tool", messages)
-        _assert(len(messages) == 1, f"Expected 1 tool message, got {len(messages)}")
-        d = json.loads(messages[0])
-        return mock_open_ai_chat_completion(f"The current temperature in {d["location"]} is {d["temperature"]} degrees {d["unit"]}")
-
-    _assert(False, f"Unexpected number of messages {messages}")
-
 
 
 def get_current_weather(location, unit="fahrenheit"):
@@ -115,9 +98,13 @@ class WiseAgentWeather(WiseAgent):
 #Install ollam from their official website https://ollama.com/
 #run ollama with the following command: ollama run llama3.1
 
+
+
 @pytest.mark.needsllm
-def test_agent_tool(mocker):
-    mock_open_ai_for_ci(mocker, __mock_llm)
+@pytest.mark.unmockable
+# This is marked as unmocakable since there were some issues with mocking the ChatCompletionMessageToolCall
+# classes contained in the response
+def test_agent_tool():
     try:
         json_schema = {
                         "type": "object",
@@ -167,10 +154,13 @@ def test_agent_tool(mocker):
         weather_agent.stop_agent()
         WiseAgentRegistry.remove_context("default")
         print("done")
-    
+
+
 @pytest.mark.needsllm
-def test_tool(mocker):
-    mock_open_ai_for_ci(mocker, __mock_llm)
+@pytest.mark.unmockable
+# This is marked as unmocakable since there were some issues with mocking the ChatCompletionMessageToolCall
+# classes contained in the response
+def test_tool():
     try:
         json_schema = {
                         "type": "object",

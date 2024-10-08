@@ -243,21 +243,7 @@ class LLMWiseAgentWithTools(WiseAgent):
         # Step 2: check if the model wanted to call a function
         if tool_calls is not None:
             # Step 3: call the function
-            # TODO: the JSON response may not always be valid; be sure to handle errors
-            # We cannot serialize the mocks we use directly, so we need to convert them to dictionaries
-            clean_message = {"content": response_message.content, "role": "assistant"}
-            tools = []
-            for tool in tool_calls:
-                tools.append({"id": tool.id, "name": tool.function.name, "arguments": tool.function.arguments})
-            tools.append({
-                    "id": tool.id,
-                    "name": tool.function.name,
-                    "arguments": tool.function.arguments,
-                    "type": tool.function.type})
-            clean_message["tool_calls"] = tools
-            # TODO - Remove this, problem solving only
-            # clean_message = response_message
-            ctx.append_chat_completion(messages= clean_message)  # extend conversation with assistant's reply
+            ctx.append_chat_completion(messages=response_message)  # extend conversation with assistant's reply
 
             # Step 4: send the info for each function call and function response to the model
             for tool_call in tool_calls:

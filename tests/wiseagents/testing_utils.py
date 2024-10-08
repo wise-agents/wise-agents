@@ -48,12 +48,11 @@ def mock_open_ai_chat_completion(*messages: str, extra: dict = None) -> ChatComp
     Args:
         fn (function): Callback function to be called when the mocked method is called. The signature should be
             (*args, **kwargs)
-        extra (dict): Extra data to be added to the response
     """
-    return mock_open_ai_chat_completion_with_mocker(None, *messages, extra=extra)
+    return mock_open_ai_chat_completion_with_mocker(None, *messages)
 
 
-def mock_open_ai_chat_completion_with_mocker(mocker: MockerFixture | None, *messages: str, extra: dict = None) -> ChatCompletion:
+def mock_open_ai_chat_completion_with_mocker(mocker: MockerFixture | None, *messages: str) -> ChatCompletion:
     """
     Mocks the Completions.create() method of the OpenAI API for CI testing. This avoids the need for an LLM.
     Args:
@@ -81,9 +80,6 @@ def mock_open_ai_chat_completion_with_mocker(mocker: MockerFixture | None, *mess
             mocker.patch.object(completion_msg, "__getstate__", return_value={"content": message})
 
         completion_msg.content = message
-        if extra:
-            for key, value in extra.items():
-                setattr(completion_msg, key, value)
         choice = Mock(spec=Choice)
         choice.message = completion_msg
         response.choices.append(choice)
