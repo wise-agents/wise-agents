@@ -33,13 +33,15 @@ def assert_env_var_set(var_name: str) -> str:
 def mock_open_ai_for_ci(mocker: MockerFixture, fn: callable):
     """
     Mocks the Completions.create() method of the OpenAI API for CI testing. This avoids the need for an LLM.
+    This only happens if the environment variable MOCK_OPENAI_FOR_TESTS is set to 1. Otherwise,
+    this operation is a no-op, and tests use OpenAI API to call LLMs as normal.
     Args:
         mocker (pytest_mock.plugin.MockerFixture): the mocker fixture
         fn (function): Callback function to be called when the mocked method is called. The signature should be
             (*args, **kwargs)
     """
-    # TODO Only do this if the MOCK_OPENAI_FOR_CI environment variable is set
-    mocker.patch('openai.resources.chat.completions.Completions.create', side_effect=fn)
+    if os.getenv("MOCK_OPENAI_FOR_TESTS") == "1":
+        mocker.patch('openai.resources.chat.completions.Completions.create', side_effect=fn)
 
 
 def mock_open_ai_chat_completion(*messages: str, extra: dict = None) -> ChatCompletion:
