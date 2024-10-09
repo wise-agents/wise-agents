@@ -37,6 +37,11 @@ def log_messages_exchanged(messages: List[ChatCompletionMessageParam], agent_nam
     """
     if not os.path.exists(dir_path):
         os.makedirs(dir_path)
+    with open(f'{dir_path}/messages-{agent_name}-{context_name}.md', 'w') as file:
+        message : ChatCompletionMessageParam
+        for message  in messages:
+            file.write(f"## {message.get('role')}\n {message.get('content')}\n\n\n")
+            #file.write(f"{message}\n\n\n")
     with open(f'{dir_path}/messages-{agent_name}-{context_name}.log', 'w') as file:
         json.dump(messages, file, indent=2)
     print(f"[{agent_name}] Logged messages to {dir_path}/messages-{agent_name}-{context_name}.log for the current request")
