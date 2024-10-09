@@ -94,7 +94,7 @@ class RAGWiseAgent(WiseAgent):
         retrieved_documents = retrieve_documents_for_rag(request.message, self.vector_db, self.collection_name, self.k)
         llm_response_with_sources = create_and_process_rag_prompt(retrieved_documents, request.message, self.llm,
                                                                   self.include_sources, conversation_history,
-                                                                  self.metadata.system_message)
+                                                                  self.metadata.system_message, self.name)
         return llm_response_with_sources
 
     def process_response(self, response: WiseAgentMessage):
@@ -201,7 +201,7 @@ class GraphRAGWiseAgent(WiseAgent):
         retrieved_documents = retrieve_documents_for_graph_rag(request.message, self.graph_db, self.k,
                                                                self.retrieval_query, self.params, self.metadata_filter)
         llm_response_with_sources = create_and_process_rag_prompt(retrieved_documents, request.message, self.llm, self.include_sources,
-                                                                   conversation_history, self.metadata.system_message)
+                                                                   conversation_history, self.metadata.system_message, self.name)
         return llm_response_with_sources
 
     def process_response(self, response: WiseAgentMessage):
@@ -372,7 +372,7 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         for question in verification_questions:
             retrieved_documents = self.retrieve_documents(question)
             llm_response = create_and_process_rag_prompt(retrieved_documents, question, self.llm, False,
-                                          [], self.metadata.system_message)
+                                          [], self.metadata.system_message, self.name)
             verification_responses = (verification_responses + "Verification Question: " + question + "\n"
                                       + "Verification Result: " + llm_response + "\n")
 
@@ -600,7 +600,7 @@ class CoVeChallengerGraphRAGWiseAgent(BaseCoVeChallengerWiseAgent):
 
 def create_and_process_rag_prompt(retrieved_documents: List[Document], question: str, llm: WiseAgentLLM,
                                   include_sources: bool, conversation_history: List[ChatCompletionMessageParam],
-                                  system_message: str) -> str:
+                                  system_message: str, agent_name: str) -> str:
     """
     Create a RAG prompt and process it with the LLM agent.
 
@@ -612,7 +612,9 @@ def create_and_process_rag_prompt(retrieved_documents: List[Document], question:
             can be used while processing the request. If this agent isn't involved in a type of
             collaboration that makes use of the conversation history, this will be an empty list.
         system_message (str): the optional system message to use
+        agent_name (str): the agent name
     """
+    log_retrieved_content(retrieved_documents, agent_name)
     context = "\n".join([document.content for document in retrieved_documents])
     prompt = (f"Answer the question based only on the following context:\n{context}\n"
               f"Question: {question}\n")
@@ -628,6 +630,15 @@ def create_and_process_rag_prompt(retrieved_documents: List[Document], question:
         return f"{llm_response.choices[0].message.content}\n\nSource Documents:\n{source_documents}"
     else:
         return llm_response.choices[0].message.content
+
+
+def log_retrieved_content(retrieved_documents: List[Document], agent_name: str):
+    for document in retrieved_documents:
+        logging.getLogger(agent_name).debug(f"Retrieved Document:\n"
+                                           f"{document.content}\n"
+                                           f"Metadata:\n"
+                                           f"  Source: {document.metadata.get('source', '')}\n"
+                                           f"  Matched: {document.metadata.get('matched', '')}")
 
 
 def retrieve_documents_for_rag(question: str, vector_db: WiseAgentVectorDB, collection_name: str, k: int) \
