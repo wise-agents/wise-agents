@@ -843,7 +843,12 @@ class WiseAgent(WiseAgentsYAMLObject):
         logging.debug(f"Agent {self.name} received request in ctx: {context}")
         collaboration_type = context.collaboration_type
         conversation_history = self.get_conversation_history_if_needed(context, collaboration_type)
+        initial_conversation_history_size = len(conversation_history)
         response_str = self.process_request(request, conversation_history)
+        if len(conversation_history) > initial_conversation_history_size:
+            # the conversation history has been updated
+            for message in conversation_history[initial_conversation_history_size:]:
+                context.append_chat_completion(message)
         return self.handle_response(response_str, request, context, collaboration_type)
 
     def get_conversation_history_if_needed(self, context: WiseAgentContext,

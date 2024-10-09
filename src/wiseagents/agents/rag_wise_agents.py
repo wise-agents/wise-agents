@@ -624,8 +624,8 @@ def create_and_process_rag_prompt(retrieved_documents: List[Document], question:
     if include_sources:
         source_documents = ""
         for document in retrieved_documents:
-            source_documents += f"Source Document:\n    Content: {document.content}\n    Metadata: {json.dumps(document.metadata)}\n\n"
-        return f"{llm_response.choices[0].message.content}\n\nSource Documents:\n{source_documents}"
+            source_documents += f"{json.dumps(document.metadata)}\n\n"
+        return f"{llm_response.choices[0].message.content}\n\nSource Metadata:\n{source_documents}"
     else:
         return llm_response.choices[0].message.content
 
