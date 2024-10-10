@@ -130,7 +130,7 @@ class SequentialMemoryCoordinatorWiseAgent(WiseAgent):
         Args:
             request (WiseAgentMessage): the request message to process
         """
-        print(f"[{self.name}] Received a message from {request.sender}. Starting to kick off the sequence of agents")
+        logging.getLogger(self.name).info(f"Received a message from {request.sender}. Starting to kick off the sequence of agents")
 
         # Generate a chat ID that will be used to collaborate on this query
         sub_ctx_name = f'{self.name}.{str(uuid.uuid4())}'
