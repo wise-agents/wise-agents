@@ -293,7 +293,7 @@ class LLMWiseAgentWithTools(WiseAgent):
         Args:
             response (WiseAgentMessage): the response message to process
         """
-        print(f"Response received: {response}")
+        logging.getLogger(self.name).info(f"Response received: {response}")
         ctx = WiseAgentRegistry.get_context(response.context_name)
         ctx.append_chat_completion(messages= 
             {
@@ -309,7 +309,7 @@ class LLMWiseAgentWithTools(WiseAgent):
             llm_response = self.llm.process_chat_completion(ctx.llm_chat_completion, 
                                                             ctx.llm_available_tools_in_chat)
             response_message = llm_response.choices[0].message
-            logging.debug(f"sending response {response_message.content} to: {response.route_response_to}")
+            logging.getLogger(self.name).info(f"sending response {response_message.content} to: {response.route_response_to}")
             parent_context = WiseAgentRegistry.remove_context(context_name=response.context_name, merge_chat_to_parent=True)
             self.send_response(WiseAgentMessage(message=response_message.content, sender=self.name, context_name=parent_context.name), response.route_response_to )
             return True

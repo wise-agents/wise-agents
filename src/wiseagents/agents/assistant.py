@@ -81,14 +81,14 @@ class AssistantAgent(WiseAgent):
             Optional[str]: the response to the request message as a string or None if there is
             no string response yet
         """
-        print(f"AssistantAgent: process_request: {request}")
+        logging.getLogger(self.name).info(f"AssistantAgent: process_request: {request}")
         WiseAgentRegistry.get_context(request.context_name).append_chat_completion({"role": "user", "content": request.message})
         self.send_request(request, self.destination_agent_name)
         return None
 
     def process_response(self, response : WiseAgentMessage):
         """Process a response message just sending it back to the client."""
-        print(f"AssistantAgent: process_response: {response}")
+        logging.getLogger(self.name).info(f"AssistantAgent: process_response: {response}")
         with self._cond:
             self._response = response
             self._cond.notify()

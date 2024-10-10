@@ -56,10 +56,17 @@ To learn more about how the CLI and agents can be scaled and managed in a distri
 To start the Wise Agents CLI, run the script from your terminal:
 
 ```bash
-python src/wiseagents/cli/wise_agent_cli.py [path_to_agents_file.yaml]
-```
+python src/wiseagents/cli/wise_agent_cli.py --help
+usage: Wise Agent Argument Parser [-h] [--debug DEBUG] [filename]
 
-- The `[path_to_agents_file.yaml]` is optional. If provided, the CLI will automatically load agents from the specified YAML file upon startup.
+Wise Agent CLI to run and manage Wise Agents
+
+positional arguments:
+  filename       is optional. If provided, the CLI will automatically load agents from the specified YAML file upon startup.
+
+options:
+  -h, --help     show this help message and exit
+  --debug DEBUG  Setting the logging level to DEBUG instead of INFO
 
 ---
 

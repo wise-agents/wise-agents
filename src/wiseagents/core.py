@@ -745,6 +745,9 @@ class WiseAgent(WiseAgentsYAMLObject):
         self.start_agent()
 
     def start_agent(self):
+        if self._llm is not None:
+            self._llm.set_agent_name(self._name)
+
         ''' Start the agent by setting the call backs and starting the transport.'''
         self.transport.set_call_backs(self.handle_request, self.process_event, self.process_error,
                                       self.process_response)
