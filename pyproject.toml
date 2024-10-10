@@ -1,11 +1,31 @@
+
+[build-system]
+requires = [
+    "dynamic-versioning",
+    "setuptools>=64", 
+    "setuptools-scm[toml]>=8",
+    "twine",
+    "wheel", 
+]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "wiseagents"
-version = "0.0.1"
+dynamic = [
+  "version",
+]
 description = "Multi-agent framework"
 authors = []
 readme = "README.md"
+license = {file = "LICENSE.txt"}
 requires-python = ">=3.8.1,<4.0"
-
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "License :: OSI Approved :: Apache Software License",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3",
+  "Topic :: Software Development"
+]
 dependencies = [
     "langchain==0.2.16",
     "langchain-community==0.2.16",
@@ -28,9 +48,23 @@ dependencies = [
     "gradio",
 ]
 
+[project.urls]
+homepage = "https://wise-agents.github.io/"
+documentation = "https://wise-agents.github.io/"
+repository = "https://github.com/wise-agents/wise-agents"
+changelog = "https://github.com/wise-agents/wise-agents/blob/master/CHANGELOG.md"
+Issues = "https://github.com/wise-agents/wise-agents/issues"
+
 [project.optional-dependencies]
 test = [
     "pytest",
+]
+build = [
+    "dynamic-versioning",
+    "setuptools>=64", 
+    "setuptools-scm[toml]>=8",
+    "twine",
+    "wheel",
 ]
 
 [tool.pytest.ini_options]
@@ -53,3 +87,6 @@ markers = [
     "needsllama: Needs llama, and the model is too big for GitHub Actions.",
     "needsqroq: Needs an API key for Groq to be able to run successfully.",
 ]
+
+
+[tool.setuptools_scm]
