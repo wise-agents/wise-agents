@@ -1,3 +1,4 @@
+import logging
 from typing import Dict, Iterable, Optional
 
 import openai
@@ -52,7 +53,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
     
     def connect(self):
         '''Connect to the remote machine.'''
-        print(f"Connecting to WiseAgentLLM on remote machine at {self.remote_address} with API key {self.api_key}")
+        logging.getLogger(__name__).info(f"Connecting to {self._agent_name} on remote machine at {self.remote_address} with API key ***********")
         self.client = openai.OpenAI(base_url=self.remote_address, 
                 api_key=self.api_key)
     
@@ -63,7 +64,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
 
         Args:
             prompt (str): the prompt to process'''
-        print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
+        logging.getLogger(__name__).info(f"Executing {self._agent_name} on remote machine at {self.remote_address}")
         if (self.client is None):
             self.connect()
         messages = []
@@ -92,7 +93,7 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         
         Returns:
                 ChatCompletion: the chat completion result'''
-        print(f"Executing WiseAgentLLM on remote machine at {self.remote_address}")
+        logging.getLogger(__name__).info(f"Executing {self._agent_name} on remote machine at {self.remote_address}")
         if (self.client is None):
             self.connect()
         #messages = []

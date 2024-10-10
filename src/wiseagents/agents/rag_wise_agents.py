@@ -90,7 +90,7 @@ class RAGWiseAgent(WiseAgent):
             Optional[str]: the response to the request message as a string or None if there is
             no string response yet
         """
-        print(f"[{self.name}] Received a message from {request.sender}. Starting to process it using RAG")
+        logging.getLogger(self.name).info(f"Received a message from {request.sender}. Starting to process it using RAG")
         retrieved_documents = retrieve_documents_for_rag(request.message, self.vector_db, self.collection_name, self.k)
         llm_response_with_sources = create_and_process_rag_prompt(retrieved_documents, request.message, self.llm,
                                                                   self.include_sources, conversation_history,
@@ -197,7 +197,7 @@ class GraphRAGWiseAgent(WiseAgent):
             Optional[str]: the response to the request message as a string or None if there is
             no string response yet
         """
-        print(f"[{self.name}] Received a message from {request.sender}. Starting to process it using Graph RAG")
+        logging.getLogger(self.name).info(f"Received a message from {request.sender}. Starting to process it using Graph RAG")
         retrieved_documents = retrieve_documents_for_graph_rag(request.message, self.graph_db, self.k,
                                                                self.retrieval_query, self.params, self.metadata_filter)
         llm_response_with_sources = create_and_process_rag_prompt(retrieved_documents, request.message, self.llm, self.include_sources,
@@ -471,7 +471,7 @@ class CoVeChallengerRAGWiseAgent(BaseCoVeChallengerWiseAgent):
         Returns:
             str: the response to the request message as a string
         """
-        print(f"[{self.name}] Received a message from {request.sender}. Starting to challenge it")
+        logging.getLogger(self.name).info(f"Received a message from {request.sender}. Starting to challenge it")
         llm_response = self.create_and_process_chain_of_verification_prompts(request.message, conversation_history)
         return llm_response
 
@@ -566,7 +566,7 @@ class CoVeChallengerGraphRAGWiseAgent(BaseCoVeChallengerWiseAgent):
         Returns:
             str: the response to the request message as a string
         """
-        print(f"[{self.name}] Received a message from {request.sender}. Starting to challenge it")
+        logging.getLogger(self.name).info(f"Received a message from {request.sender}. Starting to challenge it")
         llm_response = self.create_and_process_chain_of_verification_prompts(request.message, conversation_history)
         return llm_response
 

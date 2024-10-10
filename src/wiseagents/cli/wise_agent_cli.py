@@ -1,4 +1,6 @@
+import argparse
 import importlib
+import logging
 import signal
 import sys
 import threading
@@ -47,12 +49,31 @@ def main():
     file_path = None
     default_file_path = "src/wiseagents/cli/test-multiple.yaml"
 
+    parser = argparse.ArgumentParser(prog="Wise Agent Argument Parser", description="Wise Agent CLI to run and manage Wise Agents", add_help=True)
+    parser.add_argument("filename", nargs="?", help="is optional. If provided, the CLI will automatically load agents from the specified YAML file upon startup.")
+    parser.add_argument("--debug", dest="debug", help="Setting the logging level to DEBUG instead of INFO", type=bool, default=False)
+    args = parser.parse_args()
+    logger = logging.getLogger(__name__)
+    if (args.debug):
+        level=logging.DEBUG
+    else:
+        level=logging.INFO
+    logging.basicConfig(filename='./log/agents.log', filemode="w",
+                        format='%(asctime)s %(levelname)s [%(name)s]: %(message)s', encoding='utf-8',
+                        level=level)
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.INFO)
+
+    logger.info(f"Starting CLI in debug mode {args.debug} with file {args.filename}")
     signal.signal(signal.SIGINT, signal_handler)
     context_name = "CLI." + str(uuid.uuid4())
     WiseAgentRegistry.create_context(context_name)
-    if (sys.argv.__len__() > 1):
-            user_input="/load-agents"
-            file_path=sys.argv[1]
+    if (args.filename is not None):
+        user_input="/load-agents"
+        file_path=args.filename
+        logger.info(f"Loading agents from {file_path}")
+    else:
+        logger.info(f"No agent from {file_path}")
+
     while True:
         if  (user_input == '/help' or user_input == '/h'):
             print('/(l)oad-agents: Load agents from file')
@@ -69,7 +90,7 @@ def main():
                 print(msg)
         if  (user_input == '/exit' or user_input == '/x'):
             #stop all agents
-            print('/exit seceleted! Please wait for the agents to stop')
+            print('/exit selected! Please wait for the agents to stop')
             for agent in agent_list:
                 print(f"Stopping agent {agent.name}")
                 agent.stop_agent()
@@ -89,11 +110,11 @@ def main():
                 if not file_path:
                     file_path = default_file_path
             with open(file_path) as stream:
-                try:  
+                try:
 
                     for agent in yaml.load_all(stream, Loader=WiseAgentsLoader):
                         agent : WiseAgent
-                        print(f'Loaded agent: {agent.name}')
+                        logger.info(f'Loaded agent: {agent.name}')
                         if agent.name == "PassThroughClientAgent1":
                             _passThroughClientAgent1 = agent
                             _passThroughClientAgent1.set_response_delivery(response_delivered)
@@ -101,7 +122,8 @@ def main():
                         agent_list.append(agent)
                 except yaml.YAMLError as exc:
                     traceback.print_exc()
-                print(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
+                lines = [f'{key} {value}' for key, value in WiseAgentRegistry.fetch_agents_metadata_dict().items()]
+                print(f"registered agents=\n {'\n'.join(lines)}")
         if  (user_input == '/chat' or user_input == '/c'):
             while True:
                 user_input = input("Enter a message (or /back): ")
@@ -111,7 +133,8 @@ def main():
                     _passThroughClientAgent1.send_request(WiseAgentMessage(message=user_input, sender="PassThroughClientAgent1", context_name=context_name), "LLMOnlyWiseAgent2")
                     cond.wait()
         if (user_input == '/agents' or user_input == '/a'):
-            print(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
+            lines = [f'{key} {value}' for key, value in WiseAgentRegistry.fetch_agents_metadata_dict().items()]
+            print(f"registered agents=\n {'\n'.join(lines)}")
 
         if (user_input == '/send' or user_input == '/s'):
             agent_name = input("Enter the agent name: ")

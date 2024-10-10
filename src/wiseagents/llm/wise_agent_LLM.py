@@ -34,7 +34,11 @@ class WiseAgentLLM(WiseAgentsYAMLObject):
     @property
     def model_name(self):
         '''Get the model name.'''
-        return self._model_name     
+        return self._model_name
+
+
+    def set_agent_name(self, agent_name: str) :
+        self._agent_name = agent_name
 
     @abstractmethod
     def process_single_prompt(self, prompt):

@@ -56,7 +56,7 @@ class WiseAgentMessage(YAMLObject):
         self._message = state["_message"]
         self._sender =  state["_sender"]
         if state["_message_type"] is not None and state["_message_type"] != "":
-            logging.debug(f"__setstate__ state[_message_type]: {state['_message_type']}")
+            logging.getLogger(__name__).debug(f"__setstate__ state[_message_type]: {state['_message_type']}")
             self._message_type = WiseAgentMessageType(state["_message_type"])
         else:
             self._message_type = None

@@ -112,7 +112,7 @@ class StompWiseAgentTransport(WiseAgentTransport):
         if self.response_conn.is_connected() == False:
             self.response_conn.connect(os.getenv("STOMP_USER"), os.getenv("STOMP_PASSWORD"), wait=True)
         request_destination = '/queue/request/' + dest_agent_name
-        logging.debug(f"Sending request {message} to {request_destination}")    
+        logging.getLogger(__name__).debug(f"Sending request {message} to {request_destination}")
         self.request_conn.send(body=yaml.dump(message), destination=request_destination)
         
     def send_response(self, message: WiseAgentMessage, dest_agent_name: str):
