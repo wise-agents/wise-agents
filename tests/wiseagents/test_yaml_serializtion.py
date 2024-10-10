@@ -93,7 +93,7 @@ def test_using_deserialized_agent(monkeypatch):
     try:
         # Create a WiseAgent object
         agent_llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                            model_name="llama3.1",
+                                            model_name="llama3.2:1b",
                                             remote_address="http://localhost:11434/v1")
         agent_graph_db = Neo4jLangChainWiseAgentGraphDB(url="bolt://localhost:7687", refresh_graph_schema=False,
                                                         embedding_model_name="all-MiniLM-L6-v2", collection_name="test-cli-vector-db",
