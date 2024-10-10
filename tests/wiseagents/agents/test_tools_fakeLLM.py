@@ -125,7 +125,7 @@ def test_tool():
         client_agent1.set_response_delivery(response_delivered)
         client_agent1.send_request(WiseAgentMessage("What is the current weather in Tokyo?", "PassThroughClientAgent1"), 
                                                     "WiseIntelligentAgent")
-        cond.wait()
+        cond.wait(timeout=300)
         
 
    logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
