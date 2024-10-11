@@ -3,7 +3,7 @@
 metadata: !wiseagents.WiseAgentMetaData 
   description: This is an agent that can give suggestion on what to read next
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
-  model_name: llama3.1
+  model_name: llama3.2:1b
   remote_address: http://localhost:11434/v1
   system_message: You are an english literature expert. The user will provide you with a list of books they have read. Suggest the next 5 books they should read and ask user for their favorite one in this list
 name: LiterateAgent
@@ -38,7 +38,7 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
 metadata: !wiseagents.WiseAgentMetaData 
   description: This is an agent that can give suggestion on what to read next
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
-  model_name: llama3.1
+  model_name: llama3.2:1b
   remote_address: http://localhost:11434/v1
   system_message: You will receive a preference from the user. Considering the previous books read , the user's preference on your first list of suggestion, suggest the next 3 books they should read.
 name: FinalLiterateAgent
