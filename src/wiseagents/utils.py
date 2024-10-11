@@ -1,4 +1,5 @@
 import json
+import logging
 import os
 from typing import List, Optional
 
@@ -48,4 +49,4 @@ def log_messages_exchanged(messages: List[ChatCompletionMessageParam], agent_nam
             #file.write(f"{message}\n\n\n")
     with open(f'{dir_path}/{context_name}/json/{agent_name}.json', 'w') as file:
         json.dump(messages, file, indent=2)
-    print(f"[{agent_name}] Logged messages to {dir_path}/{context_name}/ for the current request")
+    logging.getLogger(agent_name).info(f"Logged messages to {dir_path}/{context_name}/ for the current request")
