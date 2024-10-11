@@ -357,13 +357,22 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         """
 
         # plan verifications, taking into account the baseline response and conversation history
-        prompt = (f"Given the following question and baseline response, generate a list of {self.num_verification_questions} "
-                  f" verification questions that could help determine if there are any mistakes in the baseline response:"
-                  f"\n{message}\n"
-                  f"Your response should contain only the list of questions, one per line.\n")
         if self.metadata.system_message or self.llm.system_message:
             conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
-        conversation_history.append({"role": "user", "content": prompt})
+        conversation_history.append({"role": "user", "content": f"I have a question and a baseline response to my question. I want you"
+                                                                f" to generate a list of {self.num_verification_questions} verification"
+                                                                f" questions to help determine if there are any mistakes in the baseline"
+                                                                f" response. Let's proceed step by step. Please ask me to provide the question and baseline response first."})
+        llm_response = self.llm.process_chat_completion(conversation_history, [])
+        conversation_history.append({"role": "assistant", "content": llm_response.choices[0].message.content})
+        conversation_history.append({"role": "user", "content": f"Here's my question and the baseline response to this question:\n{message}\n"})
+        llm_response = self.llm.process_chat_completion(conversation_history, [])
+        conversation_history.append({"role": "assistant", "content": llm_response.choices[0].message.content})
+        conversation_history.append({"role": "user", "content": f"Generate a list of {self.num_verification_questions} that could"
+                                                                f" determine if there are any mistakes in the baseline response."
+                                                                f" Your response should contain only the list of questions, one per"
+                                                                f" line. Do not include any introductory text before the verification"
+                                                                f" questions."})
         llm_response = self.llm.process_chat_completion(conversation_history, [])
 
         # execute verifications, answering questions independently, without the baseline response
@@ -616,20 +625,28 @@ def create_and_process_rag_prompt(retrieved_documents: List[Document], question:
     """
     log_retrieved_content(retrieved_documents, agent_name)
     context = "\n".join([document.content for document in retrieved_documents])
-    prompt = (f"Answer the question based only on the following context:\n{context}\n"
-              f"Question: {question}\n")
     if system_message or llm.system_message:
         conversation_history.append({"role": "system", "content": system_message or llm.system_message})
-    conversation_history.append({"role": "user", "content": prompt})
+    conversation_history.append({"role": "user", "content": "I have a question for you. I want you to base your answer"
+                                                            " only on a set of relevant documents that I can provide you with."
+                                                            " Please ask me for the relevant documents first and then ask me to"
+                                                            " provide my question."})
+    llm_response = llm.process_chat_completion(conversation_history, [])
+    conversation_history.append({"role": "assistant", "content": llm_response.choices[0].message.content})
+    conversation_history.append({"role": "user", "content": f"Here are the relevant documents that I want you to use:\n{context}\n"})
+    llm_response = llm.process_chat_completion(conversation_history, [])
+    conversation_history.append({"role": "assistant", "content": llm_response.choices[0].message.content})
+    conversation_history.append({"role": "user", "content": f"Please answer the following question that is delimited by triple backticks, basing your answer"
+                                                            f" only on the relevant documents I provided above:\n```\n{question}\n```"})
     llm_response = llm.process_chat_completion(conversation_history, [])
 
     if include_sources:
         source_documents = ""
         for document in retrieved_documents:
             source_documents += f"{json.dumps(document.metadata)}\n\n"
-        return f"{llm_response.choices[0].message.content}\n\nSource Metadata:\n{source_documents}"
+        return f"The question was:\n```\n{question}\n```\nThe response to this question is:\n{llm_response.choices[0].message.content}\n\nSource Metadata:\n{source_documents}"
     else:
-        return llm_response.choices[0].message.content
+        return f"The question was:\n```\n{question}\n```\nThe response to this question is:\n" + llm_response.choices[0].message.content
 
 
 def log_retrieved_content(retrieved_documents: List[Document], agent_name: str):
