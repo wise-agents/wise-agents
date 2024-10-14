@@ -234,7 +234,8 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
 
         logging.debug(f"messages: {ctx.llm_chat_completion}")
         llm_response = self.llm.process_chat_completion(ctx.llm_chat_completion, tools=[])
-        ctx.append_chat_completion(messages=llm_response.choices[0].message)
+        msg = {"content": llm_response.choices[0].message.content, "role": "assistant"}
+        ctx.append_chat_completion(messages=msg)
 
         # Assign the agents to phases
         agent_assignment_prompt = ("Assign each of the agents that will be required to solve the query to one of the following phases:\n" +
@@ -245,7 +246,8 @@ class PhasedCoordinatorWiseAgent(WiseAgent):
                                    " agents for the second phase and so on. Don't include anything else in the response.\n")
         ctx.append_chat_completion(messages={"role": "user", "content": agent_assignment_prompt})
         llm_response = self.llm.process_chat_completion(ctx.llm_chat_completion, tools=[])
-        ctx.append_chat_completion(messages=llm_response.choices[0].message)     
+        msg = {"content": llm_response.choices[0].message.content, "role": "assistant"}
+        ctx.append_chat_completion(messages=msg)
         phases = [phase.split() for phase in llm_response.choices[0].message.content.splitlines()]
         ctx.set_agent_phase_assignments(phases)
         ctx.set_current_phase(0)

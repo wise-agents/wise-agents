@@ -7,7 +7,16 @@ from wiseagents import WiseAgentRegistry
 from wiseagents.cli.wise_agent_cli import main
 from wiseagents.graphdb import Entity, GraphDocument, Neo4jLangChainWiseAgentGraphDB, Relationship, Source
 from wiseagents.vectordb import Document, PGVectorLangChainWiseAgentVectorDB
-from tests.wiseagents import assert_standard_variables_set
+from tests.wiseagents import assert_standard_variables_set, mock_open_ai_for_ci, mock_open_ai_chat_completion, get_user_messages
+
+def __mock_llm(*args, **kwargs):
+    user_messages = get_user_messages(kwargs["messages"])
+    if "Who won the NBA championship in 2024?" in user_messages[0]:
+        return mock_open_ai_chat_completion("The Boston Celtics won the NBA Championship in 2024.")
+    elif "Fictitious Tower is located in Canada" in user_messages[0]:
+        return mock_open_ai_chat_completion(
+            "Fictitious Tower doesn't exist, but if it did, it would be in Canada.")
+    return mock_open_ai_chat_completion("The Boston Celtics won the NBA Finals in 2024")
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
@@ -60,7 +69,8 @@ def get_connection_string():
 
 
 @pytest.mark.needsllm
-def test_cli_with_rag_agent(monkeypatch, pytestconfig, capsys):
+def test_cli_with_rag_agent(monkeypatch, pytestconfig, capsys, mocker):
+    mock_open_ai_for_ci(mocker, __mock_llm)
     inputs = ['/load-agents', '', '/send', 'RAGWiseAgent1', 'Who won the NBA championship in 2024?', '/exit']
 
     def mock_input(prompt):
@@ -84,7 +94,8 @@ def test_cli_with_rag_agent(monkeypatch, pytestconfig, capsys):
 
 
 @pytest.mark.needsllm
-def test_cli_with_graph_rag_agent(monkeypatch, pytestconfig, capsys):
+def test_cli_with_graph_rag_agent(monkeypatch, pytestconfig, capsys, mocker):
+    mock_open_ai_for_ci(mocker, __mock_llm)
     inputs = ['/load-agents', '', '/send', 'GraphRAGWiseAgent1', 'what country is the tall building located in', '/exit']
 
     def mock_input(prompt):

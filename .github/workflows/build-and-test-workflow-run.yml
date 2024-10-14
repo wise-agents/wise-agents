@@ -34,6 +34,8 @@ env:
   POSTGRES_DB: postgres
   # Keys/tokens for external models
   GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+  # Turn on mocking of the local LLM tests
+  MOCK_OPENAI_FOR_TESTS: 1
 
 jobs:
   build:
@@ -112,7 +114,7 @@ jobs:
         pip install -e '.[test]'
     - name: Test with pytest
       run: |
-        pytest --log-cli-level=DEBUG -m "not needsllm and not needsllama"
+        pytest --log-cli-level=DEBUG -m "not needsllama"
     - name: Save success
       if: ${{ always() }} && env.PR_NUMBER != 'push'
       env:

@@ -243,9 +243,8 @@ class LLMWiseAgentWithTools(WiseAgent):
         # Step 2: check if the model wanted to call a function
         if tool_calls is not None:
             # Step 3: call the function
-            # TODO: the JSON response may not always be valid; be sure to handle errors
-            ctx.append_chat_completion(messages= response_message)  # extend conversation with assistant's reply
-            
+            ctx.append_chat_completion(messages=response_message)  # extend conversation with assistant's reply
+
             # Step 4: send the info for each function call and function response to the model
             for tool_call in tool_calls:
                 #record the required tool call in the context/chatid

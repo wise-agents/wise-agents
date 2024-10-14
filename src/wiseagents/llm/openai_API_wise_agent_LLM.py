@@ -2,7 +2,7 @@ import logging
 from typing import Dict, Iterable, Optional
 
 import openai
-from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam, ChatCompletionMessage
 
 from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 
