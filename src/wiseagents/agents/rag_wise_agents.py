@@ -360,7 +360,8 @@ class BaseCoVeChallengerWiseAgent(WiseAgent):
         prompt = (f"Given the following question and baseline response, generate a list of {self.num_verification_questions} "
                   f" verification questions that could help determine if there are any mistakes in the baseline response:"
                   f"\n{message}\n"
-                  f"Your response should contain only the list of questions, one per line.\n")
+                  f"Your response should contain only the list of questions, one per line with no blank lines in between the questions. Do not include any introductory"
+                  f" text before the verification questions.\n")
         if self.metadata.system_message or self.llm.system_message:
             conversation_history.append({"role": "system", "content": self.metadata.system_message or self.llm.system_message})
         conversation_history.append({"role": "user", "content": prompt})
@@ -627,9 +628,9 @@ def create_and_process_rag_prompt(retrieved_documents: List[Document], question:
         source_documents = ""
         for document in retrieved_documents:
             source_documents += f"{json.dumps(document.metadata)}\n\n"
-        return f"{llm_response.choices[0].message.content}\n\nSource Metadata:\n{source_documents}"
+        return f"Question: {question}\n{llm_response.choices[0].message.content}\n\nSource Metadata:\n{source_documents}"
     else:
-        return llm_response.choices[0].message.content
+        return f"Question: {question}\n{llm_response.choices[0].message.content}"
 
 
 def log_retrieved_content(retrieved_documents: List[Document], agent_name: str):
