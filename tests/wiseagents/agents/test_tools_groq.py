@@ -126,7 +126,7 @@ def test_agent_tool():
             client_agent1.set_response_delivery(response_delivered)
             client_agent1.send_request(WiseAgentMessage(message="What is the current weather in Tokyo?", sender="PassThroughClientAgent1",context_name="default"), 
                                                         "WiseIntelligentAgent")
-            cond.wait()
+            cond.wait(timeout=300)
             
 
         logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
@@ -176,7 +176,7 @@ def test_tool():
             client_agent1.set_response_delivery(response_delivered)
             client_agent1.send_request(WiseAgentMessage(message="What is the current weather in Tokyo?", sender="PassThroughClientAgent1",context_name="default"), 
                                                         "WiseIntelligentAgent")
-            cond.wait()
+            cond.wait(timeout=300)
             
 
         logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")

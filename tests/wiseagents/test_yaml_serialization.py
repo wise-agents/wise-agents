@@ -6,21 +6,29 @@ import unittest
 import pytest
 import yaml
 
-from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMessageType, WiseAgentMetaData, WiseAgentRegistry, WiseAgentTransport
+from wiseagents import WiseAgent, WiseAgentMessage, WiseAgentMessageType, WiseAgentMetaData, WiseAgentRegistry, \
+    WiseAgentTransport
 from wiseagents.agents import AssistantAgent
 from wiseagents.graphdb import Neo4jLangChainWiseAgentGraphDB
 from wiseagents.llm import OpenaiAPIWiseAgentLLM
 from wiseagents.vectordb import PGVectorLangChainWiseAgentVectorDB
 from wiseagents.yaml import WiseAgentsLoader
-from tests.wiseagents import assert_standard_variables_set
+from tests.wiseagents import (assert_standard_variables_set, find_in_user_messages,
+                              mock_open_ai_chat_completion, mock_open_ai_for_ci)
 
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     assert_standard_variables_set()
     yield
 
+def _mock_hello_stefano(*args, **kwargs):
+    assert find_in_user_messages(kwargs["messages"], "Hello my name is Stefano"), \
+        "Expected the message 'Hello my name is Stefano'"
+    return mock_open_ai_chat_completion("Hello Stefano! It's a pleasure to meet you. How can I assist you today?")
+
+
 class DummyTransport(WiseAgentTransport):
-    yaml_tag = "!tests.wiseagents.test_yaml_serializtion.DummyTransport"
+    yaml_tag = "!tests.wiseagents.test_yaml_serialization.DummyTransport"
     def __init__(self):
         pass
 
@@ -38,7 +46,7 @@ class DummyTransport(WiseAgentTransport):
         pass
 
 class TestSerializationAgent(WiseAgent):
-    yaml_tag = "!tests.wiseagents.test_yaml_serializtion.TestSerializationAgent"
+    yaml_tag = "!tests.wiseagents.test_yaml_serialization.TestSerializationAgent"
     def __init__(self, name, metadata, transport, llm=None, graph_db=None, vector_db=None):
         super().__init__(name, metadata, transport, llm=llm, graph_db=graph_db, vector_db=vector_db)
 
@@ -89,7 +97,8 @@ def test_serialize_wise_agent(monkeypatch):
 
 
 @pytest.mark.needsllm
-def test_using_deserialized_agent(monkeypatch):
+def test_using_deserialized_agent(monkeypatch, mocker):
+    mock_open_ai_for_ci(mocker, _mock_hello_stefano)
     try:
         # Create a WiseAgent object
         agent_llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",

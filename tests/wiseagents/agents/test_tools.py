@@ -11,15 +11,27 @@ from wiseagents.transports.stomp import StompWiseAgentTransport
 from tests.wiseagents import assert_standard_variables_set
 
 
+assertError : AssertionError = None
+
+
 @pytest.fixture(scope="session", autouse=True)
 def run_after_all_tests():
     assert_standard_variables_set()
     yield
-    
-    
-
 
 cond = threading.Condition()
+
+def _assert(condition: bool, message):
+    global assertError
+    try:
+        if not condition:
+            raise AssertionError(message)
+    except AssertionError as e:
+        assertError = e
+        with cond:
+            cond.notify()
+
+
 def get_current_weather(location, unit="fahrenheit"):
     """Get the current weather in a given location"""
     if "tokyo" in location.lower():
@@ -86,7 +98,8 @@ class WiseAgentWeather(WiseAgent):
 #Install ollam from their official website https://ollama.com/
 #run ollama with the following command: ollama run llama3.1
 
-@pytest.mark.needsllm
+
+@pytest.mark.needsllama
 def test_agent_tool():
     try:
         json_schema = {
@@ -125,7 +138,7 @@ def test_agent_tool():
             client_agent1.set_response_delivery(response_delivered)
             client_agent1.send_request(WiseAgentMessage(message="What is the current weather in Tokyo?", sender="PassThroughClientAgent1", context_name="default"), 
                                                         "WiseIntelligentAgent")
-            cond.wait()
+            cond.wait(timeout=300)
             
 
         logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")
@@ -137,8 +150,9 @@ def test_agent_tool():
         weather_agent.stop_agent()
         WiseAgentRegistry.remove_context("default")
         print("done")
-    
-@pytest.mark.needsllm
+
+
+@pytest.mark.needsllama
 def test_tool():
     try:
         json_schema = {
@@ -174,7 +188,7 @@ def test_tool():
             client_agent1.set_response_delivery(response_delivered)
             client_agent1.send_request(WiseAgentMessage(message="What is the current weather in Tokyo?", sender="PassThroughClientAgent1",context_name="default"), 
                                                         "WiseIntelligentAgent")
-            cond.wait()
+            cond.wait(timeout=300)
             
 
         logging.debug(f"registered agents= {WiseAgentRegistry.fetch_agents_metadata_dict()}")

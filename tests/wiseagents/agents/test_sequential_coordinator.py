@@ -5,6 +5,7 @@ from typing import List, Optional
 
 import pytest
 from openai.types.chat import ChatCompletionMessageParam
+from pytest_mock import MockFixture
 
 from wiseagents import WiseAgent, WiseAgentEvent, WiseAgentMessage, WiseAgentMetaData, WiseAgentRegistry, \
     WiseAgentTransport
@@ -12,7 +13,8 @@ from wiseagents.agents import LLMOnlyWiseAgent, PassThroughClientAgent, Sequenti
     SequentialMemoryCoordinatorWiseAgent
 from wiseagents.llm import OpenaiAPIWiseAgentLLM, WiseAgentLLM
 from wiseagents.transports import StompWiseAgentTransport
-from tests.wiseagents import assert_standard_variables_set
+from tests.wiseagents import assert_standard_variables_set, get_user_messages, mock_open_ai_for_ci, \
+    mock_open_ai_chat_completion
 
 cond1 = threading.Condition()
 cond2 = threading.Condition()
@@ -23,6 +25,63 @@ assertError : AssertionError = None
 def run_after_all_tests():
     assert_standard_variables_set()
     yield
+
+
+def mock_llm_sequential_coordinator(*args, **kwargs):
+    user_messages = get_user_messages(kwargs["messages"])
+    if "My name is Agent0" in user_messages[0]:
+        return mock_open_ai_chat_completion("Hello Agent0, my name is Agent1.")
+    elif user_messages[0] == "Hello Agent0, my name is Agent1.":
+        return mock_open_ai_chat_completion("Hello. The agent names mentioned are Agent0 and Agent1. My name is Agent2.")
+
+
+llm_sequential_counter = 0
+
+
+def mock_llm_sequential_memory_coordinator(*args, **kwargs):
+    global llm_sequential_counter
+    llm_sequential_counter += 1
+    try:
+        user_messages = get_user_messages(kwargs["messages"])
+        if llm_sequential_counter == 1:
+            assert user_messages[0] == "Raleigh", "Expected 'Raleigh' in user message"
+            return mock_open_ai_chat_completion(
+                "Raleigh is in the state of North Carolina.\n\n"
+                "We have discussed the following cities and states so far:\n"
+                "1. Raleigh, North Carolina")
+        elif llm_sequential_counter == 2:
+            assert "Raleigh is in the state of North Carolina" in user_messages[0], \
+                "Expected 'Raleigh is in the state of North Carolina' in user message"
+            return mock_open_ai_chat_completion(
+                "Raleigh is located in the state of North Carolina, and North Carolina "
+                "is in the United States of America.\n\n"
+                "We have discussed the following cities and states so far:\n"
+                "1. Raleigh, North Carolina- USA\n\n"
+                "Please give me another city and state to find the country for.")
+        elif llm_sequential_counter == 3:
+            assert "user_messages[0] = Atlanta", "Expected 'Atlanta' in user message"
+            return mock_open_ai_chat_completion(
+                "Atlanta is in the state of Georgia.\n\n"
+                "We have discussed the following cities and states so far:\n"
+                "1. Raleigh, North Carolina - USA\n"
+                "2. Atlanta, Georgia - USA")
+        elif llm_sequential_counter == 4:
+            assert "Atlanta is in the state of Georgia" in user_messages[0], \
+                "Expected 'Atlanta is in the state of Georgia' in user message"
+            assert "1. Raleigh, North Carolina" in user_messages[0], "Expected '1. Raleigh, North Carolina' in user message"
+            assert "2. Atlanta, Georgia" in user_messages[0], "Expected '2. Atlanta, Georgia' in user message"
+            return mock_open_ai_chat_completion(
+                "Both states, North Carolina and Georgia, are in the United States of America (USA).\n\n"
+                "We have the following city and state pairs so far:\n"
+                "1. Raleigh, North Carolina - USA\n"
+                "2. Atlanta, Georgia - USA")
+
+        assert False, f"Unexpected message {user_messages}"
+    except AssertionError as e:
+        global assertError
+        assertError = e
+        with cond2:
+            cond2.notify()
 
 
 class FinalWiseAgent(WiseAgent):
@@ -85,10 +144,14 @@ def response_delivered_restart(message: WiseAgentMessage):
         cond2.notify()
 
 
-def test_sequential_coordinator():
+def test_sequential_coordinator(mocker):
     """
     Requires STOMP_USER and STOMP_PASSWORD.
     """
+    global global_mocker
+    global_mocker = mocker
+
+    mock_open_ai_for_ci(mocker, mock_llm_sequential_coordinator)
     try:
         global assertError
         groq_api_key = os.getenv("GROQ_API_KEY")
@@ -132,10 +195,14 @@ def test_sequential_coordinator():
         WiseAgentRegistry.remove_context("default")
 
 
-def test_sequential_memory_coordinator_restart_sequence():
+def test_sequential_memory_coordinator_restart_sequence(mocker):
     """
     Requires STOMP_USER and STOMP_PASSWORD.
     """
+    global global_mocker
+    global_mocker = mocker
+
+    mock_open_ai_for_ci(mocker, mock_llm_sequential_memory_coordinator)
     try:
         global assertError
         groq_api_key = os.getenv("GROQ_API_KEY")
