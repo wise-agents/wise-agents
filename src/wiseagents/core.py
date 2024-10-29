@@ -172,7 +172,7 @@ class WiseAgentContext():
         self._config = config
         WiseAgentRegistry.register_context(self)
         if config.get("use_redis") == True and self._redis_db is None:
-            self._redis_db = redis.Redis(host=self._config["redis_host"], port=self._config["redis_port"])
+            self._redis_db = redis.Redis(host=self._config["redis_host"], port=self._config["redis_port"], protocol=3)
             self._use_redis = True
         if (config.get("trace_enabled") == True):
             self._trace_enabled = True
@@ -201,7 +201,7 @@ class WiseAgentContext():
         '''Set the state of the context.'''
         self.__dict__.update(state)
         if self._config.get("use_redis") == True and self._redis_db is None:
-            self._redis_db = redis.Redis(host=self._config["redis_host"], port=self._config["redis_port"])
+            self._redis_db = redis.Redis(host=self._config["redis_host"], port=self._config["redis_port"], protocol=3)
             self._use_redis = True
 
     def _append_to_redis_list(self, key: str, value: Any):
@@ -1052,10 +1052,11 @@ class WiseAgentRegistry:
                     ssl=True,
                     ssl_certfile=cls.config["redis_ssl_certfile"],
                     ssl_keyfile=cls.config["redis_ssl_keyfile"],
-                    ssl_ca_certs=cls.config["redis_ssl_ca_certs"])
+                    ssl_ca_certs=cls.config["redis_ssl_ca_certs"],
+                    protocol=3)
 
                 else:
-                    cls.redis_db = redis.Redis(host=cls.config["redis_host"], port=cls.config["redis_port"])
+                    cls.redis_db = redis.Redis(host=cls.config["redis_host"], port=cls.config["redis_port"], protocol=3)
             return cls.config
         except Exception as e:
             logging.error(e)
