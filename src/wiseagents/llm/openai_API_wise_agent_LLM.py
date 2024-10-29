@@ -2,7 +2,9 @@ import logging
 from typing import Dict, Iterable, Optional
 
 import openai
-from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam
+from openai import NotGiven
+from openai import NOT_GIVEN
+from openai.types.chat import ChatCompletionMessageParam, ChatCompletion, ChatCompletionToolParam, completion_create_params
 
 from wiseagents.llm.wise_agent_remote_LLM import WiseAgentRemoteLLM
 
@@ -37,7 +39,6 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
         super().__init__(model_name=model_name, remote_address=remote_address, system_message=system_message)
         self._api_key = api_key
         self._openai_config = openai_config
-    
     
     def __repr__(self):
         '''Return a string representation of the agent.'''
@@ -82,7 +83,8 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
    
     def process_chat_completion(self, 
                                 messages: Iterable[ChatCompletionMessageParam], 
-                                tools: Iterable[ChatCompletionToolParam]) -> ChatCompletion:
+                                tools: Iterable[ChatCompletionToolParam],
+                                max_tokens : Optional[int] | NotGiven = NOT_GIVEN, response_format : Optional[completion_create_params.ResponseFormat] | NotGiven = NOT_GIVEN) -> ChatCompletion:
         '''Process a chat completion. This method is implemented from superclass WiseAgentLLM.
         The context and state is passed in input and returned as part of the output.
         Deal with the messages and tools is responsibility of the caller.
@@ -104,6 +106,8 @@ class OpenaiAPIWiseAgentLLM(WiseAgentRemoteLLM):
             model=self.model_name,
             tools=tools,
             tool_choice="auto",  # auto is default, but we'll be explicit
+            max_tokens=max_tokens,
+            response_format=response_format,
             **self.openai_config
             )
         return response
