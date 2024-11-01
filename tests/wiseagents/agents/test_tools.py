@@ -82,9 +82,9 @@ class WiseAgentWeather(WiseAgent):
 
 
 
-#Note: this test work using ollama as inference system and llama3.1 as model
+#Note: this test work using ollama as inference system and llama3.2:1b as model
 #Install ollam from their official website https://ollama.com/
-#run ollama with the following command: ollama run llama3.1
+#run ollama with the following command: ollama run llama3.2:1b
 
 @pytest.mark.needsllm
 def test_agent_tool():
@@ -103,7 +103,7 @@ def test_agent_tool():
         WiseAgentTool(name="WeatherAgent", description="Get the current weather in a given location", agent_tool=True,
                     parameters_json_schema=json_schema, call_back=None) 
         llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                            model_name="llama3.1",
+                                            model_name="llama3.2:1b",
                                             remote_address="http://localhost:11434/v1")      
         
         weather_agent = WiseAgentWeather(name="WeatherAgent", metadata=WiseAgentMetaData(description="Get the current weather in a given location"))
@@ -155,7 +155,7 @@ def test_tool():
         WiseAgentTool(name="get_current_weather", description="Get the current weather in a given location", agent_tool=False,
                     parameters_json_schema=json_schema, call_back=get_current_weather) 
         llm = OpenaiAPIWiseAgentLLM(system_message="Answer my greeting saying Hello and my name",
-                                            model_name="llama3.1",
+                                            model_name="llama3.2:1b",
                                             remote_address="http://localhost:11434/v1")      
         agent = LLMWiseAgentWithTools(name="WiseIntelligentAgent",
                                     metadata=WiseAgentMetaData(description="This is a test agent"),

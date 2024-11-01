@@ -3,7 +3,7 @@
 metadata: !wiseagents.WiseAgentMetaData 
   description: This is an agent that can answer questions about english literature
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
-  model_name: llama3.1
+  model_name: llama3.2:1b
   remote_address: http://localhost:11434/v1
   system_message: You are an english literature expert. Answer questions about english literature. Try to give context to your answers and provide quote from the books described. Your user is a native english speaker, with limited background in english literature.
 name: LiterateAgent
@@ -16,7 +16,7 @@ transport:  !wiseagents.transports.StompWiseAgentTransport
 metadata: !wiseagents.WiseAgentMetaData 
   description: This is an agent that can translate from english to italian
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
-  model_name: llama3.1
+  model_name: llama3.2:1b
   remote_address: http://localhost:11434/v1
   system_message: You are an expert translator from english to italian. Translate the provided text from english to italian.
 name: TranslatorAgent

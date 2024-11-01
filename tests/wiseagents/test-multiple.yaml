@@ -30,7 +30,7 @@ graph_db: !wiseagents.graphdb.Neo4jLangChainWiseAgentGraphDB
   collection_name: test-cli-vector-db
   properties: [ name, type ]
 llm: !wiseagents.llm.OpenaiAPIWiseAgentLLM
-  model_name: "llama3.1"
+  model_name: "llama3.2:1b"
   remote_address: "http://localhost:11434/v1"
   system_message: Answer my greeting saying Hello and my name
 name: Agent2

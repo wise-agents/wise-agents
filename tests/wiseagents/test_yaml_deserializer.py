@@ -36,7 +36,7 @@ def test_using_deserialized_agent():
         assert deserialized_agent.name == "Agent1"
         assert deserialized_agent.metadata.description == "This is a test agent"
         assert deserialized_agent.llm.system_message == "Answer my greeting saying Hello and my name"
-        assert deserialized_agent.llm.model_name =="llama3.1"
+        assert deserialized_agent.llm.model_name =="llama3.2:1b"
         assert deserialized_agent.llm.remote_address == "http://localhost:11434/v1"
         assert deserialized_agent.llm.openai_config == {"temperature": 0.5, "max_tokens": 100}
         logging.debug(deserialized_agent)
@@ -73,7 +73,7 @@ def test_using_multiple_deserialized_agents():
         assert deserialized_agent[0].name == "Agent1"
         assert deserialized_agent[0].metadata.description == "This is a test agent"
         assert deserialized_agent[0].llm.system_message == "Answer my greeting saying Hello and my name"
-        assert deserialized_agent[0].llm.model_name =="llama3.1"
+        assert deserialized_agent[0].llm.model_name =="llama3.2:1b"
         assert deserialized_agent[0].llm.remote_address == "http://localhost:11434/v1"
         response = deserialized_agent[0].llm.process("Hello my name is Stefano")
         assert response.content.__len__() > 0
